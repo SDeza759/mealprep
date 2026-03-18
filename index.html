@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Meal Prep Optimizer</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f4f3; color: #1a2e2a; line-height: 1.5; }
+  .app { max-width: 1200px; margin: 0 auto; padding: 16px; }
+  h1 { text-align: center; font-size: 1.8rem; color: #2d6a4f; margin-bottom: 4px; }
+  .subtitle { text-align: center; color: #6b7f7a; margin-bottom: 24px; font-size: 0.95rem; }
+  .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .card h2 { color: #2d6a4f; font-size: 1.15rem; margin-bottom: 12px; }
+  .macro-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .input-group { display: flex; flex-direction: column; }
+  .input-group label { font-size: 0.82rem; font-weight: 600; color: #3a5a50; margin-bottom: 4px; }
+  .input-group input, .input-group select { padding: 8px 12px; border: 1.5px solid #c8d6d0; border-radius: 8px; font-size: 1rem; outline: none; transition: border-color 0.2s; background: #fff; }
+  .input-group input:focus, .input-group select:focus { border-color: #2d6a4f; }
+  .warning { background: #fff3cd; color: #856404; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; margin-top: 8px; }
+  .error { background: #f8d7da; color: #721c24; }
+  .success { background: #d4edda; color: #155724; padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; margin-top: 8px; }
+  .macro-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 12px; }
+  .macro-pill { background: #e8f5e9; padding: 10px; border-radius: 10px; text-align: center; }
+  .macro-pill .value { font-size: 1.3rem; font-weight: 700; color: #2d6a4f; }
+  .macro-pill .label { font-size: 0.75rem; color: #5a7a6f; }
+  .btn { padding: 12px 28px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-sm { padding: 6px 14px; font-size: 0.82rem; border-radius: 8px; }
+  .btn-primary { background: #2d6a4f; color: #fff; }
+  .btn-primary:hover { background: #1b4332; }
+  .btn-secondary { background: #e0e8e4; color: #2d6a4f; }
+  .btn-secondary:hover { background: #c8d6d0; }
+  .btn-danger { background: #e74c3c; color: #fff; }
+  .btn-danger:hover { background: #c0392b; }
+  .btn-toggle { background: #d8f3dc; color: #2d6a4f; }
+  .btn-toggle.active { background: #2d6a4f; color: #fff; }
+  .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 16px 0; }
+  .day-card { border-left: 4px solid #2d6a4f; }
+  .day-label { font-size: 1.1rem; font-weight: 700; color: #2d6a4f; margin-bottom: 8px; }
+  .meal-card { background: #f7faf8; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+  .meal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+  .meal-name { font-weight: 600; font-size: 1rem; }
+  .cuisine-tag { background: #d8f3dc; color: #2d6a4f; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .breakfast-tag { background: #fff3cd; color: #856404; }
+  .swap-btn { background: none; border: 1px solid #c8d6d0; border-radius: 6px; padding: 3px 10px; font-size: 0.78rem; color: #6b7f7a; cursor: pointer; transition: all 0.2s; }
+  .swap-btn:hover { border-color: #2d6a4f; color: #2d6a4f; background: #e8f5e9; }
+  .ing-table { width: 100%; font-size: 0.82rem; border-collapse: collapse; }
+  .ing-table th { text-align: left; color: #6b7f7a; font-weight: 600; padding: 4px 6px; border-bottom: 1px solid #e0e8e4; }
+  .ing-table td { padding: 4px 6px; border-bottom: 1px solid #f0f4f3; }
+  .spice-row td { color: #9b8b6e; font-style: italic; }
+  .adj-note { color: #e67e22; font-size: 0.78rem; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+  .meal-totals { display: flex; gap: 12px; margin-top: 8px; font-size: 0.82rem; font-weight: 600; color: #3a5a50; flex-wrap: wrap; }
+  .day-totals { display: flex; gap: 16px; padding: 10px 0; border-top: 2px solid #d8f3dc; margin-top: 8px; font-weight: 700; font-size: 0.9rem; color: #2d6a4f; flex-wrap: wrap; }
+  .progress-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .progress-item { flex: 1; min-width: 100px; }
+  .progress-item .plabel { font-size: 0.72rem; color: #6b7f7a; margin-bottom: 2px; display: flex; justify-content: space-between; }
+  .progress-bar { height: 6px; background: #e0e8e4; border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  .fill-cal { background: #2d6a4f; }
+  .fill-carb { background: #e67e22; }
+  .fill-pro { background: #2980b9; }
+  .fill-fat { background: #8e44ad; }
+  .grocery-section { margin-bottom: 16px; }
+  .grocery-section h3 { color: #2d6a4f; font-size: 1rem; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 2px solid #d8f3dc; }
+  .grocery-item { display: grid; grid-template-columns: 1fr auto auto 1fr; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f0f4f3; font-size: 0.88rem; align-items: center; }
+  .grocery-item .gi-name { font-weight: 600; }
+  .grocery-item .gi-qty { color: #2d6a4f; font-weight: 600; text-align: center; min-width: 70px; }
+  .grocery-item .gi-alt { color: #5a7a6f; font-size: 0.82rem; text-align: center; min-width: 70px; }
+  .grocery-item .gi-usage { color: #6b7f7a; font-size: 0.78rem; }
+  .grocery-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+  .copy-feedback { font-size: 0.82rem; color: #2d6a4f; font-weight: 600; }
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .modal { background: #fff; border-radius: 14px; padding: 24px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
+  .modal h3 { color: #2d6a4f; margin-bottom: 12px; }
+  .modal-recipe { padding: 10px; border: 1.5px solid #e0e8e4; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
+  .modal-recipe:hover { border-color: #2d6a4f; background: #f7faf8; }
+  .modal-recipe .mr-name { font-weight: 600; }
+  .modal-recipe .mr-cuisine { color: #6b7f7a; font-size: 0.82rem; }
+  .modal-recipe .mr-macros { font-size: 0.78rem; color: #3a5a50; margin-top: 4px; }
+  .modal-search { width: 100%; padding: 8px 12px; border: 1.5px solid #c8d6d0; border-radius: 8px; font-size: 0.95rem; margin-bottom: 12px; outline: none; }
+  .modal-search:focus { border-color: #2d6a4f; }
+  .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+  .recipe-browser-card { background: #f7faf8; border-radius: 10px; padding: 14px; border: 1px solid #e0e8e4; }
+  .recipe-browser-card .rb-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .recipe-browser-card .rb-name { font-weight: 600; font-size: 0.95rem; }
+  .recipe-browser-card .rb-macros { font-size: 0.82rem; color: #3a5a50; margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .recipe-browser-card .rb-ings { font-size: 0.78rem; color: #6b7f7a; margin-top: 4px; }
+  .recipe-browser-card .rb-spices { font-size: 0.72rem; color: #9b8b6e; font-style: italic; margin-top: 2px; }
+  .recipe-filter-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+  .recipe-filter-row input, .recipe-filter-row select { padding: 6px 10px; border: 1.5px solid #c8d6d0; border-radius: 8px; font-size: 0.9rem; outline: none; }
+  .tag-pill { background: #e0e8e4; color: #3a5a50; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
+  .save-section { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+  .save-section input { padding: 6px 10px; border: 1.5px solid #c8d6d0; border-radius: 8px; font-size: 0.9rem; outline: none; flex: 1; min-width: 150px; }
+  .saved-plans-list { margin-top: 8px; }
+  .saved-plan-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border: 1px solid #e0e8e4; border-radius: 8px; margin-bottom: 6px; }
+  .saved-plan-item .sp-name { font-weight: 600; font-size: 0.9rem; }
+  .saved-plan-item .sp-meta { font-size: 0.78rem; color: #6b7f7a; }
+  .saved-plan-item .sp-actions { display: flex; gap: 6px; }
+  .override-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .override-table th { text-align: left; color: #6b7f7a; font-weight: 600; padding: 6px 8px; border-bottom: 2px solid #d8f3dc; position: sticky; top: 0; background: #fff; }
+  .override-table td { padding: 5px 8px; border-bottom: 1px solid #f0f4f3; }
+  .override-table tr.has-override { background: #f0faf4; }
+  .override-input { width: 60px; padding: 3px 6px; border: 1.5px solid #c8d6d0; border-radius: 6px; font-size: 0.85rem; text-align: right; }
+  .override-input:focus { border-color: #2d6a4f; outline: none; }
+  .override-input.modified { border-color: #e67e22; background: #fff8f0; }
+  .override-cat { font-size: 0.72rem; color: #6b7f7a; }
+  .override-reset { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 0.78rem; font-weight: 600; padding: 2px 6px; }
+  .override-reset:hover { text-decoration: underline; }
+  .override-count { font-size: 0.82rem; color: #2d6a4f; font-weight: 600; margin-left: 8px; }
+  @media (max-width: 600px) {
+    .macro-inputs { grid-template-columns: 1fr 1fr; }
+    .grocery-item { grid-template-columns: 1fr auto auto; }
+    .grocery-item .gi-usage { grid-column: 1 / -1; }
+    h1 { font-size: 1.4rem; }
+    .recipe-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+// ===== UNIT-BASED INGREDIENTS =====
+var UNIT_INGREDIENTS = {
+  "Egg": { unit: "egg", plural: "eggs", gPerUnit: 50 },
+  "Corn Tortillas": { unit: "tortilla", plural: "tortillas", gPerUnit: 30 },
+  "Whole Wheat Tortilla": { unit: "tortilla", plural: "tortillas", gPerUnit: 35 },
+  "Pita Bread": { unit: "pita", plural: "pitas", gPerUnit: 60 },
+  "Flatbread": { unit: "flatbread", plural: "flatbreads", gPerUnit: 90 },
+  "Whole Wheat Bread": { unit: "slice", plural: "slices", gPerUnit: 30 },
+  "Sub Roll": { unit: "roll", plural: "rolls", gPerUnit: 75 },
+  "Lime": { unit: "lime", plural: "limes", gPerUnit: 15 },
+  "Lemon": { unit: "lemon", plural: "lemons", gPerUnit: 15 },
+  "Banana": { unit: "banana", plural: "bananas", gPerUnit: 100 },
+  "Nori Seaweed": { unit: "sheet", plural: "sheets", gPerUnit: 2.5 }
+};
+
+function isUnitBased(name) { return !!UNIT_INGREDIENTS[name]; }
+function getUnitCount(name, grams) {
+  var u = UNIT_INGREDIENTS[name];
+  if (!u) return null;
+  return Math.round(grams / u.gPerUnit);
+}
+function getUnitDisplay(name, grams) {
+  var u = UNIT_INGREDIENTS[name];
+  if (!u) return null;
+  var count = Math.max(1, Math.round(grams / u.gPerUnit));
+  return count + " " + (count === 1 ? u.unit : u.plural);
+}
+
+// ===== SPICE DISPLAY =====
+function spiceDisplay(grams) {
+  if (grams <= 1) return "pinch";
+  if (grams <= 3) return "\u00BD tsp";
+  if (grams <= 6) return "1 tsp";
+  return Math.round(grams / 5) + " tsp";
+}
+
+// ===== SPICES BY CUISINE =====
+var CUISINE_SPICES = {
+  "Indian": [
+    { name: "Cumin", grams: 2 }, { name: "Turmeric", grams: 1 }, { name: "Garam Masala", grams: 2 },
+    { name: "Coriander Powder", grams: 2 }, { name: "Chili Powder", grams: 1 }, { name: "Salt", grams: 2 }, { name: "Black Pepper", grams: 1 }
+  ],
+  "Mexican": [
+    { name: "Cumin", grams: 2 }, { name: "Chili Powder", grams: 2 }, { name: "Paprika", grams: 2 },
+    { name: "Garlic Powder", grams: 1 }, { name: "Salt", grams: 2 }, { name: "Black Pepper", grams: 1 }
+  ],
+  "Middle Eastern": [
+    { name: "Cumin", grams: 2 }, { name: "Paprika", grams: 2 }, { name: "Coriander Powder", grams: 1 },
+    { name: "Salt", grams: 2 }, { name: "Black Pepper", grams: 1 }
+  ],
+  "Japanese": [
+    { name: "Salt", grams: 1 }, { name: "White Pepper", grams: 1 }
+  ],
+  "Korean": [
+    { name: "Gochugaru", grams: 2 }, { name: "Garlic Powder", grams: 1 },
+    { name: "Salt", grams: 1 }, { name: "Black Pepper", grams: 1 }
+  ],
+  "Thai": [
+    { name: "Chili Flakes", grams: 1 }, { name: "White Pepper", grams: 1 }, { name: "Salt", grams: 1 }
+  ],
+  "Italian": [
+    { name: "Salt", grams: 2 }, { name: "Black Pepper", grams: 1 }, { name: "Oregano", grams: 1 }, { name: "Dried Basil", grams: 1 }
+  ],
+  "American": [
+    { name: "Salt", grams: 2 }, { name: "Black Pepper", grams: 1 }, { name: "Garlic Powder", grams: 1 }
+  ],
+  "Mediterranean": [
+    { name: "Salt", grams: 2 }, { name: "Black Pepper", grams: 1 }, { name: "Oregano", grams: 1 }
+  ]
+};
+
+var RECIPE_SPICE_OVERRIDES = {
+  "Lamb Biryani": [{ name: "Cumin", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Garam Masala", grams: 2 },{ name: "Cardamom", grams: 1 },{ name: "Cinnamon", grams: 1 },{ name: "Bay Leaf", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Shawarma Bowl": [{ name: "Cumin", grams: 2 },{ name: "Paprika", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Cinnamon", grams: 1 },{ name: "Allspice", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Chicken Shawarma Plate": [{ name: "Cumin", grams: 2 },{ name: "Paprika", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Cinnamon", grams: 1 },{ name: "Allspice", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Moroccan Chickpea Stew": [{ name: "Cumin", grams: 2 },{ name: "Cinnamon", grams: 1 },{ name: "Ginger (ground)", grams: 1 },{ name: "Turmeric", grams: 1 },{ name: "Paprika", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Falafel Plate": [{ name: "Cumin", grams: 2 },{ name: "Coriander Powder", grams: 2 },{ name: "Dried Parsley", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Katsu Curry": [{ name: "Curry Powder", grams: 3 },{ name: "Salt", grams: 1 },{ name: "White Pepper", grams: 1 }],
+  "Dakgalbi": [{ name: "Gochugaru", grams: 3 },{ name: "Gochujang", grams: 5 },{ name: "Garlic Powder", grams: 1 },{ name: "Salt", grams: 1 }],
+  "Tteokbokki": [{ name: "Gochugaru", grams: 3 },{ name: "Gochujang", grams: 5 },{ name: "Salt", grams: 1 }],
+  "BBQ Chicken Plate": [{ name: "Paprika", grams: 2 },{ name: "Garlic Powder", grams: 1 },{ name: "Cayenne", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Cacio e Pepe": [{ name: "Black Pepper", grams: 3 },{ name: "Salt", grams: 2 }],
+  "Chicken Souvlaki Plate": [{ name: "Oregano", grams: 2 },{ name: "Paprika", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }]
+};
+
+// ===== RECIPES =====
+var RECIPES = [
+  // BREAKFAST
+  { name: "Classic Oatmeal with Berries", cuisine: "American", servingSize: "1 bowl", tags: ["breakfast","high-fiber"], ingredients: [{ name: "Rolled Oats", grams: 80, calories: 303, carbs: 51, protein: 10.7, fat: 5.5 },{ name: "Blueberries", grams: 75, calories: 43, carbs: 10.9, protein: 0.6, fat: 0.2 },{ name: "Banana", grams: 100, calories: 89, carbs: 22.8, protein: 1.1, fat: 0.3 },{ name: "Honey", grams: 15, calories: 46, carbs: 12.5, protein: 0, fat: 0 },{ name: "Whole Milk", grams: 120, calories: 73, carbs: 5.9, protein: 3.9, fat: 3.9 }] },
+  { name: "Scrambled Eggs & Toast", cuisine: "American", servingSize: "1 plate", tags: ["breakfast","high-protein"], ingredients: [{ name: "Egg", grams: 150, calories: 216, carbs: 1.2, protein: 18.9, fat: 15 },{ name: "Whole Wheat Bread", grams: 60, calories: 155, carbs: 26, protein: 5.4, fat: 2.4 },{ name: "Butter", grams: 10, calories: 72, carbs: 0, protein: 0.1, fat: 8.1 },{ name: "Cheddar Cheese", grams: 20, calories: 81, carbs: 0.3, protein: 5, fat: 6.5 }] },
+  { name: "Greek Yogurt Parfait", cuisine: "Mediterranean", servingSize: "1 bowl", tags: ["breakfast","high-protein"], ingredients: [{ name: "Greek Yogurt", grams: 200, calories: 197, carbs: 12, protein: 20, fat: 1.4 },{ name: "Granola", grams: 50, calories: 225, carbs: 33, protein: 5, fat: 9 },{ name: "Strawberries", grams: 80, calories: 26, carbs: 6.1, protein: 0.5, fat: 0.2 },{ name: "Honey", grams: 10, calories: 31, carbs: 8.3, protein: 0, fat: 0 }] },
+  { name: "Avocado Toast with Egg", cuisine: "American", servingSize: "2 slices", tags: ["breakfast","balanced"], ingredients: [{ name: "Whole Wheat Bread", grams: 60, calories: 155, carbs: 26, protein: 5.4, fat: 2.4 },{ name: "Avocado", grams: 80, calories: 128, carbs: 6.8, protein: 1.6, fat: 11.7 },{ name: "Egg", grams: 100, calories: 144, carbs: 0.8, protein: 12.6, fat: 10 },{ name: "Cherry Tomatoes", grams: 40, calories: 7, carbs: 1.6, protein: 0.4, fat: 0.1 }] },
+  { name: "Protein Pancakes", cuisine: "American", servingSize: "3 pancakes", tags: ["breakfast","high-protein"], ingredients: [{ name: "Rolled Oats", grams: 60, calories: 227, carbs: 38, protein: 8, fat: 4.1 },{ name: "Egg", grams: 100, calories: 144, carbs: 0.8, protein: 12.6, fat: 10 },{ name: "Banana", grams: 100, calories: 89, carbs: 22.8, protein: 1.1, fat: 0.3 },{ name: "Greek Yogurt", grams: 50, calories: 49, carbs: 3, protein: 5, fat: 0.4 },{ name: "Maple Syrup", grams: 20, calories: 52, carbs: 13.4, protein: 0, fat: 0 }] },
+  { name: "Breakfast Burrito", cuisine: "Mexican", servingSize: "1 burrito", tags: ["breakfast","high-protein"], ingredients: [{ name: "Whole Wheat Tortilla", grams: 70, calories: 190, carbs: 32, protein: 5, fat: 5 },{ name: "Egg", grams: 100, calories: 144, carbs: 0.8, protein: 12.6, fat: 10 },{ name: "Black Beans", grams: 60, calories: 79, carbs: 14.2, protein: 5.3, fat: 0.4 },{ name: "Cheddar Cheese", grams: 25, calories: 101, carbs: 0.3, protein: 6.3, fat: 8.1 },{ name: "Avocado", grams: 40, calories: 64, carbs: 3.4, protein: 0.8, fat: 5.9 }] },
+  { name: "Shakshuka Breakfast", cuisine: "Middle Eastern", servingSize: "1 plate", tags: ["breakfast","vegetarian"], ingredients: [{ name: "Egg", grams: 150, calories: 216, carbs: 1.2, protein: 18.9, fat: 15 },{ name: "Tomato Sauce", grams: 150, calories: 45, carbs: 10.5, protein: 1.5, fat: 0.3 },{ name: "Bell Pepper", grams: 60, calories: 18, carbs: 4, protein: 0.5, fat: 0.1 },{ name: "Onion", grams: 50, calories: 20, carbs: 4.7, protein: 0.6, fat: 0.1 },{ name: "Feta Cheese", grams: 30, calories: 79, carbs: 1.2, protein: 4.3, fat: 6.3 },{ name: "Pita Bread", grams: 60, calories: 165, carbs: 33, protein: 5.5, fat: 0.7 }] },
+  { name: "Japanese Tamagoyaki", cuisine: "Japanese", servingSize: "1 plate", tags: ["breakfast","high-protein"], ingredients: [{ name: "Egg", grams: 150, calories: 216, carbs: 1.2, protein: 18.9, fat: 15 },{ name: "White Rice", grams: 150, calories: 195, carbs: 43, protein: 3.5, fat: 0.4 },{ name: "Soy Sauce", grams: 8, calories: 4, carbs: 0.5, protein: 0.7, fat: 0 },{ name: "Miso Paste", grams: 15, calories: 30, carbs: 3.8, protein: 1.8, fat: 0.9 },{ name: "Green Onion", grams: 10, calories: 3, carbs: 0.7, protein: 0.2, fat: 0 }] },
+  { name: "Smoothie Bowl", cuisine: "American", servingSize: "1 bowl", tags: ["breakfast","vegetarian"], ingredients: [{ name: "Banana", grams: 100, calories: 89, carbs: 22.8, protein: 1.1, fat: 0.3 },{ name: "Blueberries", grams: 80, calories: 46, carbs: 11.6, protein: 0.6, fat: 0.3 },{ name: "Greek Yogurt", grams: 120, calories: 118, carbs: 7.2, protein: 12, fat: 0.8 },{ name: "Granola", grams: 40, calories: 180, carbs: 26.4, protein: 4, fat: 7.2 },{ name: "Honey", grams: 10, calories: 31, carbs: 8.3, protein: 0, fat: 0 }] },
+  { name: "Masala Dosa", cuisine: "Indian", servingSize: "1 plate", tags: ["breakfast","vegetarian"], ingredients: [{ name: "Rice Flour", grams: 80, calories: 291, carbs: 64, protein: 4.7, fat: 0.9 },{ name: "Potato", grams: 120, calories: 93, carbs: 21, protein: 2.5, fat: 0.1 },{ name: "Onion", grams: 50, calories: 20, carbs: 4.7, protein: 0.6, fat: 0.1 },{ name: "Coconut Chutney", grams: 40, calories: 80, carbs: 4, protein: 1.2, fat: 6.8 }] },
+  { name: "Chilaquiles", cuisine: "Mexican", servingSize: "1 plate", tags: ["breakfast","comfort-food"], ingredients: [{ name: "Corn Tortillas", grams: 90, calories: 190, carbs: 39, protein: 5, fat: 2.3 },{ name: "Egg", grams: 100, calories: 144, carbs: 0.8, protein: 12.6, fat: 10 },{ name: "Tomato Sauce", grams: 100, calories: 30, carbs: 7, protein: 1, fat: 0.2 },{ name: "Avocado", grams: 40, calories: 64, carbs: 3.4, protein: 0.8, fat: 5.9 },{ name: "Feta Cheese", grams: 25, calories: 66, carbs: 1, protein: 3.6, fat: 5.3 },{ name: "Onion", grams: 30, calories: 12, carbs: 2.8, protein: 0.3, fat: 0.1 }] },
+  { name: "French Toast", cuisine: "American", servingSize: "2 slices", tags: ["breakfast","comfort-food"], ingredients: [{ name: "Whole Wheat Bread", grams: 60, calories: 155, carbs: 26, protein: 5.4, fat: 2.4 },{ name: "Egg", grams: 50, calories: 72, carbs: 0.4, protein: 6.3, fat: 5 },{ name: "Whole Milk", grams: 60, calories: 37, carbs: 3, protein: 2, fat: 2 },{ name: "Butter", grams: 10, calories: 72, carbs: 0, protein: 0.1, fat: 8.1 },{ name: "Maple Syrup", grams: 25, calories: 65, carbs: 16.8, protein: 0, fat: 0 },{ name: "Strawberries", grams: 60, calories: 19, carbs: 4.6, protein: 0.4, fat: 0.2 }] },
+  { name: "Huevos Rancheros", cuisine: "Mexican", servingSize: "1 plate", tags: ["breakfast","vegetarian"], ingredients: [{ name: "Egg", grams: 100, calories: 144, carbs: 0.8, protein: 12.6, fat: 10 },{ name: "Corn Tortillas", grams: 60, calories: 127, carbs: 26, protein: 3.3, fat: 1.5 },{ name: "Black Beans", grams: 80, calories: 105, carbs: 19, protein: 7, fat: 0.5 },{ name: "Tomato Sauce", grams: 80, calories: 24, carbs: 5.6, protein: 0.8, fat: 0.2 },{ name: "Avocado", grams: 40, calories: 64, carbs: 3.4, protein: 0.8, fat: 5.9 },{ name: "Feta Cheese", grams: 20, calories: 53, carbs: 0.8, protein: 2.9, fat: 4.2 }] },
+  // LUNCH/DINNER
+  { name: "Grilled Chicken & Rice Bowl", cuisine: "American", servingSize: "1 bowl", tags: ["high-protein"], ingredients: [{ name: "Chicken Breast", grams: 180, calories: 297, carbs: 0, protein: 56, fat: 6.5 },{ name: "Brown Rice", grams: 150, calories: 165, carbs: 35, protein: 3.5, fat: 1.3 },{ name: "Broccoli", grams: 100, calories: 34, carbs: 7, protein: 2.8, fat: 0.4 },{ name: "Olive Oil", grams: 10, calories: 88, carbs: 0, protein: 0, fat: 10 }] },
+  { name: "Spaghetti Bolognese", cuisine: "Italian", servingSize: "1 plate", tags: ["comfort-food"], ingredients: [{ name: "Ground Beef (lean)", grams: 150, calories: 250, carbs: 0, protein: 38, fat: 10 },{ name: "Spaghetti Pasta", grams: 120, calories: 180, carbs: 37, protein: 6, fat: 1 },{ name: "Tomato Sauce", grams: 100, calories: 30, carbs: 7, protein: 1, fat: 0.2 },{ name: "Parmesan Cheese", grams: 15, calories: 60, carbs: 0.5, protein: 4, fat: 4.5 },{ name: "Onion", grams: 50, calories: 20, carbs: 4.7, protein: 0.6, fat: 0.1 }] },
+  { name: "Chicken Burrito Bowl", cuisine: "Mexican", servingSize: "1 bowl", tags: ["high-protein","high-fiber"], ingredients: [{ name: "Chicken Breast", grams: 150, calories: 248, carbs: 0, protein: 47, fat: 5.4 },{ name: "Brown Rice", grams: 130, calories: 143, carbs: 30, protein: 3, fat: 1.1 },{ name: "Black Beans", grams: 80, calories: 105, carbs: 19, protein: 7, fat: 0.5 },{ name: "Avocado", grams: 50, calories: 80, carbs: 4.3, protein: 1, fat: 7.3 },{ name: "Bell Pepper", grams: 60, calories: 18, carbs: 4, protein: 0.5, fat: 0.1 }] },
+  { name: "Teriyaki Salmon Bowl", cuisine: "Japanese", servingSize: "1 bowl", tags: ["high-protein","omega-3"], ingredients: [{ name: "Salmon Fillet", grams: 170, calories: 354, carbs: 0, protein: 38, fat: 22 },{ name: "White Rice", grams: 150, calories: 195, carbs: 43, protein: 3.5, fat: 0.4 },{ name: "Edamame", grams: 60, calories: 72, carbs: 4.5, protein: 6.5, fat: 3.2 },{ name: "Soy Sauce", grams: 15, calories: 8, carbs: 1, protein: 1.3, fat: 0 }] },
+  { name: "Chicken Tikka Masala", cuisine: "Indian", servingSize: "1 bowl", tags: ["high-protein"], ingredients: [{ name: "Chicken Breast", grams: 170, calories: 281, carbs: 0, protein: 53, fat: 6.1 },{ name: "Greek Yogurt", grams: 60, calories: 59, carbs: 3.6, protein: 6, fat: 0.4 },{ name: "Tomato Sauce", grams: 100, calories: 30, carbs: 7, protein: 1, fat: 0.2 },{ name: "Onion", grams: 60, calories: 24, carbs: 5.6, protein: 0.7, fat: 0.1 },{ name: "Brown Rice", grams: 140, calories: 154, carbs: 32, protein: 3.3, fat: 1.2 },{ name: "Olive Oil", grams: 8, calories: 70, carbs: 0, protein: 0, fat: 8 }] },
+  { name: "Falafel Plate", cuisine: "Middle Eastern", servingSize: "1 plate", tags: ["vegetarian","high-fiber"], ingredients: [{ name: "Chickpeas", grams: 120, calories: 196, carbs: 33, protein: 10.5, fat: 3.1 },{ name: "Tahini", grams: 20, calories: 118, carbs: 3.4, protein: 3.4, fat: 10.6 },{ name: "Cucumber", grams: 80, calories: 12, carbs: 2.9, protein: 0.5, fat: 0.1 },{ name: "Tomato", grams: 80, calories: 14, carbs: 3.1, protein: 0.7, fat: 0.2 },{ name: "Pita Bread", grams: 60, calories: 165, carbs: 33, protein: 5.5, fat: 0.7 }] },
+  { name: "Bibimbap", cuisine: "Korean", servingSize: "1 bowl", tags: ["balanced"], ingredients: [{ name: "Ground Beef (lean)", grams: 120, calories: 200, carbs: 0, protein: 30, fat: 8 },{ name: "White Rice", grams: 160, calories: 208, carbs: 46, protein: 3.7, fat: 0.4 },{ name: "Spinach", grams: 60, calories: 14, carbs: 2.2, protein: 1.7, fat: 0.2 },{ name: "Egg", grams: 50, calories: 72, carbs: 0.4, protein: 6.3, fat: 5 },{ name: "Carrot", grams: 50, calories: 21, carbs: 4.8, protein: 0.5, fat: 0.1 },{ name: "Sesame Oil", grams: 5, calories: 44, carbs: 0, protein: 0, fat: 5 }] },
+  { name: "Pad Thai", cuisine: "Thai", servingSize: "1 plate", tags: ["seafood"], ingredients: [{ name: "Shrimp", grams: 140, calories: 140, carbs: 1.4, protein: 27, fat: 2.2 },{ name: "Rice Noodles", grams: 120, calories: 130, carbs: 32, protein: 1.1, fat: 0.2 },{ name: "Egg", grams: 50, calories: 72, carbs: 0.4, protein: 6.3, fat: 5 },{ name: "Peanuts", grams: 20, calories: 114, carbs: 3.2, protein: 5.2, fat: 9.8 },{ name: "Bean Sprouts", grams: 50, calories: 16, carbs: 3.1, protein: 1.5, fat: 0.1 },{ name: "Lime", grams: 15, calories: 5, carbs: 1.6, protein: 0.1, fat: 0 }] },
+  { name: "Greek Chicken Salad", cuisine: "Mediterranean", servingSize: "1 bowl", tags: ["high-protein","low-carb"], ingredients: [{ name: "Chicken Breast", grams: 150, calories: 248, carbs: 0, protein: 47, fat: 5.4 },{ name: "Feta Cheese", grams: 40, calories: 105, carbs: 1.6, protein: 5.7, fat: 8.4 },{ name: "Cucumber", grams: 100, calories: 15, carbs: 3.6, protein: 0.7, fat: 0.1 },{ name: "Tomato", grams: 100, calories: 18, carbs: 3.9, protein: 0.9, fat: 0.2 },{ name: "Olive Oil", grams: 12, calories: 106, carbs: 0, protein: 0, fat: 12 },{ name: "Red Onion", grams: 30, calories: 12, carbs: 2.8, protein: 0.3, fat: 0 }] },
+  { name: "Beef Stir Fry", cuisine: "American", servingSize: "1 plate", tags: ["high-protein"], ingredients: [{ name: "Beef Sirloin", grams: 160, calories: 264, carbs: 0, protein: 42, fat: 10 },{ name: "Bell Pepper", grams: 80, calories: 24, carbs: 5.3, protein: 0.7, fat: 0.2 },{ name: "Broccoli", grams: 100, calories: 34, carbs: 7, protein: 2.8, fat: 0.4 },{ name: "Soy Sauce", grams: 15, calories: 8, carbs: 1, protein: 1.3, fat: 0 },{ name: "Brown Rice", grams: 140, calories: 154, carbs: 32, protein: 3.3, fat: 1.2 },{ name: "Sesame Oil", grams: 5, calories: 44, carbs: 0, protein: 0, fat: 5 }] },
+  { name: "Margherita Flatbread", cuisine: "Italian", servingSize: "1 flatbread", tags: ["vegetarian"], ingredients: [{ name: "Flatbread", grams: 90, calories: 250, carbs: 44, protein: 8, fat: 5 },{ name: "Mozzarella Cheese", grams: 60, calories: 170, carbs: 1.2, protein: 12, fat: 13 },{ name: "Tomato", grams: 80, calories: 14, carbs: 3.1, protein: 0.7, fat: 0.2 },{ name: "Olive Oil", grams: 8, calories: 70, carbs: 0, protein: 0, fat: 8 }] },
+  { name: "Carnitas Tacos", cuisine: "Mexican", servingSize: "3 tacos", tags: ["comfort-food"], ingredients: [{ name: "Pork Shoulder", grams: 150, calories: 330, carbs: 0, protein: 33, fat: 21 },{ name: "Corn Tortillas", grams: 90, calories: 190, carbs: 39, protein: 5, fat: 2.3 },{ name: "Onion", grams: 40, calories: 16, carbs: 3.8, protein: 0.4, fat: 0.1 },{ name: "Cilantro", grams: 10, calories: 2, carbs: 0.4, protein: 0.2, fat: 0.1 },{ name: "Lime", grams: 15, calories: 5, carbs: 1.6, protein: 0.1, fat: 0 }] },
+  { name: "Miso Ramen", cuisine: "Japanese", servingSize: "1 bowl", tags: ["comfort-food"], ingredients: [{ name: "Ramen Noodles", grams: 130, calories: 190, carbs: 36, protein: 5, fat: 2 },{ name: "Pork Shoulder", grams: 100, calories: 220, carbs: 0, protein: 22, fat: 14 },{ name: "Egg", grams: 50, calories: 72, carbs: 0.4, protein: 6.3, fat: 5 },{ name: "Miso Paste", grams: 20, calories: 40, carbs: 5, protein: 2.4, fat: 1.2 },{ name: "Spinach", grams: 40, calories: 9, carbs: 1.4, protein: 1.2, fat: 0.2 },{ name: "Green Onion", grams: 15, calories: 5, carbs: 1, protein: 0.3, fat: 0.1 }] },
+  { name: "Palak Paneer", cuisine: "Indian", servingSize: "1 bowl", tags: ["vegetarian"], ingredients: [{ name: "Paneer", grams: 120, calories: 312, carbs: 3.6, protein: 22, fat: 24 },{ name: "Spinach", grams: 150, calories: 35, carbs: 5.4, protein: 4.3, fat: 0.6 },{ name: "Onion", grams: 50, calories: 20, carbs: 4.7, protein: 0.6, fat: 0.1 },{ name: "Garlic", grams: 10, calories: 15, carbs: 3.3, protein: 0.6, fat: 0.1 },{ name: "Brown Rice", grams: 130, calories: 143, carbs: 30, protein: 3, fat: 1.1 }] },
+  { name: "Shawarma Bowl", cuisine: "Middle Eastern", servingSize: "1 bowl", tags: ["high-protein"], ingredients: [{ name: "Chicken Thigh", grams: 160, calories: 288, carbs: 0, protein: 32, fat: 17.6 },{ name: "White Rice", grams: 140, calories: 182, carbs: 40, protein: 3.3, fat: 0.4 },{ name: "Hummus", grams: 50, calories: 88, carbs: 8, protein: 4, fat: 5.2 },{ name: "Tomato", grams: 60, calories: 11, carbs: 2.3, protein: 0.5, fat: 0.1 },{ name: "Cucumber", grams: 60, calories: 9, carbs: 2.2, protein: 0.4, fat: 0.1 }] },
+  { name: "Kimchi Fried Rice", cuisine: "Korean", servingSize: "1 plate", tags: ["comfort-food"], ingredients: [{ name: "White Rice", grams: 180, calories: 234, carbs: 52, protein: 4.2, fat: 0.5 },{ name: "Kimchi", grams: 80, calories: 18, carbs: 3.6, protein: 1.4, fat: 0.2 },{ name: "Egg", grams: 50, calories: 72, carbs: 0.4, protein: 6.3, fat: 5 },{ name: "Pork Belly", grams: 60, calories: 258, carbs: 0, protein: 5.4, fat: 27 },{ name: "Sesame Oil", grams: 5, calories: 44, carbs: 0, protein: 0, fat: 5 },{ name: "Green Onion", grams: 10, calories: 3, carbs: 0.7, protein: 0.2, fat: 0 }] },
+  { name: "Green Curry", cuisine: "Thai", servingSize: "1 bowl", tags: ["high-protein"], ingredients: [{ name: "Chicken Breast", grams: 150, calories: 248, carbs: 0, protein: 47, fat: 5.4 },{ name: "Coconut Milk", grams: 100, calories: 154, carbs: 2.8, protein: 1.4, fat: 16 },{ name: "Bamboo Shoots", grams: 60, calories: 16, carbs: 3, protein: 1.5, fat: 0.2 },{ name: "Bell Pepper", grams: 60, calories: 18, carbs: 4, protein: 0.5, fat: 0.1 },{ name: "White Rice", grams: 150, calories: 195, carbs: 43, protein: 3.5, fat: 0.4 }] },
+  { name: "Lentil Soup", cuisine: "Mediterranean", servingSize: "2 cups", tags: ["vegetarian","high-fiber"], ingredients: [{ name: "Red Lentils", grams: 100, calories: 116, carbs: 20, protein: 9, fat: 0.4 },{ name: "Carrot", grams: 60, calories: 25, carbs: 5.7, protein: 0.6, fat: 0.1 },{ name: "Onion", grams: 60, calories: 24, carbs: 5.6, protein: 0.7, fat: 0.1 },{ name: "Tomato", grams: 80, calories: 14, carbs: 3.1, protein: 0.7, fat: 0.2 },{ name: "Olive Oil", grams: 10, calories: 88, carbs: 0, protein: 0, fat: 10 },{ name: "Garlic", grams: 8, calories: 12, carbs: 2.6, protein: 0.5, fat: 0.1 }] },
+  { name: "Turkey Club Wrap", cuisine: "American", servingSize: "1 wrap", tags: ["high-protein","low-fat"], ingredients: [{ name: "Turkey Breast (deli)", grams: 120, calories: 130, carbs: 3, protein: 25, fat: 1.8 },{ name: "Whole Wheat Tortilla", grams: 70, calories: 190, carbs: 32, protein: 5, fat: 5 },{ name: "Avocado", grams: 50, calories: 80, carbs: 4.3, protein: 1, fat: 7.3 },{ name: "Tomato", grams: 50, calories: 9, carbs: 1.9, protein: 0.4, fat: 0.1 },{ name: "Spinach", grams: 30, calories: 7, carbs: 1.1, protein: 0.9, fat: 0.1 }] },
+  { name: "Pasta Primavera", cuisine: "Italian", servingSize: "1 plate", tags: ["vegetarian"], ingredients: [{ name: "Penne Pasta", grams: 120, calories: 180, carbs: 37, protein: 6, fat: 1 },{ name: "Zucchini", grams: 80, calories: 14, carbs: 2.5, protein: 1, fat: 0.3 },{ name: "Bell Pepper", grams: 60, calories: 18, carbs: 4, protein: 0.5, fat: 0.1 },{ name: "Cherry Tomatoes", grams: 80, calories: 14, carbs: 3.1, protein: 0.7, fat: 0.2 },{ name: "Parmesan Cheese", grams: 15, calories: 60, carbs: 0.5, protein: 4, fat: 4.5 },{ name: "Olive Oil", grams: 12, calories: 106, carbs: 0, protein: 0, fat: 12 }] },
+  { name: "Fish Tacos", cuisine: "Mexican", servingSize: "3 tacos", tags: ["seafood","high-protein"], ingredients: [{ name: "White Fish (cod)", grams: 160, calories: 148, carbs: 0, protein: 32, fat: 1.6 },{ name: "Corn Tortillas", grams: 90, calories: 190, carbs: 39, protein: 5, fat: 2.3 },{ name: "Cabbage", grams: 60, calories: 15, carbs: 3.5, protein: 0.8, fat: 0.1 },{ name: "Avocado", grams: 40, calories: 64, carbs: 3.4, protein: 0.8, fat: 5.9 },{ name: "Lime", grams: 15, calories: 5, carbs: 1.6, protein: 0.1, fat: 0 }] },
+  { name: "Tofu Stir Fry", cuisine: "Japanese", servingSize: "1 bowl", tags: ["vegetarian","high-fiber"], ingredients: [{ name: "Firm Tofu", grams: 180, calories: 144, carbs: 3.6, protein: 15, fat: 8.6 },{ name: "Broccoli", grams: 100, calories: 34, carbs: 7, protein: 2.8, fat: 0.4 },{ name: "Carrot", grams: 50, calories: 21, carbs: 4.8, protein: 0.5, fat: 0.1 },{ name: "Brown Rice", grams: 140, calories: 154, carbs: 32, protein: 3.3, fat: 1.2 },{ name: "Soy Sauce", grams: 15, calories: 8, carbs: 1, protein: 1.3, fat: 0 },{ name: "Sesame Oil", grams: 5, calories: 44, carbs: 0, protein: 0, fat: 5 }] },
+  { name: "Lamb Kofta Plate", cuisine: "Middle Eastern", servingSize: "1 plate", tags: ["high-protein"], ingredients: [{ name: "Ground Lamb", grams: 150, calories: 375, carbs: 0, protein: 30, fat: 28 },{ name: "Hummus", grams: 60, calories: 106, carbs: 9.6, protein: 4.8, fat: 6.2 },{ name: "Pita Bread", grams: 60, calories: 165, carbs: 33, protein: 5.5, fat: 0.7 },{ name: "Tomato", grams: 60, calories: 11, carbs: 2.3, protein: 0.5, fat: 0.1 },{ name: "Red Onion", grams: 30, calories: 12, carbs: 2.8, protein: 0.3, fat: 0 }] },
+  { name: "Japchae", cuisine: "Korean", servingSize: "1 plate", tags: ["balanced"], ingredients: [{ name: "Sweet Potato Noodles", grams: 120, calories: 132, carbs: 32, protein: 0.2, fat: 0.1 },{ name: "Beef Sirloin", grams: 100, calories: 165, carbs: 0, protein: 26, fat: 6.3 },{ name: "Spinach", grams: 60, calories: 14, carbs: 2.2, protein: 1.7, fat: 0.2 },{ name: "Bell Pepper", grams: 50, calories: 15, carbs: 3.3, protein: 0.4, fat: 0.1 },{ name: "Carrot", grams: 40, calories: 17, carbs: 3.8, protein: 0.4, fat: 0.1 },{ name: "Sesame Oil", grams: 8, calories: 70, carbs: 0, protein: 0, fat: 8 },{ name: "Soy Sauce", grams: 10, calories: 5, carbs: 0.7, protein: 0.9, fat: 0 }] },
+  { name: "Tom Yum Shrimp Soup", cuisine: "Thai", servingSize: "1 bowl", tags: ["seafood","low-fat"], ingredients: [{ name: "Shrimp", grams: 150, calories: 150, carbs: 1.5, protein: 29, fat: 2.4 },{ name: "Mushrooms", grams: 80, calories: 18, carbs: 2.6, protein: 2.5, fat: 0.3 },{ name: "Cherry Tomatoes", grams: 60, calories: 11, carbs: 2.3, protein: 0.5, fat: 0.1 },{ name: "Coconut Milk", grams: 50, calories: 77, carbs: 1.4, protein: 0.7, fat: 8 },{ name: "Lime", grams: 15, calories: 5, carbs: 1.6, protein: 0.1, fat: 0 },{ name: "White Rice", grams: 130, calories: 169, carbs: 37, protein: 3, fat: 0.3 }] },
+  { name: "Quinoa Power Bowl", cuisine: "Mediterranean", servingSize: "1 bowl", tags: ["high-protein","high-fiber"], ingredients: [{ name: "Quinoa", grams: 140, calories: 168, carbs: 29, protein: 6.2, fat: 2.7 },{ name: "Chicken Breast", grams: 140, calories: 231, carbs: 0, protein: 43.5, fat: 5 },{ name: "Sweet Potato", grams: 100, calories: 86, carbs: 20, protein: 1.6, fat: 0.1 },{ name: "Spinach", grams: 40, calories: 9, carbs: 1.4, protein: 1.2, fat: 0.2 },{ name: "Olive Oil", grams: 8, calories: 70, carbs: 0, protein: 0, fat: 8 }] },
+  { name: "BBQ Chicken Plate", cuisine: "American", servingSize: "1 plate", tags: ["high-protein"], ingredients: [{ name: "Chicken Thigh", grams: 170, calories: 306, carbs: 0, protein: 34, fat: 18.7 },{ name: "Sweet Potato", grams: 150, calories: 129, carbs: 30, protein: 2.4, fat: 0.2 },{ name: "Coleslaw Mix", grams: 80, calories: 18, carbs: 4, protein: 1, fat: 0.1 },{ name: "BBQ Sauce", grams: 30, calories: 48, carbs: 11, protein: 0.3, fat: 0.1 }] },
+  { name: "Chana Masala", cuisine: "Indian", servingSize: "1 bowl", tags: ["vegetarian","high-fiber"], ingredients: [{ name: "Chickpeas", grams: 150, calories: 245, carbs: 41, protein: 13, fat: 3.8 },{ name: "Tomato Sauce", grams: 100, calories: 30, carbs: 7, protein: 1, fat: 0.2 },{ name: "Onion", grams: 60, calories: 24, carbs: 5.6, protein: 0.7, fat: 0.1 },{ name: "Garlic", grams: 8, calories: 12, carbs: 2.6, protein: 0.5, fat: 0.1 },{ name: "Brown Rice", grams: 130, calories: 143, carbs: 30, protein: 3, fat: 1.1 },{ name: "Olive Oil", grams: 8, calories: 70, carbs: 0, protein: 0, fat: 8 }] },
+  { name: "Poke Bowl", cuisine: "Japanese", servingSize: "1 bowl", tags: ["high-protein","low-fat"], ingredients: [{ name: "Ahi Tuna", grams: 150, calories: 184, carbs: 0, protein: 40, fat: 1.5 },{ name: "White Rice", grams: 150, calories: 195, carbs: 43, protein: 3.5, fat: 0.4 },{ name: "Avocado", grams: 50, calories: 80, carbs: 4.3, protein: 1, fat: 7.3 },{ name: "Edamame", grams: 50, calories: 60, carbs: 3.8, protein: 5.4, fat: 2.7 },{ name: "Cucumber", grams: 60, calories: 9, carbs: 2.2, protein: 0.4, fat: 0.1 },{ name: "Soy Sauce", grams: 10, calories: 5, carbs: 0.7, protein: 0.9, fat: 0 }] },
+  { name: "Bulgogi Rice Bowl", cuisine: "Korean", servingSize: "1 bowl", tags: ["high-protein"], ingredients: [{ name: "Beef Sirloin", grams: 160, calories: 264, carbs: 0, protein: 42, fat: 10 },{ name: "White Rice", grams: 160, calories: 208, carbs: 46, protein: 3.7, fat: 0.4 },{ name: "Carrot", grams: 40, calories: 17, carbs: 3.8, protein: 0.4, fat: 0.1 },{ name: "Green Onion", grams: 15, calories: 5, carbs: 1, protein: 0.3, fat: 0.1 },{ name: "Sesame Oil", grams: 5, calories: 44, carbs: 0, protein: 0, fat: 5 },{ name: "Soy Sauce", grams: 12, calories: 6, carbs: 0.8, protein: 1.1, fat: 0 }] },
+  { name: "Massaman Curry", cuisine: "Thai", servingSize: "1 bowl", tags: ["comfort-food"], ingredients: [{ name: "Chicken Thigh", grams: 150, calories: 270, carbs: 0, protein: 30, fat: 16.5 },{ name: "Sweet Potato", grams: 120, calories: 103, carbs: 24, protein: 1.9, fat: 0.1 },{ name: "Coconut Milk", grams: 80, calories: 123, carbs: 2.2, protein: 1.1, fat: 12.8 },{ name: "Peanuts", grams: 20, calories: 114, carbs: 3.2, protein: 5.2, fat: 9.8 },{ name: "White Rice", grams: 140, calories: 182, carbs: 40, protein: 3.3, fat: 0.4 }] },
+  { name: "Egg Fried Rice", cuisine: "American", servingSize: "1 plate", tags: ["vegetarian"], ingredients: [{ name: "White Rice", grams: 200, calories: 260, carbs: 57, protein: 4.7, fat: 0.6 },{ name: "Egg", grams: 100, calories: 144, carbs: 0.8, protein: 12.6, fat: 10 },{ name: "Green Peas", grams: 50, calories: 42, carbs: 7.5, protein: 2.7, fat: 0.2 },{ name: "Carrot", grams: 40, calories: 17, carbs: 3.8, protein: 0.4, fat: 0.1 },{ name: "Soy Sauce", grams: 12, calories: 6, carbs: 0.8, protein: 1.1, fat: 0 },{ name: "Sesame Oil", grams: 5, calories: 44, carbs: 0, protein: 0, fat: 5 }] },
+  { name: "Tuna Nicoise Salad", cuisine: "Mediterranean", servingSize: "1 plate", tags: ["high-protein","balanced"], ingredients: [{ name: "Canned Tuna", grams: 120, calories: 132, carbs: 0, protein: 28, fat: 1.5 },{ name: "Egg", grams: 50, calories: 72, carbs: 0.4, protein: 6.3, fat: 5 },{ name: "Green Beans", grams: 80, calories: 25, carbs: 5.6, protein: 1.5, fat: 0.1 },{ name: "Potato", grams: 120, calories: 93, carbs: 21, protein: 2.5, fat: 0.1 },{ name: "Olive Oil", grams: 12, calories: 106, carbs: 0, protein: 0, fat: 12 },{ name: "Cherry Tomatoes", grams: 60, calories: 11, carbs: 2.3, protein: 0.5, fat: 0.1 }] },
+  { name: "Chicken Quesadilla", cuisine: "Mexican", servingSize: "1 quesadilla", tags: ["high-protein"], ingredients: [{ name: "Chicken Breast", grams: 130, calories: 215, carbs: 0, protein: 40.5, fat: 4.7 },{ name: "Whole Wheat Tortilla", grams: 70, calories: 190, carbs: 32, protein: 5, fat: 5 },{ name: "Cheddar Cheese", grams: 40, calories: 161, carbs: 0.5, protein: 10, fat: 13 },{ name: "Bell Pepper", grams: 50, calories: 15, carbs: 3.3, protein: 0.4, fat: 0.1 },{ name: "Onion", grams: 30, calories: 12, carbs: 2.8, protein: 0.3, fat: 0.1 }] },
+  { name: "Hummus & Veggie Wrap", cuisine: "Mediterranean", servingSize: "1 wrap", tags: ["vegetarian"], ingredients: [{ name: "Hummus", grams: 80, calories: 141, carbs: 12.8, protein: 6.4, fat: 8.3 },{ name: "Whole Wheat Tortilla", grams: 70, calories: 190, carbs: 32, protein: 5, fat: 5 },{ name: "Cucumber", grams: 60, calories: 9, carbs: 2.2, protein: 0.4, fat: 0.1 },{ name: "Carrot", grams: 50, calories: 21, carbs: 4.8, protein: 0.5, fat: 0.1 },{ name: "Spinach", grams: 30, calories: 7, carbs: 1.1, protein: 0.9, fat: 0.1 },{ name: "Feta Cheese", grams: 25, calories: 66, carbs: 1, protein: 3.6, fat: 5.3 }] },
+  // MORE RECIPES (compact)
+  { name:"Chicken Caesar Salad",cuisine:"American",servingSize:"1 bowl",tags:["high-protein","low-carb"],ingredients:[{name:"Chicken Breast",grams:160,calories:264,carbs:0,protein:50,fat:5.8},{name:"Romaine Lettuce",grams:120,calories:20,carbs:3.9,protein:1.5,fat:0.4},{name:"Parmesan Cheese",grams:20,calories:80,carbs:0.7,protein:5.3,fat:6},{name:"Croutons",grams:30,calories:122,carbs:20,protein:3,fat:3},{name:"Olive Oil",grams:10,calories:88,carbs:0,protein:0,fat:10}]},
+  { name:"Lamb Shawarma Wrap",cuisine:"Middle Eastern",servingSize:"1 wrap",tags:["high-protein"],ingredients:[{name:"Ground Lamb",grams:130,calories:325,carbs:0,protein:26,fat:24.3},{name:"Whole Wheat Tortilla",grams:70,calories:190,carbs:32,protein:5,fat:5},{name:"Tomato",grams:50,calories:9,carbs:1.9,protein:0.4,fat:0.1},{name:"Red Onion",grams:30,calories:12,carbs:2.8,protein:0.3,fat:0},{name:"Tahini",grams:15,calories:89,carbs:2.6,protein:2.6,fat:8}]},
+  { name:"Shrimp Fried Rice",cuisine:"Thai",servingSize:"1 plate",tags:["seafood"],ingredients:[{name:"Shrimp",grams:140,calories:140,carbs:1.4,protein:27,fat:2.2},{name:"White Rice",grams:180,calories:234,carbs:52,protein:4.2,fat:0.5},{name:"Egg",grams:50,calories:72,carbs:0.4,protein:6.3,fat:5},{name:"Green Peas",grams:40,calories:34,carbs:6,protein:2.2,fat:0.2},{name:"Soy Sauce",grams:12,calories:6,carbs:0.8,protein:1.1,fat:0},{name:"Sesame Oil",grams:5,calories:44,carbs:0,protein:0,fat:5}]},
+  { name:"Butter Chicken",cuisine:"Indian",servingSize:"1 bowl",tags:["high-protein","comfort-food"],ingredients:[{name:"Chicken Breast",grams:170,calories:281,carbs:0,protein:53,fat:6.1},{name:"Butter",grams:15,calories:108,carbs:0,protein:0.1,fat:12.2},{name:"Tomato Sauce",grams:120,calories:36,carbs:8.4,protein:1.2,fat:0.2},{name:"Greek Yogurt",grams:40,calories:39,carbs:2.4,protein:4,fat:0.3},{name:"Brown Rice",grams:140,calories:154,carbs:32,protein:3.3,fat:1.2}]},
+  { name:"Mediterranean Stuffed Peppers",cuisine:"Mediterranean",servingSize:"2 peppers",tags:["balanced"],ingredients:[{name:"Bell Pepper",grams:200,calories:60,carbs:13.3,protein:1.3,fat:0.3},{name:"Quinoa",grams:100,calories:120,carbs:21,protein:4.4,fat:1.9},{name:"Ground Beef (lean)",grams:100,calories:167,carbs:0,protein:25,fat:6.7},{name:"Feta Cheese",grams:30,calories:79,carbs:1.2,protein:4.3,fat:6.3},{name:"Tomato",grams:60,calories:11,carbs:2.3,protein:0.5,fat:0.1}]},
+  { name:"Korean Chicken Wings",cuisine:"Korean",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Wings",grams:200,calories:406,carbs:0,protein:38,fat:28},{name:"White Rice",grams:140,calories:182,carbs:40,protein:3.3,fat:0.4},{name:"Soy Sauce",grams:12,calories:6,carbs:0.8,protein:1.1,fat:0},{name:"Honey",grams:15,calories:46,carbs:12.5,protein:0,fat:0},{name:"Garlic",grams:8,calories:12,carbs:2.6,protein:0.5,fat:0.1},{name:"Sesame Oil",grams:5,calories:44,carbs:0,protein:0,fat:5}]},
+  { name:"Cacio e Pepe",cuisine:"Italian",servingSize:"1 plate",tags:["vegetarian","comfort-food"],ingredients:[{name:"Spaghetti Pasta",grams:140,calories:210,carbs:43,protein:7,fat:1.2},{name:"Parmesan Cheese",grams:40,calories:160,carbs:1.3,protein:10.7,fat:12},{name:"Butter",grams:15,calories:108,carbs:0,protein:0.1,fat:12.2},{name:"Olive Oil",grams:8,calories:70,carbs:0,protein:0,fat:8}]},
+  { name:"Chicken Enchiladas",cuisine:"Mexican",servingSize:"2 enchiladas",tags:["high-protein","comfort-food"],ingredients:[{name:"Chicken Breast",grams:150,calories:248,carbs:0,protein:47,fat:5.4},{name:"Corn Tortillas",grams:90,calories:190,carbs:39,protein:5,fat:2.3},{name:"Cheddar Cheese",grams:40,calories:161,carbs:0.5,protein:10,fat:13},{name:"Tomato Sauce",grams:100,calories:30,carbs:7,protein:1,fat:0.2},{name:"Onion",grams:40,calories:16,carbs:3.8,protein:0.4,fat:0.1}]},
+  { name:"Sushi Bowl (Chirashi)",cuisine:"Japanese",servingSize:"1 bowl",tags:["high-protein","omega-3"],ingredients:[{name:"Salmon Fillet",grams:120,calories:250,carbs:0,protein:27,fat:15.6},{name:"White Rice",grams:160,calories:208,carbs:46,protein:3.7,fat:0.4},{name:"Cucumber",grams:50,calories:8,carbs:1.8,protein:0.3,fat:0.1},{name:"Avocado",grams:40,calories:64,carbs:3.4,protein:0.8,fat:5.9},{name:"Soy Sauce",grams:10,calories:5,carbs:0.7,protein:0.9,fat:0},{name:"Edamame",grams:40,calories:48,carbs:3,protein:4.3,fat:2.1}]},
+  { name:"Aloo Gobi",cuisine:"Indian",servingSize:"1 bowl",tags:["vegetarian"],ingredients:[{name:"Potato",grams:150,calories:116,carbs:26.3,protein:3.1,fat:0.2},{name:"Cauliflower",grams:150,calories:38,carbs:7.5,protein:2.9,fat:0.4},{name:"Onion",grams:50,calories:20,carbs:4.7,protein:0.6,fat:0.1},{name:"Tomato",grams:60,calories:11,carbs:2.3,protein:0.5,fat:0.1},{name:"Olive Oil",grams:12,calories:106,carbs:0,protein:0,fat:12},{name:"Brown Rice",grams:130,calories:143,carbs:30,protein:3,fat:1.1}]},
+  { name:"Tabbouleh with Grilled Chicken",cuisine:"Middle Eastern",servingSize:"1 plate",tags:["high-protein","high-fiber"],ingredients:[{name:"Chicken Breast",grams:150,calories:248,carbs:0,protein:47,fat:5.4},{name:"Quinoa",grams:80,calories:96,carbs:16.8,protein:3.5,fat:1.5},{name:"Cucumber",grams:60,calories:9,carbs:2.2,protein:0.4,fat:0.1},{name:"Tomato",grams:80,calories:14,carbs:3.1,protein:0.7,fat:0.2},{name:"Olive Oil",grams:12,calories:106,carbs:0,protein:0,fat:12},{name:"Lemon",grams:15,calories:4,carbs:1.4,protein:0.2,fat:0.1}]},
+  { name:"Pork Tonkatsu",cuisine:"Japanese",servingSize:"1 plate",tags:["comfort-food"],ingredients:[{name:"Pork Loin",grams:150,calories:248,carbs:0,protein:41,fat:8.3},{name:"Panko Breadcrumbs",grams:30,calories:112,carbs:22,protein:3.2,fat:0.7},{name:"Egg",grams:50,calories:72,carbs:0.4,protein:6.3,fat:5},{name:"White Rice",grams:160,calories:208,carbs:46,protein:3.7,fat:0.4},{name:"Cabbage",grams:60,calories:15,carbs:3.5,protein:0.8,fat:0.1}]},
+  { name:"Thai Basil Chicken",cuisine:"Thai",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:170,calories:281,carbs:0,protein:53,fat:6.1},{name:"White Rice",grams:160,calories:208,carbs:46,protein:3.7,fat:0.4},{name:"Bell Pepper",grams:60,calories:18,carbs:4,protein:0.5,fat:0.1},{name:"Garlic",grams:10,calories:15,carbs:3.3,protein:0.6,fat:0.1},{name:"Soy Sauce",grams:12,calories:6,carbs:0.8,protein:1.1,fat:0},{name:"Sesame Oil",grams:5,calories:44,carbs:0,protein:0,fat:5}]},
+  { name:"Tuscan White Bean Soup",cuisine:"Italian",servingSize:"2 cups",tags:["vegetarian","high-fiber"],ingredients:[{name:"White Beans",grams:130,calories:163,carbs:29,protein:11,fat:0.6},{name:"Spinach",grams:60,calories:14,carbs:2.2,protein:1.7,fat:0.2},{name:"Tomato",grams:80,calories:14,carbs:3.1,protein:0.7,fat:0.2},{name:"Garlic",grams:10,calories:15,carbs:3.3,protein:0.6,fat:0.1},{name:"Olive Oil",grams:12,calories:106,carbs:0,protein:0,fat:12},{name:"Whole Wheat Bread",grams:30,calories:78,carbs:13,protein:2.7,fat:1.2}]},
+  { name:"Mango Chicken Curry",cuisine:"Indian",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Thigh",grams:150,calories:270,carbs:0,protein:30,fat:16.5},{name:"Mango",grams:80,calories:48,carbs:12.5,protein:0.7,fat:0.3},{name:"Coconut Milk",grams:60,calories:92,carbs:1.7,protein:0.8,fat:9.6},{name:"Onion",grams:50,calories:20,carbs:4.7,protein:0.6,fat:0.1},{name:"Brown Rice",grams:140,calories:154,carbs:32,protein:3.3,fat:1.2}]},
+  { name:"Grilled Salmon & Asparagus",cuisine:"American",servingSize:"1 plate",tags:["high-protein","omega-3"],ingredients:[{name:"Salmon Fillet",grams:180,calories:375,carbs:0,protein:40,fat:23.3},{name:"Asparagus",grams:120,calories:24,carbs:4.7,protein:2.6,fat:0.1},{name:"Quinoa",grams:100,calories:120,carbs:21,protein:4.4,fat:1.9},{name:"Lemon",grams:15,calories:4,carbs:1.4,protein:0.2,fat:0.1},{name:"Olive Oil",grams:10,calories:88,carbs:0,protein:0,fat:10}]},
+  { name:"Beef Tacos",cuisine:"Mexican",servingSize:"3 tacos",tags:["high-protein"],ingredients:[{name:"Ground Beef (lean)",grams:150,calories:250,carbs:0,protein:38,fat:10},{name:"Corn Tortillas",grams:90,calories:190,carbs:39,protein:5,fat:2.3},{name:"Tomato",grams:60,calories:11,carbs:2.3,protein:0.5,fat:0.1},{name:"Onion",grams:40,calories:16,carbs:3.8,protein:0.4,fat:0.1},{name:"Avocado",grams:40,calories:64,carbs:3.4,protein:0.8,fat:5.9},{name:"Cilantro",grams:5,calories:1,carbs:0.2,protein:0.1,fat:0}]},
+  { name:"Chicken Pesto Pasta",cuisine:"Italian",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:140,calories:231,carbs:0,protein:43.5,fat:5},{name:"Penne Pasta",grams:120,calories:180,carbs:37,protein:6,fat:1},{name:"Pesto Sauce",grams:30,calories:120,carbs:2,protein:2,fat:12},{name:"Cherry Tomatoes",grams:60,calories:11,carbs:2.3,protein:0.5,fat:0.1},{name:"Parmesan Cheese",grams:10,calories:40,carbs:0.3,protein:2.7,fat:3}]},
+  { name:"Katsu Curry",cuisine:"Japanese",servingSize:"1 plate",tags:["comfort-food"],ingredients:[{name:"Chicken Breast",grams:150,calories:248,carbs:0,protein:47,fat:5.4},{name:"Panko Breadcrumbs",grams:30,calories:112,carbs:22,protein:3.2,fat:0.7},{name:"White Rice",grams:160,calories:208,carbs:46,protein:3.7,fat:0.4},{name:"Carrot",grams:40,calories:17,carbs:3.8,protein:0.4,fat:0.1},{name:"Onion",grams:50,calories:20,carbs:4.7,protein:0.6,fat:0.1}]},
+  { name:"Spicy Tuna Bowl",cuisine:"Japanese",servingSize:"1 bowl",tags:["high-protein","omega-3"],ingredients:[{name:"Ahi Tuna",grams:160,calories:196,carbs:0,protein:42.7,fat:1.6},{name:"White Rice",grams:150,calories:195,carbs:43,protein:3.5,fat:0.4},{name:"Avocado",grams:50,calories:80,carbs:4.3,protein:1,fat:7.3},{name:"Cucumber",grams:50,calories:8,carbs:1.8,protein:0.3,fat:0.1},{name:"Soy Sauce",grams:10,calories:5,carbs:0.7,protein:0.9,fat:0},{name:"Sesame Oil",grams:5,calories:44,carbs:0,protein:0,fat:5}]},
+  { name:"Steak & Sweet Potato",cuisine:"American",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:180,calories:297,carbs:0,protein:47,fat:11.3},{name:"Sweet Potato",grams:180,calories:155,carbs:36,protein:2.9,fat:0.2},{name:"Broccoli",grams:100,calories:34,carbs:7,protein:2.8,fat:0.4},{name:"Butter",grams:10,calories:72,carbs:0,protein:0.1,fat:8.1}]},
+  { name:"Chicken Lettuce Wraps",cuisine:"Thai",servingSize:"4 wraps",tags:["high-protein","low-carb"],ingredients:[{name:"Chicken Breast",grams:180,calories:297,carbs:0,protein:56,fat:6.5},{name:"Romaine Lettuce",grams:80,calories:13,carbs:2.6,protein:1,fat:0.3},{name:"Carrot",grams:50,calories:21,carbs:4.8,protein:0.5,fat:0.1},{name:"Peanuts",grams:15,calories:86,carbs:2.4,protein:3.9,fat:7.4},{name:"Soy Sauce",grams:12,calories:6,carbs:0.8,protein:1.1,fat:0},{name:"Lime",grams:15,calories:5,carbs:1.6,protein:0.1,fat:0}]},
+  { name:"Dal Tadka",cuisine:"Indian",servingSize:"1 bowl",tags:["vegetarian","high-fiber"],ingredients:[{name:"Red Lentils",grams:120,calories:139,carbs:24,protein:10.8,fat:0.5},{name:"Onion",grams:50,calories:20,carbs:4.7,protein:0.6,fat:0.1},{name:"Tomato",grams:60,calories:11,carbs:2.3,protein:0.5,fat:0.1},{name:"Garlic",grams:8,calories:12,carbs:2.6,protein:0.5,fat:0.1},{name:"Butter",grams:12,calories:86,carbs:0,protein:0.1,fat:9.7},{name:"Brown Rice",grams:140,calories:154,carbs:32,protein:3.3,fat:1.2}]},
+  { name:"Baba Ganoush Plate",cuisine:"Middle Eastern",servingSize:"1 plate",tags:["vegetarian"],ingredients:[{name:"Eggplant",grams:200,calories:50,carbs:12,protein:2,fat:0.4},{name:"Tahini",grams:25,calories:148,carbs:4.3,protein:4.3,fat:13.3},{name:"Pita Bread",grams:60,calories:165,carbs:33,protein:5.5,fat:0.7},{name:"Cucumber",grams:60,calories:9,carbs:2.2,protein:0.4,fat:0.1},{name:"Tomato",grams:60,calories:11,carbs:2.3,protein:0.5,fat:0.1},{name:"Olive Oil",grams:10,calories:88,carbs:0,protein:0,fat:10}]},
+  { name:"Dakgalbi",cuisine:"Korean",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Thigh",grams:170,calories:306,carbs:0,protein:34,fat:18.7},{name:"Sweet Potato",grams:100,calories:86,carbs:20,protein:1.6,fat:0.1},{name:"Cabbage",grams:80,calories:20,carbs:4.7,protein:1,fat:0.1},{name:"White Rice",grams:140,calories:182,carbs:40,protein:3.3,fat:0.4},{name:"Sesame Oil",grams:5,calories:44,carbs:0,protein:0,fat:5}]},
+  { name:"Panang Curry",cuisine:"Thai",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:160,calories:264,carbs:0,protein:50,fat:5.8},{name:"Coconut Milk",grams:80,calories:123,carbs:2.2,protein:1.1,fat:12.8},{name:"Bell Pepper",grams:60,calories:18,carbs:4,protein:0.5,fat:0.1},{name:"Green Beans",grams:60,calories:19,carbs:4.2,protein:1.1,fat:0.1},{name:"White Rice",grams:150,calories:195,carbs:43,protein:3.5,fat:0.4},{name:"Peanuts",grams:10,calories:57,carbs:1.6,protein:2.6,fat:4.9}]},
+  { name:"Eggplant Parmesan",cuisine:"Italian",servingSize:"1 plate",tags:["vegetarian"],ingredients:[{name:"Eggplant",grams:200,calories:50,carbs:12,protein:2,fat:0.4},{name:"Mozzarella Cheese",grams:60,calories:170,carbs:1.2,protein:12,fat:13},{name:"Tomato Sauce",grams:120,calories:36,carbs:8.4,protein:1.2,fat:0.2},{name:"Parmesan Cheese",grams:15,calories:60,carbs:0.5,protein:4,fat:4.5},{name:"Olive Oil",grams:12,calories:106,carbs:0,protein:0,fat:12},{name:"Spaghetti Pasta",grams:100,calories:150,carbs:31,protein:5,fat:0.8}]},
+  { name:"Black Bean Bowl",cuisine:"Mexican",servingSize:"1 bowl",tags:["vegetarian","high-fiber"],ingredients:[{name:"Black Beans",grams:130,calories:171,carbs:30.7,protein:11.4,fat:0.8},{name:"Brown Rice",grams:140,calories:154,carbs:32,protein:3.3,fat:1.2},{name:"Avocado",grams:50,calories:80,carbs:4.3,protein:1,fat:7.3},{name:"Tomato",grams:60,calories:11,carbs:2.3,protein:0.5,fat:0.1},{name:"Corn",grams:60,calories:52,carbs:11.5,protein:1.9,fat:0.7},{name:"Lime",grams:15,calories:5,carbs:1.6,protein:0.1,fat:0}]},
+  { name:"Salmon Teriyaki Bento",cuisine:"Japanese",servingSize:"1 box",tags:["high-protein","omega-3"],ingredients:[{name:"Salmon Fillet",grams:150,calories:313,carbs:0,protein:33.5,fat:19.5},{name:"White Rice",grams:140,calories:182,carbs:40,protein:3.3,fat:0.4},{name:"Broccoli",grams:60,calories:20,carbs:4.2,protein:1.7,fat:0.2},{name:"Edamame",grams:50,calories:60,carbs:3.8,protein:5.4,fat:2.7},{name:"Soy Sauce",grams:10,calories:5,carbs:0.7,protein:0.9,fat:0}]},
+  { name:"Chicken Alfredo",cuisine:"Italian",servingSize:"1 plate",tags:["high-protein","comfort-food"],ingredients:[{name:"Chicken Breast",grams:150,calories:248,carbs:0,protein:47,fat:5.4},{name:"Penne Pasta",grams:120,calories:180,carbs:37,protein:6,fat:1},{name:"Parmesan Cheese",grams:25,calories:100,carbs:0.8,protein:6.7,fat:7.5},{name:"Butter",grams:15,calories:108,carbs:0,protein:0.1,fat:12.2},{name:"Garlic",grams:8,calories:12,carbs:2.6,protein:0.5,fat:0.1}]},
+  { name:"Lamb Biryani",cuisine:"Indian",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Ground Lamb",grams:130,calories:325,carbs:0,protein:26,fat:24.3},{name:"Basmati Rice",grams:150,calories:195,carbs:43,protein:3.8,fat:0.5},{name:"Onion",grams:60,calories:24,carbs:5.6,protein:0.7,fat:0.1},{name:"Greek Yogurt",grams:40,calories:39,carbs:2.4,protein:4,fat:0.3},{name:"Garlic",grams:8,calories:12,carbs:2.6,protein:0.5,fat:0.1}]},
+  { name:"Grilled Halloumi Salad",cuisine:"Mediterranean",servingSize:"1 plate",tags:["vegetarian"],ingredients:[{name:"Halloumi Cheese",grams:80,calories:256,carbs:2.4,protein:17.6,fat:20},{name:"Cherry Tomatoes",grams:80,calories:14,carbs:3.1,protein:0.7,fat:0.2},{name:"Cucumber",grams:80,calories:12,carbs:2.9,protein:0.5,fat:0.1},{name:"Quinoa",grams:100,calories:120,carbs:21,protein:4.4,fat:1.9},{name:"Olive Oil",grams:10,calories:88,carbs:0,protein:0,fat:10},{name:"Lemon",grams:15,calories:4,carbs:1.4,protein:0.2,fat:0.1}]},
+  { name:"Tofu Pad See Ew",cuisine:"Thai",servingSize:"1 plate",tags:["vegetarian"],ingredients:[{name:"Firm Tofu",grams:150,calories:120,carbs:3,protein:12.5,fat:7.2},{name:"Rice Noodles",grams:130,calories:141,carbs:34.7,protein:1.2,fat:0.2},{name:"Broccoli",grams:80,calories:27,carbs:5.6,protein:2.2,fat:0.3},{name:"Egg",grams:50,calories:72,carbs:0.4,protein:6.3,fat:5},{name:"Soy Sauce",grams:15,calories:8,carbs:1,protein:1.3,fat:0},{name:"Sesame Oil",grams:5,calories:44,carbs:0,protein:0,fat:5}]},
+  { name:"Meatball Sub",cuisine:"American",servingSize:"1 sub",tags:["comfort-food","high-protein"],ingredients:[{name:"Ground Beef (lean)",grams:150,calories:250,carbs:0,protein:38,fat:10},{name:"Sub Roll",grams:75,calories:206,carbs:39.3,protein:7,fat:2.3},{name:"Tomato Sauce",grams:80,calories:24,carbs:5.6,protein:0.8,fat:0.2},{name:"Mozzarella Cheese",grams:40,calories:113,carbs:0.8,protein:8,fat:8.7}]},
+  { name:"Chicken Shawarma Plate",cuisine:"Middle Eastern",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:170,calories:281,carbs:0,protein:53,fat:6.1},{name:"Pita Bread",grams:60,calories:165,carbs:33,protein:5.5,fat:0.7},{name:"Hummus",grams:50,calories:88,carbs:8,protein:4,fat:5.2},{name:"Cucumber",grams:60,calories:9,carbs:2.2,protein:0.4,fat:0.1},{name:"Tomato",grams:60,calories:11,carbs:2.3,protein:0.5,fat:0.1}]},
+  { name:"Tteokbokki",cuisine:"Korean",servingSize:"1 bowl",tags:["vegetarian","comfort-food"],ingredients:[{name:"Rice Cakes",grams:200,calories:390,carbs:86,protein:6,fat:0.8},{name:"Fish Cake",grams:60,calories:55,carbs:6,protein:5,fat:1},{name:"Green Onion",grams:15,calories:5,carbs:1,protein:0.3,fat:0.1},{name:"Egg",grams:50,calories:72,carbs:0.4,protein:6.3,fat:5},{name:"Sesame Oil",grams:5,calories:44,carbs:0,protein:0,fat:5}]},
+  { name:"Prawn Laksa",cuisine:"Thai",servingSize:"1 bowl",tags:["seafood"],ingredients:[{name:"Shrimp",grams:130,calories:130,carbs:1.3,protein:25,fat:2},{name:"Rice Noodles",grams:100,calories:108,carbs:26.7,protein:0.9,fat:0.2},{name:"Coconut Milk",grams:100,calories:154,carbs:2.8,protein:1.4,fat:16},{name:"Bean Sprouts",grams:40,calories:13,carbs:2.5,protein:1.2,fat:0.1},{name:"Lime",grams:15,calories:5,carbs:1.6,protein:0.1,fat:0}]},
+  { name:"Risotto with Mushrooms",cuisine:"Italian",servingSize:"1 bowl",tags:["vegetarian","comfort-food"],ingredients:[{name:"Arborio Rice",grams:100,calories:130,carbs:29,protein:2.7,fat:0.2},{name:"Mushrooms",grams:120,calories:26,carbs:3.9,protein:3.7,fat:0.4},{name:"Parmesan Cheese",grams:25,calories:100,carbs:0.8,protein:6.7,fat:7.5},{name:"Butter",grams:15,calories:108,carbs:0,protein:0.1,fat:12.2},{name:"Onion",grams:40,calories:16,carbs:3.8,protein:0.4,fat:0.1},{name:"Olive Oil",grams:8,calories:70,carbs:0,protein:0,fat:8}]},
+  { name:"Cobb Salad",cuisine:"American",servingSize:"1 bowl",tags:["high-protein","low-carb"],ingredients:[{name:"Chicken Breast",grams:140,calories:231,carbs:0,protein:43.5,fat:5},{name:"Egg",grams:50,calories:72,carbs:0.4,protein:6.3,fat:5},{name:"Avocado",grams:50,calories:80,carbs:4.3,protein:1,fat:7.3},{name:"Cherry Tomatoes",grams:60,calories:11,carbs:2.3,protein:0.5,fat:0.1},{name:"Romaine Lettuce",grams:100,calories:17,carbs:3.3,protein:1.2,fat:0.3},{name:"Cheddar Cheese",grams:20,calories:81,carbs:0.3,protein:5,fat:6.5}]},
+  { name:"Veggie Sushi Rolls",cuisine:"Japanese",servingSize:"8 pieces",tags:["vegetarian"],ingredients:[{name:"White Rice",grams:180,calories:234,carbs:52,protein:4.2,fat:0.5},{name:"Avocado",grams:50,calories:80,carbs:4.3,protein:1,fat:7.3},{name:"Cucumber",grams:60,calories:9,carbs:2.2,protein:0.4,fat:0.1},{name:"Carrot",grams:40,calories:17,carbs:3.8,protein:0.4,fat:0.1},{name:"Nori Seaweed",grams:8,calories:5,carbs:0.8,protein:0.7,fat:0},{name:"Soy Sauce",grams:10,calories:5,carbs:0.7,protein:0.9,fat:0}]},
+  { name:"Chipotle Chicken Bowl",cuisine:"Mexican",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Thigh",grams:160,calories:288,carbs:0,protein:32,fat:17.6},{name:"Brown Rice",grams:130,calories:143,carbs:30,protein:3,fat:1.1},{name:"Black Beans",grams:70,calories:92,carbs:16.6,protein:6.1,fat:0.5},{name:"Corn",grams:50,calories:43,carbs:9.6,protein:1.6,fat:0.6},{name:"Avocado",grams:40,calories:64,carbs:3.4,protein:0.8,fat:5.9}]},
+  { name:"Minestrone Soup",cuisine:"Italian",servingSize:"2 cups",tags:["vegetarian","high-fiber"],ingredients:[{name:"White Beans",grams:80,calories:100,carbs:17.8,protein:6.8,fat:0.4},{name:"Penne Pasta",grams:50,calories:75,carbs:15.4,protein:2.5,fat:0.4},{name:"Zucchini",grams:60,calories:10,carbs:1.9,protein:0.8,fat:0.2},{name:"Carrot",grams:50,calories:21,carbs:4.8,protein:0.5,fat:0.1},{name:"Tomato Sauce",grams:100,calories:30,carbs:7,protein:1,fat:0.2},{name:"Spinach",grams:40,calories:9,carbs:1.4,protein:1.2,fat:0.2},{name:"Olive Oil",grams:10,calories:88,carbs:0,protein:0,fat:10}]},
+  { name:"Saag Chicken",cuisine:"Indian",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:160,calories:264,carbs:0,protein:50,fat:5.8},{name:"Spinach",grams:150,calories:35,carbs:5.4,protein:4.3,fat:0.6},{name:"Onion",grams:50,calories:20,carbs:4.7,protein:0.6,fat:0.1},{name:"Greek Yogurt",grams:40,calories:39,carbs:2.4,protein:4,fat:0.3},{name:"Brown Rice",grams:140,calories:154,carbs:32,protein:3.3,fat:1.2}]},
+  { name:"Stuffed Grape Leaves",cuisine:"Middle Eastern",servingSize:"8 pieces",tags:["balanced"],ingredients:[{name:"White Rice",grams:120,calories:156,carbs:34.4,protein:2.8,fat:0.3},{name:"Ground Lamb",grams:80,calories:200,carbs:0,protein:16,fat:14.9},{name:"Onion",grams:40,calories:16,carbs:3.8,protein:0.4,fat:0.1},{name:"Lemon",grams:15,calories:4,carbs:1.4,protein:0.2,fat:0.1},{name:"Olive Oil",grams:10,calories:88,carbs:0,protein:0,fat:10},{name:"Tomato",grams:50,calories:9,carbs:1.9,protein:0.4,fat:0.1}]},
+  { name:"Doenjang Jjigae",cuisine:"Korean",servingSize:"1 bowl",tags:["comfort-food"],ingredients:[{name:"Firm Tofu",grams:120,calories:96,carbs:2.4,protein:10,fat:5.7},{name:"Miso Paste",grams:25,calories:50,carbs:6.3,protein:3,fat:1.5},{name:"Zucchini",grams:60,calories:10,carbs:1.9,protein:0.8,fat:0.2},{name:"Onion",grams:40,calories:16,carbs:3.8,protein:0.4,fat:0.1},{name:"Mushrooms",grams:50,calories:11,carbs:1.6,protein:1.6,fat:0.2},{name:"White Rice",grams:160,calories:208,carbs:46,protein:3.7,fat:0.4}]},
+  { name:"Chicken Souvlaki Plate",cuisine:"Mediterranean",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:170,calories:281,carbs:0,protein:53,fat:6.1},{name:"Pita Bread",grams:60,calories:165,carbs:33,protein:5.5,fat:0.7},{name:"Greek Yogurt",grams:50,calories:49,carbs:3,protein:5,fat:0.4},{name:"Cucumber",grams:60,calories:9,carbs:2.2,protein:0.4,fat:0.1},{name:"Tomato",grams:60,calories:11,carbs:2.3,protein:0.5,fat:0.1},{name:"Red Onion",grams:20,calories:8,carbs:1.9,protein:0.2,fat:0}]},
+  { name:"Pulled Pork Sandwich",cuisine:"American",servingSize:"1 sandwich",tags:["high-protein","comfort-food"],ingredients:[{name:"Pork Shoulder",grams:150,calories:330,carbs:0,protein:33,fat:21},{name:"Sub Roll",grams:75,calories:206,carbs:39.3,protein:7,fat:2.3},{name:"BBQ Sauce",grams:30,calories:48,carbs:11,protein:0.3,fat:0.1},{name:"Coleslaw Mix",grams:60,calories:14,carbs:3,protein:0.8,fat:0.1}]},
+  { name:"Shrimp Scampi",cuisine:"Italian",servingSize:"1 plate",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:160,calories:160,carbs:1.6,protein:31,fat:2.5},{name:"Spaghetti Pasta",grams:120,calories:180,carbs:37,protein:6,fat:1},{name:"Butter",grams:15,calories:108,carbs:0,protein:0.1,fat:12.2},{name:"Garlic",grams:10,calories:15,carbs:3.3,protein:0.6,fat:0.1},{name:"Lemon",grams:15,calories:4,carbs:1.4,protein:0.2,fat:0.1}]},
+  { name:"Veggie Stir Fry with Tofu",cuisine:"Thai",servingSize:"1 plate",tags:["vegetarian"],ingredients:[{name:"Firm Tofu",grams:160,calories:128,carbs:3.2,protein:13.3,fat:7.6},{name:"Bell Pepper",grams:70,calories:21,carbs:4.7,protein:0.6,fat:0.1},{name:"Carrot",grams:50,calories:21,carbs:4.8,protein:0.5,fat:0.1},{name:"Mushrooms",grams:60,calories:13,carbs:2,protein:1.9,fat:0.2},{name:"Brown Rice",grams:150,calories:165,carbs:35,protein:3.5,fat:1.3},{name:"Soy Sauce",grams:12,calories:6,carbs:0.8,protein:1.1,fat:0},{name:"Sesame Oil",grams:5,calories:44,carbs:0,protein:0,fat:5}]},
+  { name:"Chicken Fried Rice",cuisine:"American",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:140,calories:231,carbs:0,protein:43.5,fat:5},{name:"White Rice",grams:180,calories:234,carbs:52,protein:4.2,fat:0.5},{name:"Egg",grams:50,calories:72,carbs:0.4,protein:6.3,fat:5},{name:"Green Peas",grams:40,calories:34,carbs:6,protein:2.2,fat:0.2},{name:"Carrot",grams:40,calories:17,carbs:3.8,protein:0.4,fat:0.1},{name:"Soy Sauce",grams:12,calories:6,carbs:0.8,protein:1.1,fat:0},{name:"Sesame Oil",grams:5,calories:44,carbs:0,protein:0,fat:5}]},
+  { name:"Caprese Panini",cuisine:"Italian",servingSize:"1 sandwich",tags:["vegetarian"],ingredients:[{name:"Mozzarella Cheese",grams:60,calories:170,carbs:1.2,protein:12,fat:13},{name:"Tomato",grams:80,calories:14,carbs:3.1,protein:0.7,fat:0.2},{name:"Flatbread",grams:90,calories:250,carbs:44,protein:8,fat:5},{name:"Olive Oil",grams:8,calories:70,carbs:0,protein:0,fat:8},{name:"Spinach",grams:20,calories:5,carbs:0.7,protein:0.6,fat:0.1}]},
+  { name:"Mujaddara",cuisine:"Middle Eastern",servingSize:"1 bowl",tags:["vegetarian","high-fiber"],ingredients:[{name:"Red Lentils",grams:100,calories:116,carbs:20,protein:9,fat:0.4},{name:"White Rice",grams:120,calories:156,carbs:34.4,protein:2.8,fat:0.3},{name:"Onion",grams:80,calories:32,carbs:7.5,protein:0.9,fat:0.1},{name:"Olive Oil",grams:15,calories:132,carbs:0,protein:0,fat:15},{name:"Greek Yogurt",grams:50,calories:49,carbs:3,protein:5,fat:0.4}]},
+  { name:"Pork Gyoza Plate",cuisine:"Japanese",servingSize:"8 pieces",tags:["comfort-food"],ingredients:[{name:"Pork Shoulder",grams:100,calories:220,carbs:0,protein:22,fat:14},{name:"Cabbage",grams:60,calories:15,carbs:3.5,protein:0.8,fat:0.1},{name:"Gyoza Wrappers",grams:80,calories:224,carbs:46,protein:6.4,fat:0.6},{name:"White Rice",grams:140,calories:182,carbs:40,protein:3.3,fat:0.4},{name:"Soy Sauce",grams:12,calories:6,carbs:0.8,protein:1.1,fat:0},{name:"Sesame Oil",grams:5,calories:44,carbs:0,protein:0,fat:5}]},
+  { name:"Chicken Korma",cuisine:"Indian",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Thigh",grams:150,calories:270,carbs:0,protein:30,fat:16.5},{name:"Greek Yogurt",grams:50,calories:49,carbs:3,protein:5,fat:0.4},{name:"Coconut Milk",grams:50,calories:77,carbs:1.4,protein:0.7,fat:8},{name:"Onion",grams:50,calories:20,carbs:4.7,protein:0.6,fat:0.1},{name:"Basmati Rice",grams:140,calories:182,carbs:40,protein:3.5,fat:0.5},{name:"Peanuts",grams:15,calories:86,carbs:2.4,protein:3.9,fat:7.4}]},
+  { name:"Beef Bulgogi Lettuce Wraps",cuisine:"Korean",servingSize:"4 wraps",tags:["high-protein","low-carb"],ingredients:[{name:"Beef Sirloin",grams:180,calories:297,carbs:0,protein:47,fat:11.3},{name:"Romaine Lettuce",grams:80,calories:13,carbs:2.6,protein:1,fat:0.3},{name:"White Rice",grams:100,calories:130,carbs:28.7,protein:2.3,fat:0.3},{name:"Carrot",grams:30,calories:12,carbs:2.9,protein:0.3,fat:0.1},{name:"Soy Sauce",grams:12,calories:6,carbs:0.8,protein:1.1,fat:0},{name:"Sesame Oil",grams:5,calories:44,carbs:0,protein:0,fat:5}]},
+  { name:"Coconut Shrimp Curry",cuisine:"Thai",servingSize:"1 bowl",tags:["seafood"],ingredients:[{name:"Shrimp",grams:150,calories:150,carbs:1.5,protein:29,fat:2.4},{name:"Coconut Milk",grams:100,calories:154,carbs:2.8,protein:1.4,fat:16},{name:"Bell Pepper",grams:60,calories:18,carbs:4,protein:0.5,fat:0.1},{name:"Spinach",grams:40,calories:9,carbs:1.4,protein:1.2,fat:0.2},{name:"White Rice",grams:150,calories:195,carbs:43,protein:3.5,fat:0.4}]},
+  { name:"Turkey Meatballs & Zoodles",cuisine:"American",servingSize:"1 bowl",tags:["high-protein","low-carb"],ingredients:[{name:"Ground Turkey",grams:170,calories:272,carbs:0,protein:36,fat:14},{name:"Zucchini",grams:200,calories:34,carbs:6.3,protein:2.4,fat:0.6},{name:"Tomato Sauce",grams:100,calories:30,carbs:7,protein:1,fat:0.2},{name:"Parmesan Cheese",grams:15,calories:60,carbs:0.5,protein:4,fat:4.5},{name:"Olive Oil",grams:8,calories:70,carbs:0,protein:0,fat:8}]},
+  { name:"Moroccan Chickpea Stew",cuisine:"Middle Eastern",servingSize:"1 bowl",tags:["vegetarian","high-fiber"],ingredients:[{name:"Chickpeas",grams:130,calories:212,carbs:35.5,protein:11.3,fat:3.3},{name:"Sweet Potato",grams:120,calories:103,carbs:24,protein:1.9,fat:0.1},{name:"Tomato",grams:80,calories:14,carbs:3.1,protein:0.7,fat:0.2},{name:"Onion",grams:50,calories:20,carbs:4.7,protein:0.6,fat:0.1},{name:"Olive Oil",grams:10,calories:88,carbs:0,protein:0,fat:10},{name:"Quinoa",grams:80,calories:96,carbs:16.8,protein:3.5,fat:1.5}]},
+  { name:"Gnocchi with Pesto",cuisine:"Italian",servingSize:"1 plate",tags:["vegetarian","comfort-food"],ingredients:[{name:"Potato Gnocchi",grams:200,calories:340,carbs:68,protein:8,fat:2.8},{name:"Pesto Sauce",grams:35,calories:140,carbs:2.3,protein:2.3,fat:14},{name:"Cherry Tomatoes",grams:60,calories:11,carbs:2.3,protein:0.5,fat:0.1},{name:"Parmesan Cheese",grams:15,calories:60,carbs:0.5,protein:4,fat:4.5}]},
+  { name:"Shrimp Ceviche Bowl",cuisine:"Mexican",servingSize:"1 bowl",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:160,calories:160,carbs:1.6,protein:31,fat:2.5},{name:"Avocado",grams:60,calories:96,carbs:5.1,protein:1.2,fat:8.8},{name:"Tomato",grams:80,calories:14,carbs:3.1,protein:0.7,fat:0.2},{name:"Cucumber",grams:60,calories:9,carbs:2.2,protein:0.4,fat:0.1},{name:"Lime",grams:15,calories:5,carbs:1.6,protein:0.1,fat:0},{name:"Corn Tortillas",grams:60,calories:127,carbs:26,protein:3.3,fat:1.5}]},
+  { name:"Udon Noodle Soup",cuisine:"Japanese",servingSize:"1 bowl",tags:["comfort-food"],ingredients:[{name:"Udon Noodles",grams:180,calories:190,carbs:40,protein:5.4,fat:0.5},{name:"Chicken Thigh",grams:100,calories:180,carbs:0,protein:20,fat:11},{name:"Spinach",grams:40,calories:9,carbs:1.4,protein:1.2,fat:0.2},{name:"Green Onion",grams:10,calories:3,carbs:0.7,protein:0.2,fat:0},{name:"Egg",grams:50,calories:72,carbs:0.4,protein:6.3,fat:5},{name:"Soy Sauce",grams:15,calories:8,carbs:1,protein:1.3,fat:0}]},
+  { name:"Mediterranean Tuna Salad",cuisine:"Mediterranean",servingSize:"1 plate",tags:["high-protein","low-carb"],ingredients:[{name:"Canned Tuna",grams:130,calories:143,carbs:0,protein:30.3,fat:1.6},{name:"Cherry Tomatoes",grams:80,calories:14,carbs:3.1,protein:0.7,fat:0.2},{name:"Cucumber",grams:80,calories:12,carbs:2.9,protein:0.5,fat:0.1},{name:"Red Onion",grams:25,calories:10,carbs:2.3,protein:0.3,fat:0},{name:"Olive Oil",grams:12,calories:106,carbs:0,protein:0,fat:12},{name:"Whole Wheat Bread",grams:60,calories:155,carbs:26,protein:5.4,fat:2.4}]},
+  { name:"Beef & Broccoli",cuisine:"American",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:170,calories:281,carbs:0,protein:44.6,fat:10.6},{name:"Broccoli",grams:150,calories:51,carbs:10.5,protein:4.2,fat:0.6},{name:"White Rice",grams:150,calories:195,carbs:43,protein:3.5,fat:0.4},{name:"Soy Sauce",grams:15,calories:8,carbs:1,protein:1.3,fat:0},{name:"Sesame Oil",grams:5,calories:44,carbs:0,protein:0,fat:5}]},
+  { name:"Veggie Burrito",cuisine:"Mexican",servingSize:"1 burrito",tags:["vegetarian","high-fiber"],ingredients:[{name:"Whole Wheat Tortilla",grams:70,calories:190,carbs:32,protein:5,fat:5},{name:"Black Beans",grams:100,calories:132,carbs:23.7,protein:8.9,fat:0.5},{name:"Brown Rice",grams:100,calories:110,carbs:23,protein:2.3,fat:0.8},{name:"Bell Pepper",grams:50,calories:15,carbs:3.3,protein:0.4,fat:0.1},{name:"Avocado",grams:50,calories:80,carbs:4.3,protein:1,fat:7.3},{name:"Cheddar Cheese",grams:20,calories:81,carbs:0.3,protein:5,fat:6.5}]},
+  { name:"Okonomiyaki",cuisine:"Japanese",servingSize:"1 pancake",tags:["comfort-food"],ingredients:[{name:"Cabbage",grams:150,calories:38,carbs:8.8,protein:1.9,fat:0.2},{name:"Rice Flour",grams:50,calories:182,carbs:40,protein:2.9,fat:0.6},{name:"Egg",grams:100,calories:144,carbs:0.8,protein:12.6,fat:10},{name:"Pork Belly",grams:50,calories:215,carbs:0,protein:4.5,fat:22.5},{name:"Green Onion",grams:15,calories:5,carbs:1,protein:0.3,fat:0.1}]},
+  { name:"Paneer Tikka Wrap",cuisine:"Indian",servingSize:"1 wrap",tags:["vegetarian","high-protein"],ingredients:[{name:"Paneer",grams:100,calories:260,carbs:3,protein:18.3,fat:20},{name:"Whole Wheat Tortilla",grams:70,calories:190,carbs:32,protein:5,fat:5},{name:"Bell Pepper",grams:50,calories:15,carbs:3.3,protein:0.4,fat:0.1},{name:"Onion",grams:40,calories:16,carbs:3.8,protein:0.4,fat:0.1},{name:"Greek Yogurt",grams:40,calories:39,carbs:2.4,protein:4,fat:0.3}]},
+  { name:"Kale & Quinoa Salad",cuisine:"American",servingSize:"1 bowl",tags:["vegetarian","high-fiber"],ingredients:[{name:"Kale",grams:80,calories:39,carbs:7.1,protein:2.7,fat:0.5},{name:"Quinoa",grams:120,calories:144,carbs:25.2,protein:5.3,fat:2.3},{name:"Avocado",grams:50,calories:80,carbs:4.3,protein:1,fat:7.3},{name:"Cherry Tomatoes",grams:60,calories:11,carbs:2.3,protein:0.5,fat:0.1},{name:"Peanuts",grams:20,calories:114,carbs:3.2,protein:5.2,fat:9.8},{name:"Olive Oil",grams:10,calories:88,carbs:0,protein:0,fat:10}]},
+  { name:"Lamb Gyro",cuisine:"Mediterranean",servingSize:"1 gyro",tags:["high-protein"],ingredients:[{name:"Ground Lamb",grams:120,calories:300,carbs:0,protein:24,fat:22.4},{name:"Pita Bread",grams:60,calories:165,carbs:33,protein:5.5,fat:0.7},{name:"Greek Yogurt",grams:40,calories:39,carbs:2.4,protein:4,fat:0.3},{name:"Tomato",grams:50,calories:9,carbs:1.9,protein:0.4,fat:0.1},{name:"Red Onion",grams:20,calories:8,carbs:1.9,protein:0.2,fat:0},{name:"Cucumber",grams:40,calories:6,carbs:1.5,protein:0.3,fat:0.1}]}
+];
+
+// Inject spices into recipes
+RECIPES.forEach(function(r) {
+  var spices = RECIPE_SPICE_OVERRIDES[r.name] || CUISINE_SPICES[r.cuisine] || [];
+  spices.forEach(function(s) {
+    r.ingredients.push({ name: s.name, grams: s.grams, calories: 0, carbs: 0, protein: 0, fat: 0, isSpice: true });
+  });
+  r.totalMacros = r.ingredients.reduce(function(a, i) {
+    return { calories: a.calories+i.calories, carbs: a.carbs+i.carbs, protein: a.protein+i.protein, fat: a.fat+i.fat };
+  }, { calories:0, carbs:0, protein:0, fat:0 });
+});
+
+var BREAKFAST_RECIPES = RECIPES.filter(function(r) { return r.tags.indexOf("breakfast") !== -1; });
+var MAIN_RECIPES = RECIPES.filter(function(r) { return r.tags.indexOf("breakfast") === -1; });
+
+var INGREDIENT_CATEGORIES = {
+  "Chicken Breast":"Proteins","Chicken Thigh":"Proteins","Chicken Wings":"Proteins","Ground Beef (lean)":"Proteins","Beef Sirloin":"Proteins","Pork Shoulder":"Proteins","Pork Belly":"Proteins","Pork Loin":"Proteins","Ground Lamb":"Proteins","Ground Turkey":"Proteins","Salmon Fillet":"Proteins","Shrimp":"Proteins","White Fish (cod)":"Proteins","Ahi Tuna":"Proteins","Canned Tuna":"Proteins","Fish Cake":"Proteins","Turkey Breast (deli)":"Proteins","Firm Tofu":"Proteins","Paneer":"Proteins","Halloumi Cheese":"Proteins","Egg":"Proteins",
+  "Broccoli":"Vegetables","Spinach":"Vegetables","Bell Pepper":"Vegetables","Onion":"Vegetables","Red Onion":"Vegetables","Carrot":"Vegetables","Tomato":"Vegetables","Cherry Tomatoes":"Vegetables","Cucumber":"Vegetables","Zucchini":"Vegetables","Cabbage":"Vegetables","Mushrooms":"Vegetables","Bean Sprouts":"Vegetables","Bamboo Shoots":"Vegetables","Green Beans":"Vegetables","Green Onion":"Vegetables","Garlic":"Vegetables","Coleslaw Mix":"Vegetables","Green Peas":"Vegetables","Cilantro":"Vegetables","Asparagus":"Vegetables","Romaine Lettuce":"Vegetables","Kale":"Vegetables","Cauliflower":"Vegetables","Eggplant":"Vegetables","Corn":"Vegetables","Nori Seaweed":"Vegetables","Kimchi":"Vegetables",
+  "Brown Rice":"Grains & Starches","White Rice":"Grains & Starches","Basmati Rice":"Grains & Starches","Arborio Rice":"Grains & Starches","Rice Flour":"Grains & Starches","Spaghetti Pasta":"Grains & Starches","Penne Pasta":"Grains & Starches","Rice Noodles":"Grains & Starches","Ramen Noodles":"Grains & Starches","Sweet Potato Noodles":"Grains & Starches","Udon Noodles":"Grains & Starches","Quinoa":"Grains & Starches","Rolled Oats":"Grains & Starches","Granola":"Grains & Starches","Corn Tortillas":"Grains & Starches","Whole Wheat Tortilla":"Grains & Starches","Pita Bread":"Grains & Starches","Flatbread":"Grains & Starches","Whole Wheat Bread":"Grains & Starches","Sub Roll":"Grains & Starches","Sweet Potato":"Grains & Starches","Potato":"Grains & Starches","Black Beans":"Grains & Starches","Red Lentils":"Grains & Starches","White Beans":"Grains & Starches","Chickpeas":"Grains & Starches","Edamame":"Grains & Starches","Rice Cakes":"Grains & Starches","Gyoza Wrappers":"Grains & Starches","Panko Breadcrumbs":"Grains & Starches","Croutons":"Grains & Starches","Potato Gnocchi":"Grains & Starches",
+  "Mozzarella Cheese":"Dairy","Parmesan Cheese":"Dairy","Feta Cheese":"Dairy","Cheddar Cheese":"Dairy","Greek Yogurt":"Dairy","Whole Milk":"Dairy","Butter":"Dairy",
+  "Olive Oil":"Pantry","Sesame Oil":"Pantry","Soy Sauce":"Pantry","Tomato Sauce":"Pantry","BBQ Sauce":"Pantry","Pesto Sauce":"Pantry","Miso Paste":"Pantry","Tahini":"Pantry","Hummus":"Pantry","Coconut Milk":"Pantry","Coconut Chutney":"Pantry","Peanuts":"Pantry","Honey":"Pantry","Maple Syrup":"Pantry",
+  "Avocado":"Other","Lime":"Other","Lemon":"Other","Banana":"Other","Blueberries":"Other","Strawberries":"Other","Mango":"Other",
+  "Cumin":"Spices","Turmeric":"Spices","Garam Masala":"Spices","Coriander Powder":"Spices","Chili Powder":"Spices","Black Pepper":"Spices","Salt":"Spices","Garlic Powder":"Spices","Oregano":"Spices","Dried Basil":"Spices","Paprika":"Spices","White Pepper":"Spices","Chili Flakes":"Spices","Gochugaru":"Spices","Gochujang":"Spices","Cayenne":"Spices","Cinnamon":"Spices","Cardamom":"Spices","Bay Leaf":"Spices","Allspice":"Spices","Ginger (ground)":"Spices","Curry Powder":"Spices","Dried Parsley":"Spices","Sumac":"Spices"
+};
+
+function getCategory(name) { return INGREDIENT_CATEGORIES[name] || "Other"; }
+function round1(n) { return Math.round(n * 10) / 10; }
+function formatImperial(grams) {
+  var oz = grams / 28.3495;
+  if (oz >= 16) { var lbs = Math.floor(oz / 16); var rem = round1(oz % 16); return rem > 0 ? lbs+" lb "+rem+" oz" : lbs+" lb"; }
+  return round1(oz) + " oz";
+}
+
+// Build default per-100g macros for each ingredient
+var DEFAULT_MACROS_PER100 = {};
+RECIPES.forEach(function(r) {
+  r.ingredients.forEach(function(ing) {
+    if (!ing.isSpice && !DEFAULT_MACROS_PER100[ing.name] && ing.grams > 0) {
+      var s = 100 / ing.grams;
+      DEFAULT_MACROS_PER100[ing.name] = { calories: round1(ing.calories * s), carbs: round1(ing.carbs * s), protein: round1(ing.protein * s), fat: round1(ing.fat * s) };
+    }
+  });
+});
+
+function applyIngredientOverrides(ingredients, overrides) {
+  if (!overrides || Object.keys(overrides).length === 0) return;
+  ingredients.forEach(function(ing) {
+    if (ing.isSpice || !overrides[ing.name]) return;
+    var ov = overrides[ing.name];
+    var s = ing.grams / 100;
+    ing.calories = round1(ov.calories * s);
+    ing.carbs = round1(ov.carbs * s);
+    ing.protein = round1(ov.protein * s);
+    ing.fat = round1(ov.fat * s);
+  });
+}
+
+function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targetFat) {
+  var targets = [targetCal, targetCarbs, targetProtein, targetFat];
+  var keys = ["calories", "carbs", "protein", "fat"];
+
+  function computeTotals() {
+    var t = [0,0,0,0];
+    allMealData.forEach(function(meal) {
+      meal.ingredients.forEach(function(ing) {
+        if (!ing.isSpice) { t[0]+=ing.calories; t[1]+=ing.carbs; t[2]+=ing.protein; t[3]+=ing.fat; }
+      });
+    });
+    return t;
+  }
+
+  function canAdjust(ing) { return !ing.isSpice && !isUnitBased(ing.name); }
+  function macroCal(k, v) { return k === 3 ? v*9 : v*4; }
+
+  var used = {};
+
+  for (var iter = 0; iter < 30; iter++) {
+    var t = computeTotals();
+
+    // Find worst macro (carbs=1, protein=2, fat=3) by % deviation
+    var worstK = -1, worstDev = 0;
+    for (var k = 1; k <= 3; k++) {
+      if (targets[k] <= 0) continue;
+      var dev = Math.abs(t[k] - targets[k]) / targets[k];
+      if (dev > worstDev) { worstDev = dev; worstK = k; }
+    }
+    if (worstDev <= 0.03) break;
+
+    var gap = targets[worstK] - t[worstK];
+    var worstKey = keys[worstK];
+
+    // Find best lever: highest selectivity + bonus for unused ingredients
+    var bestMi = -1, bestIi = -1, bestSel = -999;
+    allMealData.forEach(function(meal, mi) {
+      meal.ingredients.forEach(function(ing, ii) {
+        if (!canAdjust(ing) || ing.calories < 5 || ing[worstKey] < 0.5) return;
+        var sel = ing.calories > 0 ? macroCal(worstK, ing[worstKey]) / ing.calories : 0;
+        if (!used[mi + ":" + ii]) sel += 0.1;
+        if (sel > bestSel) { bestSel = sel; bestMi = mi; bestIi = ii; }
+      });
+    });
+    if (bestMi < 0) break;
+
+    var ing = allMealData[bestMi].ingredients[bestIi];
+    var partialGap = gap * 0.6;
+    var targetVal = ing[worstKey] + partialGap;
+    if (ing[worstKey] < 0.1) continue;
+    var scale = targetVal / ing[worstKey];
+    scale = Math.max(0.4, Math.min(2.5, scale));
+    if (Math.abs(scale - 1) < 0.02) continue;
+
+    var oldG = ing.grams;
+    var newG = Math.round(oldG * scale);
+    if (newG === oldG || newG < 5) continue;
+    var actualScale = newG / oldG;
+    ing.adjustment = "serving adjusted from " + oldG + "g to " + newG + "g to meet " + worstKey + " target";
+    ing.calories = round1(ing.calories * actualScale);
+    ing.carbs = round1(ing.carbs * actualScale);
+    ing.protein = round1(ing.protein * actualScale);
+    ing.fat = round1(ing.fat * actualScale);
+    ing.grams = newG;
+    used[bestMi + ":" + bestIi] = true;
+  }
+
+  return allMealData;
+}
+
+function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, overrides) {
+  var days = [], ingredientFrequency = {};
+  function overlapScore(recipe) {
+    var s = 0; recipe.ingredients.forEach(function(ing) { if (!ing.isSpice && ingredientFrequency[ing.name]) s += ingredientFrequency[ing.name]; }); return s;
+  }
+
+  for (var d = 0; d < 7; d++) {
+    var mealsPerDay = targetCal > 2200 ? 3 : (targetCal < 1500 ? 2 : (d % 2 === 0 ? 3 : 2));
+    var includeBreakfast = mealsPerDay >= 3 && d % 3 === 0;
+    var usedDay = {}, recentRecipes = {};
+    days.slice(Math.max(0, d - 2)).forEach(function(day) { day.meals.forEach(function(m) { recentRecipes[m.originalName] = true; }); });
+
+    // Score a recipe combo by how well its total macros match all targets
+    function comboScore(picks) {
+      var tc=0, tb=0, tp=0, tf=0;
+      picks.forEach(function(r) { tc+=r.totalMacros.calories; tb+=r.totalMacros.carbs; tp+=r.totalMacros.protein; tf+=r.totalMacros.fat; });
+      if (tc < 1) return 999;
+      var s = Math.pow((tc-targetCal)/targetCal, 2);
+      s += Math.pow((tb-targetCarbs)/Math.max(targetCarbs,1), 2);
+      s += Math.pow((tp-targetProtein)/Math.max(targetProtein,1), 2);
+      s += Math.pow((tf-targetFat)/Math.max(targetFat,1), 2);
+      return s - overlapScore(picks[0]) * 0.01;
+    }
+
+    var bestPicks = null, bestScore = Infinity;
+    // Try 8 random combos scored by ALL macros (not just calories)
+    for (var attempt = 0; attempt < 8; attempt++) {
+      var picks = [], usedAttempt = {};
+      for (var m = 0; m < mealsPerDay; m++) {
+        var pool = (m === 0 && includeBreakfast) ? BREAKFAST_RECIPES : MAIN_RECIPES;
+        var scored = [];
+        for (var i = 0; i < pool.length; i++) {
+          var r = pool[i], gi = RECIPES.indexOf(r);
+          if (usedAttempt[gi] || recentRecipes[r.name]) continue;
+          // Score: how well does adding this recipe improve the combo?
+          var testPicks = picks.concat([r]);
+          scored.push({ recipe: r, index: gi, score: comboScore(testPicks) });
+        }
+        scored.sort(function(a, b) { return a.score - b.score; });
+        // Pick from top 3 with randomness for variety across days
+        var pick = scored[Math.min(Math.floor(Math.random() * 3), scored.length - 1)] || scored[0];
+        if (!pick) continue;
+        usedAttempt[pick.index] = true;
+        picks.push(pick.recipe);
+      }
+      var sc = comboScore(picks);
+      if (sc < bestScore) { bestScore = sc; bestPicks = picks; }
+    }
+
+    var allMealData = (bestPicks || []).map(function(recipe) {
+      var ings = recipe.ingredients.map(function(ing) { return Object.assign({}, ing, { adjustment: null }); });
+      applyIngredientOverrides(ings, overrides);
+      return { recipe: recipe, ingredients: ings };
+    });
+
+    adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targetFat);
+
+    var dayTotals = { calories:0, carbs:0, protein:0, fat:0 }, dayMeals = [];
+    allMealData.forEach(function(md) {
+      var mt = md.ingredients.filter(function(i){return !i.isSpice;}).reduce(function(a, i) { return { calories: a.calories+i.calories, carbs: a.carbs+i.carbs, protein: a.protein+i.protein, fat: a.fat+i.fat }; }, { calories:0, carbs:0, protein:0, fat:0 });
+      dayTotals.calories += mt.calories; dayTotals.carbs += mt.carbs; dayTotals.protein += mt.protein; dayTotals.fat += mt.fat;
+      md.ingredients.forEach(function(ing) { if (!ing.isSpice) ingredientFrequency[ing.name] = (ingredientFrequency[ing.name] || 0) + 1; });
+      dayMeals.push({ originalName: md.recipe.name, name: md.recipe.name, cuisine: md.recipe.cuisine, isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1, ingredients: md.ingredients, totalMacros: mt });
+    });
+    days.push({ day: d, meals: dayMeals, totals: { calories: round1(dayTotals.calories), carbs: round1(dayTotals.carbs), protein: round1(dayTotals.protein), fat: round1(dayTotals.fat) } });
+  }
+  return days;
+}
+
+function buildGroceryList(plan) {
+  var map = {};
+  plan.forEach(function(day, di) {
+    day.meals.forEach(function(meal) {
+      meal.ingredients.forEach(function(ing) {
+        if (!map[ing.name]) map[ing.name] = { name: ing.name, totalGrams: 0, totalUnits: 0, appearances: [], isSpice: !!ing.isSpice };
+        map[ing.name].totalGrams += ing.grams;
+        if (isUnitBased(ing.name)) map[ing.name].totalUnits += Math.max(1, getUnitCount(ing.name, ing.grams));
+        map[ing.name].appearances.push("Day " + (di+1) + " \u2013 " + meal.name);
+      });
+    });
+  });
+  var categories = {};
+  Object.values(map).forEach(function(item) { var cat = getCategory(item.name); if (!categories[cat]) categories[cat] = []; categories[cat].push(item); });
+  var order = ["Proteins","Vegetables","Grains & Starches","Dairy","Pantry","Other","Spices"];
+  return order.filter(function(c) { return categories[c]; }).map(function(c) {
+    return { category: c, items: categories[c].sort(function(a, b) { return b.totalGrams - a.totalGrams; }) };
+  });
+}
+
+function groceryQtyText(item) {
+  if (item.isSpice) return Math.round(item.totalGrams) + "g (~" + Math.max(1, Math.round(item.totalGrams / 3)) + " tsp)";
+  if (isUnitBased(item.name)) {
+    var u = UNIT_INGREDIENTS[item.name];
+    return item.totalUnits + " " + (item.totalUnits === 1 ? u.unit : u.plural);
+  }
+  return formatImperial(item.totalGrams);
+}
+
+function groceryToText(groceryList) {
+  var lines = ["Weekly Grocery List","==================",""];
+  groceryList.forEach(function(section) {
+    lines.push(section.category); lines.push("-".repeat(section.category.length));
+    section.items.forEach(function(item) { lines.push("  " + item.name + " - " + groceryQtyText(item)); });
+    lines.push("");
+  });
+  return lines.join("\n");
+}
+
+var DAYS_NAMES = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+var ALL_CUISINES = [...new Set(RECIPES.map(function(r) { return r.cuisine; }))].sort();
+
+function ProgressBar(props) {
+  var pct = Math.min((props.value / props.target) * 100, 120);
+  return React.createElement("div", { className: "progress-bar" },
+    React.createElement("div", { className: "progress-fill " + props.className, style: { width: Math.min(pct, 100) + "%", opacity: pct > 105 ? 0.7 : 1 } })
+  );
+}
+
+function App() {
+  var [calories, setCalories] = React.useState(2000);
+  var [carbPct, setCarbPct] = React.useState(35);
+  var [proteinPct, setProteinPct] = React.useState(40);
+  var [fatPct, setFatPct] = React.useState(25);
+  var [plan, setPlan] = React.useState(null);
+  var [view, setView] = React.useState("plan");
+  var [swapTarget, setSwapTarget] = React.useState(null);
+  var [swapSearch, setSwapSearch] = React.useState("");
+  var [copyMsg, setCopyMsg] = React.useState("");
+  var [saveName, setSaveName] = React.useState("");
+  var [savedPlans, setSavedPlans] = React.useState(function() { try { return JSON.parse(localStorage.getItem("mealprep_plans") || "[]"); } catch(e) { return []; } });
+  var [recipeSearch, setRecipeSearch] = React.useState("");
+  var [recipeCuisine, setRecipeCuisine] = React.useState("All");
+  var [ingredientOverrides, setIngredientOverrides] = React.useState(function() { try { return JSON.parse(localStorage.getItem("mealprep_overrides") || "{}"); } catch(e) { return {}; } });
+  var [ingSearch, setIngSearch] = React.useState("");
+
+  var pctSum = carbPct + proteinPct + fatPct, pctValid = pctSum === 100;
+  var carbGrams = round1((calories * (carbPct / 100)) / 4);
+  var proteinGrams = round1((calories * (proteinPct / 100)) / 4);
+  var fatGrams = round1((calories * (fatPct / 100)) / 9);
+
+  function updateOverride(name, field, value) {
+    var next = Object.assign({}, ingredientOverrides);
+    if (!next[name]) next[name] = Object.assign({}, DEFAULT_MACROS_PER100[name]);
+    next[name][field] = Number(value) || 0;
+    setIngredientOverrides(next);
+    localStorage.setItem("mealprep_overrides", JSON.stringify(next));
+  }
+  function resetOverride(name) {
+    var next = Object.assign({}, ingredientOverrides);
+    delete next[name];
+    setIngredientOverrides(next);
+    localStorage.setItem("mealprep_overrides", JSON.stringify(next));
+  }
+  function resetAllOverrides() {
+    setIngredientOverrides({});
+    localStorage.setItem("mealprep_overrides", "{}");
+  }
+
+  var overrideCount = Object.keys(ingredientOverrides).length;
+
+  function handleGenerate() { if (!pctValid) return; setPlan(generatePlan(calories, carbGrams, proteinGrams, fatGrams, ingredientOverrides)); setView("plan"); }
+
+  function handleSave() {
+    if (!plan || !saveName.trim()) return;
+    var entry = { name: saveName.trim(), date: new Date().toLocaleDateString(), calories: calories, carbPct: carbPct, proteinPct: proteinPct, fatPct: fatPct, plan: plan };
+    var updated = [entry, ...savedPlans.filter(function(p) { return p.name !== saveName.trim(); })];
+    setSavedPlans(updated); localStorage.setItem("mealprep_plans", JSON.stringify(updated)); setSaveName("");
+    setCopyMsg("Plan saved!"); setTimeout(function() { setCopyMsg(""); }, 2000);
+  }
+  function handleLoad(entry) { setCalories(entry.calories); setCarbPct(entry.carbPct); setProteinPct(entry.proteinPct); setFatPct(entry.fatPct); setPlan(entry.plan); setView("plan"); }
+  function handleDeleteSaved(name) { var u = savedPlans.filter(function(p) { return p.name !== name; }); setSavedPlans(u); localStorage.setItem("mealprep_plans", JSON.stringify(u)); }
+
+  function handleCopyGrocery() {
+    navigator.clipboard.writeText(groceryToText(buildGroceryList(plan))).then(function() { setCopyMsg("Copied!"); setTimeout(function() { setCopyMsg(""); }, 2000); });
+  }
+
+  function handleSwap(newRecipe) {
+    if (!swapTarget || !plan) return;
+    var di = swapTarget.dayIdx, mi = swapTarget.mealIdx;
+    var newPlan = plan.map(function(day, dayI) {
+      if (dayI !== di) return day;
+      var newMeals = day.meals.map(function(meal, mealI) {
+        if (mealI !== mi) return { ...meal, ingredients: meal.ingredients.map(function(i) { return { ...i }; }) };
+        return { originalName: newRecipe.name, name: newRecipe.name, cuisine: newRecipe.cuisine, isBreakfast: newRecipe.tags.indexOf("breakfast") !== -1,
+          ingredients: newRecipe.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); }), totalMacros: { ...newRecipe.totalMacros } };
+      });
+      var mealData = newMeals.map(function(m) {
+        var ings = m.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
+        applyIngredientOverrides(ings, ingredientOverrides);
+        return { recipe: { name: m.name, tags: m.isBreakfast ? ["breakfast"] : [] }, ingredients: ings };
+      });
+      adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams);
+      var dayTotals = { calories:0, carbs:0, protein:0, fat:0 };
+      var rebuilt = mealData.map(function(md, idx) {
+        var mt = md.ingredients.filter(function(i){return !i.isSpice;}).reduce(function(a, i) { return { calories:a.calories+i.calories, carbs:a.carbs+i.carbs, protein:a.protein+i.protein, fat:a.fat+i.fat }; }, { calories:0, carbs:0, protein:0, fat:0 });
+        dayTotals.calories += mt.calories; dayTotals.carbs += mt.carbs; dayTotals.protein += mt.protein; dayTotals.fat += mt.fat;
+        return { originalName: idx === mi ? newRecipe.name : newMeals[idx].name, name: idx === mi ? newRecipe.name : newMeals[idx].name,
+          cuisine: idx === mi ? newRecipe.cuisine : newMeals[idx].cuisine, isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1, ingredients: md.ingredients, totalMacros: mt };
+      });
+      return { ...day, meals: rebuilt, totals: { calories: round1(dayTotals.calories), carbs: round1(dayTotals.carbs), protein: round1(dayTotals.protein), fat: round1(dayTotals.fat) } };
+    });
+    setPlan(newPlan); setSwapTarget(null);
+  }
+
+  var groceryList = plan ? buildGroceryList(plan) : [];
+  var filteredRecipes = RECIPES.filter(function(r) {
+    var ms = !recipeSearch || r.name.toLowerCase().indexOf(recipeSearch.toLowerCase()) !== -1 || r.ingredients.some(function(i) { return i.name.toLowerCase().indexOf(recipeSearch.toLowerCase()) !== -1; });
+    return ms && (recipeCuisine === "All" || r.cuisine === recipeCuisine);
+  });
+  var swapFiltered = RECIPES.filter(function(r) { return !swapSearch || r.name.toLowerCase().indexOf(swapSearch.toLowerCase()) !== -1 || r.cuisine.toLowerCase().indexOf(swapSearch.toLowerCase()) !== -1; });
+
+  function ingQtyDisplay(ing) {
+    if (ing.isSpice) return spiceDisplay(ing.grams);
+    var ud = getUnitDisplay(ing.name, ing.grams);
+    return ud || (ing.grams + "g");
+  }
+
+  return (
+    <div className="app">
+      <h1>Meal Prep Optimizer</h1>
+      <p className="subtitle">Generate personalized weekly meal plans with smart grocery lists</p>
+
+      <div className="card">
+        <h2>Macro Calculator</h2>
+        <div className="macro-inputs">
+          <div className="input-group"><label>Daily Calories</label><input type="number" value={calories} min={1000} max={5000} onChange={function(e){setCalories(Number(e.target.value));}} /></div>
+          <div className="input-group"><label>Carbs %</label><input type="number" value={carbPct} min={0} max={100} onChange={function(e){setCarbPct(Number(e.target.value));}} /></div>
+          <div className="input-group"><label>Protein %</label><input type="number" value={proteinPct} min={0} max={100} onChange={function(e){setProteinPct(Number(e.target.value));}} /></div>
+          <div className="input-group"><label>Fat %</label><input type="number" value={fatPct} min={0} max={100} onChange={function(e){setFatPct(Number(e.target.value));}} /></div>
+        </div>
+        {!pctValid && <div className={"warning"+(Math.abs(pctSum-100)>10?" error":"")}>Percentages sum to {pctSum}% — must equal 100%</div>}
+        <div className="macro-summary">
+          <div className="macro-pill"><div className="value">{calories}</div><div className="label">Calories</div></div>
+          <div className="macro-pill"><div className="value">{carbGrams}g</div><div className="label">Carbs</div></div>
+          <div className="macro-pill"><div className="value">{proteinGrams}g</div><div className="label">Protein</div></div>
+          <div className="macro-pill"><div className="value">{fatGrams}g</div><div className="label">Fat</div></div>
+        </div>
+      </div>
+
+      <div className="btn-row">
+        <button className="btn btn-primary" onClick={handleGenerate} disabled={!pctValid}>Generate Weekly Plan</button>
+        <button className="btn btn-secondary" onClick={function(){setView(view === "ingredients" ? "plan" : "ingredients");}}>
+          {view === "ingredients" ? "Hide" : ""} Ingredients{overrideCount > 0 ? " ("+overrideCount+" modified)" : ""}
+        </button>
+      </div>
+
+      <div className="card">
+        <h2>Saved Plans</h2>
+        <div className="save-section">
+          <input placeholder="Plan name..." value={saveName} onChange={function(e){setSaveName(e.target.value);}} />
+          <button className="btn btn-sm btn-primary" onClick={handleSave} disabled={!plan||!saveName.trim()}>Save Current</button>
+          {copyMsg && <span className="copy-feedback">{copyMsg}</span>}
+        </div>
+        {savedPlans.length > 0 && <div className="saved-plans-list">
+          {savedPlans.map(function(sp, i) {
+            return <div className="saved-plan-item" key={i}><div><span className="sp-name">{sp.name}</span><br/><span className="sp-meta">{sp.date} — {sp.calories} cal</span></div>
+              <div className="sp-actions"><button className="btn btn-sm btn-secondary" onClick={function(){handleLoad(sp);}}>Load</button><button className="btn btn-sm btn-danger" onClick={function(){handleDeleteSaved(sp.name);}}>Del</button></div></div>;
+          })}
+        </div>}
+      </div>
+
+      {!plan && view === "ingredients" && (function() {
+          var allNames = Object.keys(DEFAULT_MACROS_PER100).sort();
+          var filtered = allNames.filter(function(n) { return !ingSearch || n.toLowerCase().indexOf(ingSearch.toLowerCase()) !== -1; });
+          filtered.sort(function(a, b) {
+            var ao = ingredientOverrides[a] ? 0 : 1, bo = ingredientOverrides[b] ? 0 : 1;
+            return ao !== bo ? ao - bo : a.localeCompare(b);
+          });
+          return (<div className="card">
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8,marginBottom:12}}>
+              <h2 style={{margin:0}}>Ingredient Macros <span style={{fontWeight:400,fontSize:'0.85rem',color:'#6b7f7a'}}>(per 100g)</span></h2>
+              {overrideCount > 0 && <button className="btn btn-sm btn-danger" onClick={resetAllOverrides}>Reset All ({overrideCount})</button>}
+            </div>
+            <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:12}}>Override macro values to match your local grocery store products. Changes apply when you generate a new plan or swap a recipe.</p>
+            <input placeholder="Search ingredients..." value={ingSearch} onChange={function(e){setIngSearch(e.target.value);}} style={{width:'100%',padding:'8px 12px',border:'1.5px solid #c8d6d0',borderRadius:8,fontSize:'0.9rem',marginBottom:12,outline:'none'}} />
+            <div style={{overflowX:'auto'}}>
+            <table className="override-table">
+              <thead><tr><th>Ingredient</th><th>Category</th><th>Cal</th><th>Carbs</th><th>Protein</th><th>Fat</th><th></th></tr></thead>
+              <tbody>
+                {filtered.map(function(name) {
+                  var def = DEFAULT_MACROS_PER100[name]; var ov = ingredientOverrides[name]; var hasOv = !!ov; var cur = ov || def;
+                  return (<tr key={name} className={hasOv?"has-override":""}>
+                    <td style={{fontWeight:600,minWidth:140}}>{name}</td><td><span className="override-cat">{getCategory(name)}</span></td>
+                    <td><input className={"override-input"+(hasOv&&ov.calories!==def.calories?" modified":"")} type="number" value={cur.calories} step="1" onChange={function(e){updateOverride(name,"calories",e.target.value);}} /></td>
+                    <td><input className={"override-input"+(hasOv&&ov.carbs!==def.carbs?" modified":"")} type="number" value={cur.carbs} step="0.1" onChange={function(e){updateOverride(name,"carbs",e.target.value);}} /></td>
+                    <td><input className={"override-input"+(hasOv&&ov.protein!==def.protein?" modified":"")} type="number" value={cur.protein} step="0.1" onChange={function(e){updateOverride(name,"protein",e.target.value);}} /></td>
+                    <td><input className={"override-input"+(hasOv&&ov.fat!==def.fat?" modified":"")} type="number" value={cur.fat} step="0.1" onChange={function(e){updateOverride(name,"fat",e.target.value);}} /></td>
+                    <td>{hasOv && <button className="override-reset" onClick={function(){resetOverride(name);}}>Reset</button>}</td>
+                  </tr>);
+                })}
+              </tbody>
+            </table>
+            </div>
+          </div>);
+        })()}
+
+      {plan && (<>
+        <div className="btn-row">
+          <button className={"btn btn-toggle"+(view==="plan"?" active":"")} onClick={function(){setView("plan");}}>Meal Plan</button>
+          <button className={"btn btn-toggle"+(view==="grocery"?" active":"")} onClick={function(){setView("grocery");}}>Grocery List</button>
+          <button className={"btn btn-toggle"+(view==="recipes"?" active":"")} onClick={function(){setView("recipes");}}>All Recipes</button>
+          <button className={"btn btn-toggle"+(view==="ingredients"?" active":"")} onClick={function(){setView("ingredients");}}>Ingredients{overrideCount > 0 ? " ("+overrideCount+")" : ""}</button>
+        </div>
+
+        {view === "plan" && plan.map(function(day, di) {
+          return (<div className="card day-card" key={di}>
+            <div className="day-label">{DAYS_NAMES[di]}</div>
+            {day.meals.map(function(meal, mi) {
+              return (<div className="meal-card" key={mi}>
+                <div className="meal-header">
+                  <span className="meal-name">{meal.name}</span>
+                  <span style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap'}}>
+                    {meal.isBreakfast && <span className="cuisine-tag breakfast-tag">Breakfast</span>}
+                    <span className="cuisine-tag">{meal.cuisine}</span>
+                    <button className="swap-btn" onClick={function(){setSwapTarget({dayIdx:di,mealIdx:mi});setSwapSearch("");}}>Swap</button>
+                  </span>
+                </div>
+                <table className="ing-table">
+                  <thead><tr><th>Ingredient</th><th>Qty</th><th>Cal</th><th>C</th><th>P</th><th>F</th></tr></thead>
+                  <tbody>
+                    {meal.ingredients.map(function(ing, ii) {
+                      return (<React.Fragment key={ii}>
+                        <tr className={ing.isSpice?"spice-row":""}>
+                          <td>{ing.name}</td>
+                          <td>{ingQtyDisplay(ing)}</td>
+                          <td>{ing.isSpice ? "—" : round1(ing.calories)}</td>
+                          <td>{ing.isSpice ? "—" : round1(ing.carbs)}</td>
+                          <td>{ing.isSpice ? "—" : round1(ing.protein)}</td>
+                          <td>{ing.isSpice ? "—" : round1(ing.fat)}</td>
+                        </tr>
+                        {ing.adjustment && <tr><td colSpan={6}><div className="adj-note">{"\u26A0\uFE0F"} {ing.adjustment}</div></td></tr>}
+                      </React.Fragment>);
+                    })}
+                  </tbody>
+                </table>
+                <div className="meal-totals">
+                  <span>Cal: {round1(meal.totalMacros.calories)}</span><span>C: {round1(meal.totalMacros.carbs)}g</span>
+                  <span>P: {round1(meal.totalMacros.protein)}g</span><span>F: {round1(meal.totalMacros.fat)}g</span>
+                </div>
+              </div>);
+            })}
+            <div className="day-totals"><span>Day Total — Cal: {day.totals.calories}</span><span>C: {day.totals.carbs}g</span><span>P: {day.totals.protein}g</span><span>F: {day.totals.fat}g</span></div>
+            <div className="progress-row">
+              <div className="progress-item"><div className="plabel"><span>Calories</span><span>{Math.round(day.totals.calories/calories*100)}%</span></div><ProgressBar value={day.totals.calories} target={calories} className="fill-cal" /></div>
+              <div className="progress-item"><div className="plabel"><span>Carbs</span><span>{Math.round(day.totals.carbs/carbGrams*100)}%</span></div><ProgressBar value={day.totals.carbs} target={carbGrams} className="fill-carb" /></div>
+              <div className="progress-item"><div className="plabel"><span>Protein</span><span>{Math.round(day.totals.protein/proteinGrams*100)}%</span></div><ProgressBar value={day.totals.protein} target={proteinGrams} className="fill-pro" /></div>
+              <div className="progress-item"><div className="plabel"><span>Fat</span><span>{Math.round(day.totals.fat/fatGrams*100)}%</span></div><ProgressBar value={day.totals.fat} target={fatGrams} className="fill-fat" /></div>
+            </div>
+          </div>);
+        })}
+
+        {view === "grocery" && (<div className="card">
+          <div className="grocery-top-bar"><h2 style={{margin:0}}>Weekly Grocery List</h2><button className="btn btn-sm btn-secondary" onClick={handleCopyGrocery}>Copy List</button></div>
+          {copyMsg && <div className="success">{copyMsg}</div>}
+          {groceryList.map(function(section, si) {
+            return (<div className="grocery-section" key={si}><h3>{section.category}</h3>
+              {section.items.map(function(item, ii) {
+                return (<div className="grocery-item" key={ii}>
+                  <span className="gi-name">{item.name}</span>
+                  <span className="gi-qty">{groceryQtyText(item)}</span>
+                  <span className="gi-alt">{!item.isSpice && !isUnitBased(item.name) ? Math.round(item.totalGrams)+"g" : ""}</span>
+                  <span className="gi-usage">{[...new Set(item.appearances)].join(", ")}</span>
+                </div>);
+              })}
+            </div>);
+          })}
+        </div>)}
+
+        {view === "recipes" && (<div className="card">
+          <h2>Recipe Database ({RECIPES.length} recipes)</h2>
+          <div className="recipe-filter-row">
+            <input placeholder="Search recipes or ingredients..." value={recipeSearch} onChange={function(e){setRecipeSearch(e.target.value);}} style={{flex:1,minWidth:180}} />
+            <select value={recipeCuisine} onChange={function(e){setRecipeCuisine(e.target.value);}}><option value="All">All Cuisines</option>{ALL_CUISINES.map(function(c){return <option key={c} value={c}>{c}</option>;})}</select>
+          </div>
+          <div style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:12}}>Showing {filteredRecipes.length} recipes</div>
+          <div className="recipe-grid">
+            {filteredRecipes.map(function(r, i) {
+              var mainIngs = r.ingredients.filter(function(x){return !x.isSpice;});
+              var spiceIngs = r.ingredients.filter(function(x){return x.isSpice;});
+              return (<div className="recipe-browser-card" key={i}>
+                <div className="rb-header"><span className="rb-name">{r.name}</span><span className="cuisine-tag">{r.cuisine}</span></div>
+                <div className="rb-ings">{mainIngs.map(function(ing){return ing.name;}).join(", ")}</div>
+                {spiceIngs.length > 0 && <div className="rb-spices">Spices: {spiceIngs.map(function(s){return s.name;}).join(", ")}</div>}
+                <div className="rb-macros"><span>Cal: {round1(r.totalMacros.calories)}</span><span>C: {round1(r.totalMacros.carbs)}g</span><span>P: {round1(r.totalMacros.protein)}g</span><span>F: {round1(r.totalMacros.fat)}g</span></div>
+                <div style={{marginTop:4}}>{r.tags.map(function(t){return <span className="tag-pill" key={t} style={{marginRight:4}}>{t}</span>;})}</div>
+              </div>);
+            })}
+          </div>
+        </div>)}
+
+        {view === "ingredients" && (function() {
+          var allNames = Object.keys(DEFAULT_MACROS_PER100).sort();
+          var filtered = allNames.filter(function(n) { return !ingSearch || n.toLowerCase().indexOf(ingSearch.toLowerCase()) !== -1; });
+          // Sort overridden to top
+          filtered.sort(function(a, b) {
+            var ao = ingredientOverrides[a] ? 0 : 1, bo = ingredientOverrides[b] ? 0 : 1;
+            return ao !== bo ? ao - bo : a.localeCompare(b);
+          });
+          return (<div className="card">
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8,marginBottom:12}}>
+              <h2 style={{margin:0}}>Ingredient Macros <span style={{fontWeight:400,fontSize:'0.85rem',color:'#6b7f7a'}}>(per 100g)</span></h2>
+              {overrideCount > 0 && <button className="btn btn-sm btn-danger" onClick={resetAllOverrides}>Reset All ({overrideCount})</button>}
+            </div>
+            <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:12}}>Override macro values to match your local grocery store products. Changes apply when you generate a new plan or swap a recipe.</p>
+            <input placeholder="Search ingredients..." value={ingSearch} onChange={function(e){setIngSearch(e.target.value);}} style={{width:'100%',padding:'8px 12px',border:'1.5px solid #c8d6d0',borderRadius:8,fontSize:'0.9rem',marginBottom:12,outline:'none'}} />
+            <div style={{overflowX:'auto'}}>
+            <table className="override-table">
+              <thead><tr><th>Ingredient</th><th>Category</th><th>Cal</th><th>Carbs</th><th>Protein</th><th>Fat</th><th></th></tr></thead>
+              <tbody>
+                {filtered.map(function(name) {
+                  var def = DEFAULT_MACROS_PER100[name];
+                  var ov = ingredientOverrides[name];
+                  var hasOv = !!ov;
+                  var cur = ov || def;
+                  return (<tr key={name} className={hasOv ? "has-override" : ""}>
+                    <td style={{fontWeight:600,minWidth:140}}>{name}</td>
+                    <td><span className="override-cat">{getCategory(name)}</span></td>
+                    <td><input className={"override-input" + (hasOv && ov.calories !== def.calories ? " modified" : "")} type="number" value={cur.calories} step="1" onChange={function(e){updateOverride(name,"calories",e.target.value);}} /></td>
+                    <td><input className={"override-input" + (hasOv && ov.carbs !== def.carbs ? " modified" : "")} type="number" value={cur.carbs} step="0.1" onChange={function(e){updateOverride(name,"carbs",e.target.value);}} /></td>
+                    <td><input className={"override-input" + (hasOv && ov.protein !== def.protein ? " modified" : "")} type="number" value={cur.protein} step="0.1" onChange={function(e){updateOverride(name,"protein",e.target.value);}} /></td>
+                    <td><input className={"override-input" + (hasOv && ov.fat !== def.fat ? " modified" : "")} type="number" value={cur.fat} step="0.1" onChange={function(e){updateOverride(name,"fat",e.target.value);}} /></td>
+                    <td>{hasOv && <button className="override-reset" onClick={function(){resetOverride(name);}}>Reset</button>}</td>
+                  </tr>);
+                })}
+              </tbody>
+            </table>
+            </div>
+          </div>);
+        })()}
+      </>)}
+
+      {swapTarget && (<div className="modal-overlay" onClick={function(e){if(e.target===e.currentTarget)setSwapTarget(null);}}>
+        <div className="modal">
+          <h3>Swap Recipe — {DAYS_NAMES[swapTarget.dayIdx]}, Meal {swapTarget.mealIdx+1}</h3>
+          <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:8}}>Macros will recalibrate for the day after swapping.</p>
+          <input className="modal-search" placeholder="Search recipes..." value={swapSearch} onChange={function(e){setSwapSearch(e.target.value);}} autoFocus />
+          <div style={{maxHeight:'50vh',overflowY:'auto'}}>
+            {swapFiltered.map(function(r, i) {
+              return (<div className="modal-recipe" key={i} onClick={function(){handleSwap(r);}}>
+                <span className="mr-name">{r.name}</span> <span className="mr-cuisine">— {r.cuisine}</span>
+                <div className="mr-macros">Cal: {round1(r.totalMacros.calories)} | C: {round1(r.totalMacros.carbs)}g | P: {round1(r.totalMacros.protein)}g | F: {round1(r.totalMacros.fat)}g</div>
+              </div>);
+            })}
+          </div>
+          <div style={{marginTop:12,textAlign:'right'}}><button className="btn btn-sm btn-secondary" onClick={function(){setSwapTarget(null);}}>Cancel</button></div>
+        </div>
+      </div>)}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -110,6 +110,13 @@
   .override-reset { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 0.78rem; font-weight: 600; padding: 2px 6px; }
   .override-reset:hover { text-decoration: underline; }
   .override-count { font-size: 0.82rem; color: #2d6a4f; font-weight: 600; margin-left: 8px; }
+  /* Eaten checkboxes */
+  .eaten-cb { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.82rem; color: #3a5a50; user-select: none; }
+  .eaten-cb input { width: 18px; height: 18px; accent-color: #2d6a4f; cursor: pointer; }
+  .eaten-cb.checked { color: #2d6a4f; font-weight: 600; }
+  .meal-card.eaten { border-left: 3px solid #2d6a4f; background: #f0faf4; }
+  .log-eaten-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #e8f5e9; border-radius: 10px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+  .log-eaten-bar .le-info { font-size: 0.88rem; color: #2d6a4f; font-weight: 600; }
   /* Stats */
   .stats-section { margin-bottom: 20px; }
   .stats-section h3 { color: #2d6a4f; font-size: 1rem; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 2px solid #d8f3dc; }
@@ -605,53 +612,56 @@ var STATS_KEY = "mealprep_stats";
 function loadStats() { try { return JSON.parse(localStorage.getItem(STATS_KEY) || '{"plans":[]}'); } catch(e) { return {plans:[]}; } }
 function saveStats(data) { localStorage.setItem(STATS_KEY, JSON.stringify(data)); }
 
-function recordPlan(plan, targetCal, targetCarbs, targetProtein, targetFat) {
+// Record only the meals the user checked as eaten
+function recordEatenMeals(plan, eatenMap, targetCal, targetCarbs, targetProtein, targetFat) {
   var data = loadStats();
   var now = new Date();
   var dateStr = now.toISOString().slice(0,10);
   var id = dateStr + "-" + now.getTime();
   var meals = [];
   var weekTotals = {calories:0,carbs:0,protein:0,fat:0};
-  var daysHit = 0;
-  var ingredientCounts = {};
+  var daysWithMeals = 0;
+  var ingredientGrams = {}; // track by total grams, not count
   var cuisines = {};
   plan.forEach(function(day, di) {
-    day.meals.forEach(function(meal) {
+    var dayAte = false;
+    day.meals.forEach(function(meal, mi) {
+      var key = di + "-" + mi;
+      if (!eatenMap[key]) return; // skip unchecked meals
+      dayAte = true;
       meals.push({recipe:meal.name,cuisine:meal.cuisine,day:DAYS_NAMES[di],calories:round1(meal.totalMacros.calories),carbs:round1(meal.totalMacros.carbs),protein:round1(meal.totalMacros.protein),fat:round1(meal.totalMacros.fat)});
       cuisines[meal.cuisine] = (cuisines[meal.cuisine]||0)+1;
-      meal.ingredients.forEach(function(ing) { if (!ing.isSpice) ingredientCounts[ing.name] = (ingredientCounts[ing.name]||0)+1; });
+      meal.ingredients.forEach(function(ing) {
+        if (!ing.isSpice) {
+          if (!ingredientGrams[ing.name]) ingredientGrams[ing.name] = 0;
+          ingredientGrams[ing.name] += ing.grams;
+        }
+      });
+      weekTotals.calories += meal.totalMacros.calories;
+      weekTotals.carbs += meal.totalMacros.carbs;
+      weekTotals.protein += meal.totalMacros.protein;
+      weekTotals.fat += meal.totalMacros.fat;
     });
-    weekTotals.calories += day.totals.calories;
-    weekTotals.carbs += day.totals.carbs;
-    weekTotals.protein += day.totals.protein;
-    weekTotals.fat += day.totals.fat;
-    var calOk = Math.abs(day.totals.calories/targetCal - 1) <= 0.05;
-    var cOk = Math.abs(day.totals.carbs/targetCarbs - 1) <= 0.05;
-    var pOk = Math.abs(day.totals.protein/targetProtein - 1) <= 0.05;
-    var fOk = Math.abs(day.totals.fat/targetFat - 1) <= 0.05;
-    if (calOk && cOk && pOk && fOk) daysHit++;
+    if (dayAte) daysWithMeals++;
   });
-  var avgCal = round1(weekTotals.calories/7), avgCarbs = round1(weekTotals.carbs/7), avgPro = round1(weekTotals.protein/7), avgFat = round1(weekTotals.fat/7);
-  var hitTarget = daysHit >= 5;
-  // Overlap score: count ingredients appearing in 3+ meals
-  var overlapCount = Object.values(ingredientCounts).filter(function(v){return v>=3;}).length;
-  // Cuisine variety: number of distinct cuisines
+  if (meals.length === 0) return data; // nothing eaten
+  var daysForAvg = Math.max(daysWithMeals, 1);
+  var avgCal = round1(weekTotals.calories/daysForAvg), avgCarbs = round1(weekTotals.carbs/daysForAvg);
+  var avgPro = round1(weekTotals.protein/daysForAvg), avgFat = round1(weekTotals.fat/daysForAvg);
+  var overlapCount = Object.values(ingredientGrams).filter(function(v){return v>0;}).length;
   var cuisineCount = Object.keys(cuisines).length;
-  var totalMeals = meals.length;
-  // Consistency score: 0-100
   var calScore = Math.max(0, 100 - Math.abs(avgCal/targetCal*100 - 100)*3);
   var carbScore = Math.max(0, 100 - Math.abs(avgCarbs/targetCarbs*100 - 100)*3);
   var proScore = Math.max(0, 100 - Math.abs(avgPro/targetProtein*100 - 100)*3);
   var fatScore = Math.max(0, 100 - Math.abs(avgFat/targetFat*100 - 100)*3);
   var macroScore = (calScore+carbScore+proScore+fatScore)/4;
-  var overlapScore = Math.min(30, overlapCount*5);
-  var varietyScore = Math.min(20, cuisineCount*4);
-  var consistencyScore = Math.round(Math.min(100, macroScore*0.6 + overlapScore + varietyScore));
-
+  var overlapS = Math.min(30, Math.min(overlapCount,6)*5);
+  var varietyS = Math.min(20, cuisineCount*4);
+  var consistencyScore = Math.round(Math.min(100, macroScore*0.6 + overlapS + varietyS));
   var entry = {id:id,date:dateStr,targets:{calories:targetCal,carbs:targetCarbs,protein:targetProtein,fat:targetFat},
     avgDaily:{calories:avgCal,carbs:avgCarbs,protein:avgPro,fat:avgFat},
-    hitTarget:hitTarget,daysHit:daysHit,meals:meals,cuisines:cuisines,ingredientCounts:ingredientCounts,
-    consistencyScore:consistencyScore,totalMeals:totalMeals};
+    daysWithMeals:daysWithMeals,meals:meals,cuisines:cuisines,ingredientGrams:ingredientGrams,
+    consistencyScore:consistencyScore,totalMeals:meals.length};
   data.plans.push(entry);
   saveStats(data);
   return data;
@@ -667,16 +677,20 @@ function StatsView(props) {
   var plans = statsData.plans || [];
   if (plans.length === 0) return (<div className="card"><h2>Stats</h2><p style={{color:'#6b7f7a'}}>No data yet. Generate a weekly plan to start tracking.</p></div>);
 
-  // === Recipe History ===
+  // === Recipe History (includes all recipes, even uneaten) ===
   var recipeMap = {};
+  // Seed with every recipe in the database at count 0
+  RECIPES.forEach(function(r) {
+    if (!recipeMap[r.name]) recipeMap[r.name] = {name:r.name,cuisine:r.cuisine,count:0,lastDate:null};
+  });
   plans.forEach(function(p) {
     p.meals.forEach(function(m) {
-      if (!recipeMap[m.recipe]) recipeMap[m.recipe] = {name:m.recipe,cuisine:m.cuisine,count:0,lastDate:p.date};
+      if (!recipeMap[m.recipe]) recipeMap[m.recipe] = {name:m.recipe,cuisine:m.cuisine,count:0,lastDate:null};
       recipeMap[m.recipe].count++;
-      if (p.date > recipeMap[m.recipe].lastDate) recipeMap[m.recipe].lastDate = p.date;
+      if (!recipeMap[m.recipe].lastDate || p.date > recipeMap[m.recipe].lastDate) recipeMap[m.recipe].lastDate = p.date;
     });
   });
-  var recipeList = Object.values(recipeMap).sort(function(a,b){return b.count-a.count;});
+  var recipeList = Object.values(recipeMap).sort(function(a,b){ return b.count !== a.count ? b.count - a.count : a.name.localeCompare(b.name); });
   var maxRecipeCount = recipeList.length > 0 ? recipeList[0].count : 1;
 
   // === Macro Trends ===
@@ -705,11 +719,14 @@ function StatsView(props) {
   var cuisineList = Object.entries(cuisineTotals).sort(function(a,b){return b[1]-a[1];}).map(function(e){return {name:e[0],count:e[1],pct:Math.round(e[1]/totalCuisineMeals*100)};});
   var dominantCuisine = cuisineList.length > 0 && cuisineList[0].pct > 40 ? cuisineList[0] : null;
 
-  // === Ingredient Frequency ===
-  var ingTotals = {};
-  plans.forEach(function(p) { Object.keys(p.ingredientCounts).forEach(function(n) { ingTotals[n]=(ingTotals[n]||0)+p.ingredientCounts[n]; }); });
-  var ingList = Object.entries(ingTotals).sort(function(a,b){return b[1]-a[1];}).slice(0,20).map(function(e){return {name:e[0],count:e[1]};});
-  var maxIngCount = ingList.length > 0 ? ingList[0].count : 1;
+  // === Ingredient by Weight ===
+  var ingGramTotals = {};
+  plans.forEach(function(p) {
+    var src = p.ingredientGrams || p.ingredientCounts || {};
+    Object.keys(src).forEach(function(n) { ingGramTotals[n]=(ingGramTotals[n]||0)+src[n]; });
+  });
+  var ingList = Object.entries(ingGramTotals).sort(function(a,b){return b[1]-a[1];}).slice(0,25).map(function(e){return {name:e[0],grams:Math.round(e[1])};});
+  var maxIngGrams = ingList.length > 0 ? ingList[0].grams : 1;
 
   // === Consistency Score ===
   var avgScore = Math.round(plans.reduce(function(s,p){return s+p.consistencyScore;},0)/plans.length);
@@ -802,12 +819,12 @@ function StatsView(props) {
     </div></div>
 
     {/* Recipe History */}
-    <div className="card"><div className="stats-section"><h3>Recipe History</h3>
-      {recipeList.slice(0,25).map(function(r,i){return (<div className="stats-bar-row" key={i}>
+    <div className="card"><div className="stats-section"><h3>Recipe History ({recipeList.filter(function(r){return r.count>0;}).length} eaten / {recipeList.length} total)</h3>
+      {recipeList.map(function(r,i){return (<div className="stats-bar-row" key={i} style={r.count===0?{opacity:0.5}:{}}>
         <span className="stats-bar-label" title={r.name}>{r.name}</span>
-        <div className="stats-bar-track"><div className="stats-bar-fill fill-pro" style={{width:Math.round(r.count/maxRecipeCount*100)+"%"}}></div></div>
-        <span className="stats-bar-val">{r.count}x</span>
-        <span style={{fontSize:'0.72rem',color:'#6b7f7a',minWidth:50}}>{r.lastDate}</span>
+        <div className="stats-bar-track"><div className="stats-bar-fill fill-pro" style={{width:maxRecipeCount>0?Math.round(r.count/maxRecipeCount*100)+"%":"0%"}}></div></div>
+        <span className="stats-bar-val">{r.count === 0 ? "—" : r.count+"x"}</span>
+        <span style={{fontSize:'0.72rem',color:'#6b7f7a',minWidth:58}}>{r.lastDate || "never"}</span>
       </div>);})}
     </div></div>
 
@@ -821,13 +838,16 @@ function StatsView(props) {
       {dominantCuisine && <div className="stats-warn">{dominantCuisine.name} dominates at {dominantCuisine.pct}% of meals — consider more variety</div>}
     </div></div>
 
-    {/* Ingredient Frequency */}
-    <div className="card"><div className="stats-section"><h3>Top Ingredients</h3>
-      {ingList.map(function(ig,i){return (<div className="stats-bar-row" key={i}>
-        <span className="stats-bar-label">{ig.name}</span>
-        <div className="stats-bar-track"><div className="stats-bar-fill fill-fat" style={{width:Math.round(ig.count/maxIngCount*100)+"%"}}></div></div>
-        <span className="stats-bar-val">{ig.count}x</span>
-      </div>);})}
+    {/* Ingredient by Weight */}
+    <div className="card"><div className="stats-section"><h3>Top Ingredients by Weight</h3>
+      {ingList.map(function(ig,i){
+        var display = isUnitBased(ig.name) ? getUnitDisplay(ig.name, ig.grams) : formatImperial(ig.grams);
+        return (<div className="stats-bar-row" key={i}>
+          <span className="stats-bar-label">{ig.name}</span>
+          <div className="stats-bar-track"><div className="stats-bar-fill fill-fat" style={{width:Math.round(ig.grams/maxIngGrams*100)+"%"}}></div></div>
+          <span className="stats-bar-val">{display}</span>
+        </div>);
+      })}
     </div></div>
 
     {/* Plan Consistency Scores */}
@@ -925,15 +945,33 @@ function App() {
 
   var overrideCount = Object.keys(ingredientOverrides).length;
 
+  var [eatenMeals, setEatenMeals] = React.useState({});
+
   function handleGenerate() {
     if (!pctValid) return;
     var p = generatePlan(calories, carbGrams, proteinGrams, fatGrams, ingredientOverrides);
     setPlan(p);
     setView("plan");
-    var updated = recordPlan(p, calories, carbGrams, proteinGrams, fatGrams);
+    setEatenMeals({});
+  }
+
+  function toggleEaten(dayIdx, mealIdx) {
+    var key = dayIdx + "-" + mealIdx;
+    var next = Object.assign({}, eatenMeals);
+    if (next[key]) { delete next[key]; } else { next[key] = true; }
+    setEatenMeals(next);
+  }
+
+  function handleLogEaten() {
+    if (!plan || Object.keys(eatenMeals).length === 0) return;
+    var updated = recordEatenMeals(plan, eatenMeals, calories, carbGrams, proteinGrams, fatGrams);
     setStatsData(updated);
     setStatsNewData(true);
+    setCopyMsg("Logged " + Object.keys(eatenMeals).length + " meals!");
+    setTimeout(function() { setCopyMsg(""); }, 2500);
   }
+
+  var eatenCount = Object.keys(eatenMeals).length;
 
   function handleSave() {
     if (!plan || !saveName.trim()) return;
@@ -1083,13 +1121,23 @@ function App() {
           <button className={"btn btn-toggle"+(view==="stats"?" active":"")} onClick={function(){setView("stats");setStatsNewData(false);setLastStatsView(Date.now());localStorage.setItem("mealprep_stats_last_view",String(Date.now()));}}>Stats{statsNewData && <span className="stats-badge"></span>}</button>
         </div>
 
-        {view === "plan" && plan.map(function(day, di) {
+        {view === "plan" && (<>
+          <div className="log-eaten-bar">
+            <span className="le-info">{eatenCount > 0 ? eatenCount + " meal" + (eatenCount > 1 ? "s" : "") + " checked" : "Check meals as you eat them"}</span>
+            <button className="btn btn-sm btn-primary" onClick={handleLogEaten} disabled={eatenCount === 0}>Log Eaten Meals to Stats</button>
+          </div>
+          {plan.map(function(day, di) {
           return (<div className="card day-card" key={di}>
             <div className="day-label">{DAYS_NAMES[di]}</div>
             {day.meals.map(function(meal, mi) {
-              return (<div className="meal-card" key={mi}>
+              var mealKey = di + "-" + mi;
+              var isEaten = !!eatenMeals[mealKey];
+              return (<div className={"meal-card" + (isEaten ? " eaten" : "")} key={mi}>
                 <div className="meal-header">
-                  <span className="meal-name">{meal.name}</span>
+                  <span style={{display:'flex',alignItems:'center',gap:8}}>
+                    <label className={"eaten-cb" + (isEaten ? " checked" : "")}><input type="checkbox" checked={isEaten} onChange={function(){toggleEaten(di,mi);}} />{isEaten ? "Eaten" : "Ate this?"}</label>
+                    <span className="meal-name">{meal.name}</span>
+                  </span>
                   <span style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap'}}>
                     {meal.isBreakfast && <span className="cuisine-tag breakfast-tag">Breakfast</span>}
                     <span className="cuisine-tag">{meal.cuisine}</span>
@@ -1129,6 +1177,7 @@ function App() {
             </div>
           </div>);
         })}
+        </>)}
 
         {view === "grocery" && (<div className="card">
           <div className="grocery-top-bar"><h2 style={{margin:0}}>Weekly Grocery List</h2><button className="btn btn-sm btn-secondary" onClick={handleCopyGrocery}>Copy List</button></div>

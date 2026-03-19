@@ -1072,12 +1072,6 @@ function App() {
 
       <div className="btn-row">
         <button className="btn btn-primary" onClick={handleGenerate} disabled={!pctValid}>Generate Weekly Plan</button>
-        <button className="btn btn-secondary" onClick={function(){setView(view === "ingredients" ? "plan" : "ingredients");}}>
-          {view === "ingredients" ? "Hide" : ""} Ingredients{overrideCount > 0 ? " ("+overrideCount+" modified)" : ""}
-        </button>
-        <button className="btn btn-secondary" onClick={function(){setView(view === "stats" ? "plan" : "stats");if(view!=="stats"){setStatsNewData(false);setLastStatsView(Date.now());localStorage.setItem("mealprep_stats_last_view",String(Date.now()));}}}>
-          Stats{statsNewData && <span className="stats-badge"></span>}
-        </button>
       </div>
 
       <div className="card">
@@ -1095,52 +1089,16 @@ function App() {
         </div>}
       </div>
 
-      {!plan && view === "stats" && <StatsView statsData={statsData} onUpdate={function(d){setStatsData(d);}} savedPlans={savedPlans} onSavedPlansUpdate={function(sp){setSavedPlans(sp);localStorage.setItem("mealprep_plans",JSON.stringify(sp));}} />}
-
-      {!plan && view === "ingredients" && (function() {
-          var allNames = Object.keys(DEFAULT_MACROS_PER100).sort();
-          var filtered = allNames.filter(function(n) { return !ingSearch || n.toLowerCase().indexOf(ingSearch.toLowerCase()) !== -1; });
-          filtered.sort(function(a, b) {
-            var ao = ingredientOverrides[a] ? 0 : 1, bo = ingredientOverrides[b] ? 0 : 1;
-            return ao !== bo ? ao - bo : a.localeCompare(b);
-          });
-          return (<div className="card">
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8,marginBottom:12}}>
-              <h2 style={{margin:0}}>Ingredient Macros <span style={{fontWeight:400,fontSize:'0.85rem',color:'#6b7f7a'}}>(per 100g)</span></h2>
-              {overrideCount > 0 && <button className="btn btn-sm btn-danger" onClick={resetAllOverrides}>Reset All ({overrideCount})</button>}
-            </div>
-            <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:12}}>Override macro values to match your local grocery store products. Changes apply when you generate a new plan or swap a recipe.</p>
-            <input placeholder="Search ingredients..." value={ingSearch} onChange={function(e){setIngSearch(e.target.value);}} style={{width:'100%',padding:'8px 12px',border:'1.5px solid #c8d6d0',borderRadius:8,fontSize:'0.9rem',marginBottom:12,outline:'none'}} />
-            <div style={{overflowX:'auto'}}>
-            <table className="override-table">
-              <thead><tr><th>Ingredient</th><th>Category</th><th>Cal</th><th>Carbs</th><th>Protein</th><th>Fat</th><th></th></tr></thead>
-              <tbody>
-                {filtered.map(function(name) {
-                  var def = DEFAULT_MACROS_PER100[name]; var ov = ingredientOverrides[name]; var hasOv = !!ov; var cur = ov || def;
-                  return (<tr key={name} className={hasOv?"has-override":""}>
-                    <td style={{fontWeight:600,minWidth:140}}>{name}</td><td><span className="override-cat">{getCategory(name)}</span></td>
-                    <td><input className={"override-input"+(hasOv&&ov.calories!==def.calories?" modified":"")} type="number" value={cur.calories} step="1" onChange={function(e){updateOverride(name,"calories",e.target.value);}} /></td>
-                    <td><input className={"override-input"+(hasOv&&ov.carbs!==def.carbs?" modified":"")} type="number" value={cur.carbs} step="0.1" onChange={function(e){updateOverride(name,"carbs",e.target.value);}} /></td>
-                    <td><input className={"override-input"+(hasOv&&ov.protein!==def.protein?" modified":"")} type="number" value={cur.protein} step="0.1" onChange={function(e){updateOverride(name,"protein",e.target.value);}} /></td>
-                    <td><input className={"override-input"+(hasOv&&ov.fat!==def.fat?" modified":"")} type="number" value={cur.fat} step="0.1" onChange={function(e){updateOverride(name,"fat",e.target.value);}} /></td>
-                    <td>{hasOv && <button className="override-reset" onClick={function(){resetOverride(name);}}>Reset</button>}</td>
-                  </tr>);
-                })}
-              </tbody>
-            </table>
-            </div>
-          </div>);
-        })()}
+      {/* Tab bar — always visible */}
+      <div className="btn-row">
+        {plan && <button className={"btn btn-toggle"+(view==="plan"?" active":"")} onClick={function(){setView("plan");}}>Meal Plan</button>}
+        {plan && <button className={"btn btn-toggle"+(view==="grocery"?" active":"")} onClick={function(){setView("grocery");}}>Grocery List</button>}
+        <button className={"btn btn-toggle"+(view==="recipes"?" active":"")} onClick={function(){setView("recipes");}}>All Recipes</button>
+        <button className={"btn btn-toggle"+(view==="ingredients"?" active":"")} onClick={function(){setView("ingredients");}}>Ingredients{overrideCount > 0 ? " ("+overrideCount+")" : ""}</button>
+        <button className={"btn btn-toggle"+(view==="stats"?" active":"")} onClick={function(){setView("stats");setStatsNewData(false);setLastStatsView(Date.now());localStorage.setItem("mealprep_stats_last_view",String(Date.now()));}}>Stats{statsNewData && <span className="stats-badge"></span>}</button>
+      </div>
 
       {plan && (<>
-        <div className="btn-row">
-          <button className={"btn btn-toggle"+(view==="plan"?" active":"")} onClick={function(){setView("plan");}}>Meal Plan</button>
-          <button className={"btn btn-toggle"+(view==="grocery"?" active":"")} onClick={function(){setView("grocery");}}>Grocery List</button>
-          <button className={"btn btn-toggle"+(view==="recipes"?" active":"")} onClick={function(){setView("recipes");}}>All Recipes</button>
-          <button className={"btn btn-toggle"+(view==="ingredients"?" active":"")} onClick={function(){setView("ingredients");}}>Ingredients{overrideCount > 0 ? " ("+overrideCount+")" : ""}</button>
-          <button className={"btn btn-toggle"+(view==="stats"?" active":"")} onClick={function(){setView("stats");setStatsNewData(false);setLastStatsView(Date.now());localStorage.setItem("mealprep_stats_last_view",String(Date.now()));}}>Stats{statsNewData && <span className="stats-badge"></span>}</button>
-        </div>
-
         {view === "plan" && (<>
           <div className="log-eaten-bar">
             <span className="le-info">{eatenCount > 0 ? eatenCount + " meal" + (eatenCount > 1 ? "s" : "") + " checked" : "Check meals as you eat them"}</span>

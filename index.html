@@ -110,12 +110,37 @@
   .override-reset { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 0.78rem; font-weight: 600; padding: 2px 6px; }
   .override-reset:hover { text-decoration: underline; }
   .override-count { font-size: 0.82rem; color: #2d6a4f; font-weight: 600; margin-left: 8px; }
+  /* Stats */
+  .stats-section { margin-bottom: 20px; }
+  .stats-section h3 { color: #2d6a4f; font-size: 1rem; margin-bottom: 10px; padding-bottom: 4px; border-bottom: 2px solid #d8f3dc; }
+  .stats-bar-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 0.82rem; }
+  .stats-bar-label { min-width: 140px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stats-bar-track { flex: 1; height: 14px; background: #e0e8e4; border-radius: 7px; overflow: hidden; position: relative; }
+  .stats-bar-fill { height: 100%; border-radius: 7px; transition: width 0.3s; }
+  .stats-bar-val { min-width: 40px; text-align: right; color: #3a5a50; font-weight: 600; font-size: 0.78rem; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .stats-kpi { background: #f7faf8; border-radius: 10px; padding: 12px; text-align: center; border: 1px solid #e0e8e4; }
+  .stats-kpi .kv { font-size: 1.4rem; font-weight: 700; color: #2d6a4f; }
+  .stats-kpi .kl { font-size: 0.72rem; color: #6b7f7a; }
+  .stats-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .stats-table th { text-align: left; color: #6b7f7a; font-weight: 600; padding: 5px 8px; border-bottom: 2px solid #d8f3dc; }
+  .stats-table td { padding: 5px 8px; border-bottom: 1px solid #f0f4f3; }
+  .stats-table tr:hover { background: #f7faf8; }
+  .stats-hit { color: #2d6a4f; font-weight: 600; }
+  .stats-miss { color: #e74c3c; font-weight: 600; }
+  .stats-warn { background: #fff3cd; color: #856404; padding: 6px 10px; border-radius: 8px; font-size: 0.82rem; margin-top: 6px; }
+  .stats-badge { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #e74c3c; margin-left: 4px; vertical-align: middle; }
+  .stats-dm-summary { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; font-size: 0.85rem; }
+  .stats-dm-summary span { background: #f7faf8; padding: 4px 10px; border-radius: 8px; border: 1px solid #e0e8e4; }
+  .stats-plan-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border: 1px solid #e0e8e4; border-radius: 8px; margin-bottom: 6px; font-size: 0.85rem; }
+  .confirm-input { padding: 6px 10px; border: 1.5px solid #e74c3c; border-radius: 8px; font-size: 0.85rem; margin-right: 8px; }
   @media (max-width: 600px) {
     .macro-inputs { grid-template-columns: 1fr 1fr; }
     .grocery-item { grid-template-columns: 1fr auto auto; }
     .grocery-item .gi-usage { grid-column: 1 / -1; }
     h1 { font-size: 1.4rem; }
     .recipe-grid { grid-template-columns: 1fr; }
+    .stats-bar-label { min-width: 100px; }
   }
 </style>
 </head>
@@ -575,6 +600,286 @@ function ProgressBar(props) {
   );
 }
 
+// ===== STATS TRACKING =====
+var STATS_KEY = "mealprep_stats";
+function loadStats() { try { return JSON.parse(localStorage.getItem(STATS_KEY) || '{"plans":[]}'); } catch(e) { return {plans:[]}; } }
+function saveStats(data) { localStorage.setItem(STATS_KEY, JSON.stringify(data)); }
+
+function recordPlan(plan, targetCal, targetCarbs, targetProtein, targetFat) {
+  var data = loadStats();
+  var now = new Date();
+  var dateStr = now.toISOString().slice(0,10);
+  var id = dateStr + "-" + now.getTime();
+  var meals = [];
+  var weekTotals = {calories:0,carbs:0,protein:0,fat:0};
+  var daysHit = 0;
+  var ingredientCounts = {};
+  var cuisines = {};
+  plan.forEach(function(day, di) {
+    day.meals.forEach(function(meal) {
+      meals.push({recipe:meal.name,cuisine:meal.cuisine,day:DAYS_NAMES[di],calories:round1(meal.totalMacros.calories),carbs:round1(meal.totalMacros.carbs),protein:round1(meal.totalMacros.protein),fat:round1(meal.totalMacros.fat)});
+      cuisines[meal.cuisine] = (cuisines[meal.cuisine]||0)+1;
+      meal.ingredients.forEach(function(ing) { if (!ing.isSpice) ingredientCounts[ing.name] = (ingredientCounts[ing.name]||0)+1; });
+    });
+    weekTotals.calories += day.totals.calories;
+    weekTotals.carbs += day.totals.carbs;
+    weekTotals.protein += day.totals.protein;
+    weekTotals.fat += day.totals.fat;
+    var calOk = Math.abs(day.totals.calories/targetCal - 1) <= 0.05;
+    var cOk = Math.abs(day.totals.carbs/targetCarbs - 1) <= 0.05;
+    var pOk = Math.abs(day.totals.protein/targetProtein - 1) <= 0.05;
+    var fOk = Math.abs(day.totals.fat/targetFat - 1) <= 0.05;
+    if (calOk && cOk && pOk && fOk) daysHit++;
+  });
+  var avgCal = round1(weekTotals.calories/7), avgCarbs = round1(weekTotals.carbs/7), avgPro = round1(weekTotals.protein/7), avgFat = round1(weekTotals.fat/7);
+  var hitTarget = daysHit >= 5;
+  // Overlap score: count ingredients appearing in 3+ meals
+  var overlapCount = Object.values(ingredientCounts).filter(function(v){return v>=3;}).length;
+  // Cuisine variety: number of distinct cuisines
+  var cuisineCount = Object.keys(cuisines).length;
+  var totalMeals = meals.length;
+  // Consistency score: 0-100
+  var calScore = Math.max(0, 100 - Math.abs(avgCal/targetCal*100 - 100)*3);
+  var carbScore = Math.max(0, 100 - Math.abs(avgCarbs/targetCarbs*100 - 100)*3);
+  var proScore = Math.max(0, 100 - Math.abs(avgPro/targetProtein*100 - 100)*3);
+  var fatScore = Math.max(0, 100 - Math.abs(avgFat/targetFat*100 - 100)*3);
+  var macroScore = (calScore+carbScore+proScore+fatScore)/4;
+  var overlapScore = Math.min(30, overlapCount*5);
+  var varietyScore = Math.min(20, cuisineCount*4);
+  var consistencyScore = Math.round(Math.min(100, macroScore*0.6 + overlapScore + varietyScore));
+
+  var entry = {id:id,date:dateStr,targets:{calories:targetCal,carbs:targetCarbs,protein:targetProtein,fat:targetFat},
+    avgDaily:{calories:avgCal,carbs:avgCarbs,protein:avgPro,fat:avgFat},
+    hitTarget:hitTarget,daysHit:daysHit,meals:meals,cuisines:cuisines,ingredientCounts:ingredientCounts,
+    consistencyScore:consistencyScore,totalMeals:totalMeals};
+  data.plans.push(entry);
+  saveStats(data);
+  return data;
+}
+
+function StatsView(props) {
+  var statsData = props.statsData;
+  var onUpdate = props.onUpdate;
+  var [confirmText, setConfirmText] = React.useState("");
+  var [showConfirm, setShowConfirm] = React.useState(false);
+  var [importMsg, setImportMsg] = React.useState("");
+
+  var plans = statsData.plans || [];
+  if (plans.length === 0) return (<div className="card"><h2>Stats</h2><p style={{color:'#6b7f7a'}}>No data yet. Generate a weekly plan to start tracking.</p></div>);
+
+  // === Recipe History ===
+  var recipeMap = {};
+  plans.forEach(function(p) {
+    p.meals.forEach(function(m) {
+      if (!recipeMap[m.recipe]) recipeMap[m.recipe] = {name:m.recipe,cuisine:m.cuisine,count:0,lastDate:p.date};
+      recipeMap[m.recipe].count++;
+      if (p.date > recipeMap[m.recipe].lastDate) recipeMap[m.recipe].lastDate = p.date;
+    });
+  });
+  var recipeList = Object.values(recipeMap).sort(function(a,b){return b.count-a.count;});
+  var maxRecipeCount = recipeList.length > 0 ? recipeList[0].count : 1;
+
+  // === Macro Trends ===
+  var weeklyTrends = plans.map(function(p) {
+    var calHit = Math.abs(p.avgDaily.calories/p.targets.calories - 1) <= 0.05;
+    var cHit = Math.abs(p.avgDaily.carbs/p.targets.carbs - 1) <= 0.05;
+    var pHit = Math.abs(p.avgDaily.protein/p.targets.protein - 1) <= 0.05;
+    var fHit = Math.abs(p.avgDaily.fat/p.targets.fat - 1) <= 0.05;
+    return {date:p.date,avg:p.avgDaily,targets:p.targets,allHit:calHit&&cHit&&pHit&&fHit,calHit:calHit,cHit:cHit,pHit:pHit,fHit:fHit};
+  });
+  // Consistent over/under detection
+  var overUnder = {carbs:0,protein:0,fat:0};
+  plans.forEach(function(p) {
+    if (p.avgDaily.carbs > p.targets.carbs*1.05) overUnder.carbs++;
+    else if (p.avgDaily.carbs < p.targets.carbs*0.95) overUnder.carbs--;
+    if (p.avgDaily.protein > p.targets.protein*1.05) overUnder.protein++;
+    else if (p.avgDaily.protein < p.targets.protein*0.95) overUnder.protein--;
+    if (p.avgDaily.fat > p.targets.fat*1.05) overUnder.fat++;
+    else if (p.avgDaily.fat < p.targets.fat*0.95) overUnder.fat--;
+  });
+
+  // === Cuisine Variety ===
+  var totalCuisineMeals = 0;
+  var cuisineTotals = {};
+  plans.forEach(function(p) { Object.keys(p.cuisines).forEach(function(c) { cuisineTotals[c]=(cuisineTotals[c]||0)+p.cuisines[c]; totalCuisineMeals+=p.cuisines[c]; }); });
+  var cuisineList = Object.entries(cuisineTotals).sort(function(a,b){return b[1]-a[1];}).map(function(e){return {name:e[0],count:e[1],pct:Math.round(e[1]/totalCuisineMeals*100)};});
+  var dominantCuisine = cuisineList.length > 0 && cuisineList[0].pct > 40 ? cuisineList[0] : null;
+
+  // === Ingredient Frequency ===
+  var ingTotals = {};
+  plans.forEach(function(p) { Object.keys(p.ingredientCounts).forEach(function(n) { ingTotals[n]=(ingTotals[n]||0)+p.ingredientCounts[n]; }); });
+  var ingList = Object.entries(ingTotals).sort(function(a,b){return b[1]-a[1];}).slice(0,20).map(function(e){return {name:e[0],count:e[1]};});
+  var maxIngCount = ingList.length > 0 ? ingList[0].count : 1;
+
+  // === Consistency Score ===
+  var avgScore = Math.round(plans.reduce(function(s,p){return s+p.consistencyScore;},0)/plans.length);
+
+  // === Streak ===
+  var sortedDates = plans.map(function(p){return p.date;}).sort();
+  var currentStreak = 1, longestStreak = 1, tempStreak = 1;
+  for (var si = 1; si < sortedDates.length; si++) {
+    var d1 = new Date(sortedDates[si-1]), d2 = new Date(sortedDates[si]);
+    var diff = Math.round((d2-d1)/(1000*60*60*24));
+    if (diff <= 8) { tempStreak++; } else { tempStreak = 1; }
+    if (tempStreak > longestStreak) longestStreak = tempStreak;
+  }
+  currentStreak = tempStreak;
+  if (sortedDates.length <= 1) { currentStreak = plans.length; longestStreak = plans.length; }
+
+  // === Calorie Target Drift ===
+  var targetHistory = plans.map(function(p){return {date:p.date,cal:p.targets.calories,carbs:p.targets.carbs,protein:p.targets.protein,fat:p.targets.fat};});
+
+  // === Data Management ===
+  var dataSize = round1(new Blob([JSON.stringify(statsData)]).size / 1024);
+  var totalRecipes = Object.keys(recipeMap).length;
+
+  function handleExport() {
+    var blob = new Blob([JSON.stringify(statsData,null,2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = 'mealprep-stats.json'; a.click(); URL.revokeObjectURL(url);
+  }
+  function handleImport(e) {
+    var file = e.target.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        var imported = JSON.parse(ev.target.result);
+        if (!imported.plans) { setImportMsg("Invalid file format"); return; }
+        var current = loadStats();
+        var existingIds = {};
+        current.plans.forEach(function(p){existingIds[p.id]=true;});
+        var added = 0;
+        imported.plans.forEach(function(p) { if (!existingIds[p.id]) { current.plans.push(p); added++; } });
+        saveStats(current); onUpdate(current);
+        setImportMsg("Imported "+added+" new plans");
+        setTimeout(function(){setImportMsg("");},3000);
+      } catch(err) { setImportMsg("Error reading file"); }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+  function handleClearAll() {
+    if (confirmText !== "DELETE") return;
+    saveStats({plans:[]});
+    onUpdate({plans:[]});
+    setShowConfirm(false); setConfirmText("");
+  }
+  function handleDeletePlan(id) {
+    var d = loadStats();
+    d.plans = d.plans.filter(function(p){return p.id!==id;});
+    saveStats(d); onUpdate(d);
+  }
+
+  return (<>
+    {/* KPIs */}
+    <div className="card">
+      <h2>Stats Overview</h2>
+      <div className="stats-grid">
+        <div className="stats-kpi"><div className="kv">{plans.length}</div><div className="kl">Plans Generated</div></div>
+        <div className="stats-kpi"><div className="kv">{totalRecipes}</div><div className="kl">Unique Recipes</div></div>
+        <div className="stats-kpi"><div className="kv">{avgScore}</div><div className="kl">Avg Score</div></div>
+        <div className="stats-kpi"><div className="kv">{currentStreak}</div><div className="kl">Current Streak</div></div>
+        <div className="stats-kpi"><div className="kv">{longestStreak}</div><div className="kl">Longest Streak</div></div>
+        <div className="stats-kpi"><div className="kv">{cuisineList.length}</div><div className="kl">Cuisines Used</div></div>
+      </div>
+    </div>
+
+    {/* Macro Trends */}
+    <div className="card"><div className="stats-section"><h3>Macro Trends</h3>
+      <div style={{overflowX:'auto'}}><table className="stats-table"><thead><tr><th>Date</th><th>Avg Cal</th><th>Avg C</th><th>Avg P</th><th>Avg F</th><th>On Target</th></tr></thead><tbody>
+        {weeklyTrends.slice().reverse().map(function(w,i){return (<tr key={i}>
+          <td>{w.date}</td>
+          <td className={w.calHit?"stats-hit":"stats-miss"}>{w.avg.calories}</td>
+          <td className={w.cHit?"stats-hit":"stats-miss"}>{w.avg.carbs}g</td>
+          <td className={w.pHit?"stats-hit":"stats-miss"}>{w.avg.protein}g</td>
+          <td className={w.fHit?"stats-hit":"stats-miss"}>{w.avg.fat}g</td>
+          <td className={w.allHit?"stats-hit":"stats-miss"}>{w.allHit?"Yes":"No"}</td>
+        </tr>);})}
+      </tbody></table></div>
+      {Math.abs(overUnder.carbs) >= 2 && <div className="stats-warn">Carbs consistently {overUnder.carbs>0?"over":"under"} target across {Math.abs(overUnder.carbs)} plans</div>}
+      {Math.abs(overUnder.protein) >= 2 && <div className="stats-warn">Protein consistently {overUnder.protein>0?"over":"under"} target across {Math.abs(overUnder.protein)} plans</div>}
+      {Math.abs(overUnder.fat) >= 2 && <div className="stats-warn">Fat consistently {overUnder.fat>0?"over":"under"} target across {Math.abs(overUnder.fat)} plans</div>}
+    </div></div>
+
+    {/* Recipe History */}
+    <div className="card"><div className="stats-section"><h3>Recipe History</h3>
+      {recipeList.slice(0,25).map(function(r,i){return (<div className="stats-bar-row" key={i}>
+        <span className="stats-bar-label" title={r.name}>{r.name}</span>
+        <div className="stats-bar-track"><div className="stats-bar-fill fill-pro" style={{width:Math.round(r.count/maxRecipeCount*100)+"%"}}></div></div>
+        <span className="stats-bar-val">{r.count}x</span>
+        <span style={{fontSize:'0.72rem',color:'#6b7f7a',minWidth:50}}>{r.lastDate}</span>
+      </div>);})}
+    </div></div>
+
+    {/* Cuisine Variety */}
+    <div className="card"><div className="stats-section"><h3>Cuisine Variety</h3>
+      {cuisineList.map(function(c,i){return (<div className="stats-bar-row" key={i}>
+        <span className="stats-bar-label">{c.name}</span>
+        <div className="stats-bar-track"><div className="stats-bar-fill fill-carb" style={{width:c.pct+"%"}}></div></div>
+        <span className="stats-bar-val">{c.pct}%</span>
+      </div>);})}
+      {dominantCuisine && <div className="stats-warn">{dominantCuisine.name} dominates at {dominantCuisine.pct}% of meals — consider more variety</div>}
+    </div></div>
+
+    {/* Ingredient Frequency */}
+    <div className="card"><div className="stats-section"><h3>Top Ingredients</h3>
+      {ingList.map(function(ig,i){return (<div className="stats-bar-row" key={i}>
+        <span className="stats-bar-label">{ig.name}</span>
+        <div className="stats-bar-track"><div className="stats-bar-fill fill-fat" style={{width:Math.round(ig.count/maxIngCount*100)+"%"}}></div></div>
+        <span className="stats-bar-val">{ig.count}x</span>
+      </div>);})}
+    </div></div>
+
+    {/* Plan Consistency Scores */}
+    <div className="card"><div className="stats-section"><h3>Plan Consistency Scores</h3>
+      <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:8}}>Running average: <strong>{avgScore}/100</strong></p>
+      {plans.slice().reverse().map(function(p,i){return (<div className="stats-bar-row" key={i}>
+        <span className="stats-bar-label">{p.date}</span>
+        <div className="stats-bar-track"><div className="stats-bar-fill" style={{width:p.consistencyScore+"%",background:p.consistencyScore>=70?'#2d6a4f':p.consistencyScore>=40?'#e67e22':'#e74c3c'}}></div></div>
+        <span className="stats-bar-val">{p.consistencyScore}</span>
+      </div>);})}
+    </div></div>
+
+    {/* Calorie Target Drift */}
+    <div className="card"><div className="stats-section"><h3>Calorie Target Drift</h3>
+      <div style={{overflowX:'auto'}}><table className="stats-table"><thead><tr><th>Date</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead><tbody>
+        {targetHistory.slice().reverse().map(function(t,i){
+          var prev = targetHistory[targetHistory.length - 1 - i - 1];
+          var changed = prev && (t.cal!==prev.cal || t.carbs!==prev.carbs || t.protein!==prev.protein || t.fat!==prev.fat);
+          return (<tr key={i} style={changed?{background:'#fff3cd'}:{}}>
+            <td>{t.date}</td><td>{t.cal}</td><td>{t.carbs}</td><td>{t.protein}</td><td>{t.fat}</td>
+          </tr>);
+        })}
+      </tbody></table></div>
+    </div></div>
+
+    {/* Data Management */}
+    <div className="card"><div className="stats-section"><h3>Data Management</h3>
+      <div className="stats-dm-summary">
+        <span><strong>{plans.length}</strong> plans</span>
+        <span><strong>{totalRecipes}</strong> recipes logged</span>
+        <span><strong>{dataSize}</strong> KB stored</span>
+      </div>
+      <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}}>
+        <button className="btn btn-sm btn-secondary" onClick={handleExport}>Export JSON</button>
+        <label className="btn btn-sm btn-secondary" style={{cursor:'pointer'}}>Import JSON<input type="file" accept=".json" onChange={handleImport} style={{display:'none'}} /></label>
+        {!showConfirm && <button className="btn btn-sm btn-danger" onClick={function(){setShowConfirm(true);}}>Clear All Data</button>}
+        {showConfirm && <span><input className="confirm-input" placeholder='Type DELETE' value={confirmText} onChange={function(e){setConfirmText(e.target.value);}} />
+          <button className="btn btn-sm btn-danger" onClick={handleClearAll} disabled={confirmText!=="DELETE"}>Confirm</button>
+          <button className="btn btn-sm btn-secondary" onClick={function(){setShowConfirm(false);setConfirmText("");}}>Cancel</button></span>}
+      </div>
+      {importMsg && <div className="success">{importMsg}</div>}
+      <div style={{marginTop:8}}>
+        <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:6}}>Individual plan deletion:</p>
+        {plans.slice().reverse().map(function(p){return (<div className="stats-plan-row" key={p.id}>
+          <span>{p.date} — Score: {p.consistencyScore} — {p.totalMeals} meals</span>
+          <button className="btn btn-sm btn-danger" onClick={function(){handleDeletePlan(p.id);}}>Del</button>
+        </div>);})}
+      </div>
+    </div></div>
+  </>);
+}
+
 function App() {
   var [calories, setCalories] = React.useState(2000);
   var [carbPct, setCarbPct] = React.useState(35);
@@ -591,6 +896,9 @@ function App() {
   var [recipeCuisine, setRecipeCuisine] = React.useState("All");
   var [ingredientOverrides, setIngredientOverrides] = React.useState(function() { try { return JSON.parse(localStorage.getItem("mealprep_overrides") || "{}"); } catch(e) { return {}; } });
   var [ingSearch, setIngSearch] = React.useState("");
+  var [statsData, setStatsData] = React.useState(loadStats);
+  var [statsNewData, setStatsNewData] = React.useState(false);
+  var [lastStatsView, setLastStatsView] = React.useState(function() { return Number(localStorage.getItem("mealprep_stats_last_view") || "0"); });
 
   var pctSum = carbPct + proteinPct + fatPct, pctValid = pctSum === 100;
   var carbGrams = round1((calories * (carbPct / 100)) / 4);
@@ -617,7 +925,15 @@ function App() {
 
   var overrideCount = Object.keys(ingredientOverrides).length;
 
-  function handleGenerate() { if (!pctValid) return; setPlan(generatePlan(calories, carbGrams, proteinGrams, fatGrams, ingredientOverrides)); setView("plan"); }
+  function handleGenerate() {
+    if (!pctValid) return;
+    var p = generatePlan(calories, carbGrams, proteinGrams, fatGrams, ingredientOverrides);
+    setPlan(p);
+    setView("plan");
+    var updated = recordPlan(p, calories, carbGrams, proteinGrams, fatGrams);
+    setStatsData(updated);
+    setStatsNewData(true);
+  }
 
   function handleSave() {
     if (!plan || !saveName.trim()) return;
@@ -701,6 +1017,9 @@ function App() {
         <button className="btn btn-secondary" onClick={function(){setView(view === "ingredients" ? "plan" : "ingredients");}}>
           {view === "ingredients" ? "Hide" : ""} Ingredients{overrideCount > 0 ? " ("+overrideCount+" modified)" : ""}
         </button>
+        <button className="btn btn-secondary" onClick={function(){setView(view === "stats" ? "plan" : "stats");if(view!=="stats"){setStatsNewData(false);setLastStatsView(Date.now());localStorage.setItem("mealprep_stats_last_view",String(Date.now()));}}}>
+          Stats{statsNewData && <span className="stats-badge"></span>}
+        </button>
       </div>
 
       <div className="card">
@@ -717,6 +1036,8 @@ function App() {
           })}
         </div>}
       </div>
+
+      {!plan && view === "stats" && <StatsView statsData={statsData} onUpdate={function(d){setStatsData(d);}} />}
 
       {!plan && view === "ingredients" && (function() {
           var allNames = Object.keys(DEFAULT_MACROS_PER100).sort();
@@ -759,6 +1080,7 @@ function App() {
           <button className={"btn btn-toggle"+(view==="grocery"?" active":"")} onClick={function(){setView("grocery");}}>Grocery List</button>
           <button className={"btn btn-toggle"+(view==="recipes"?" active":"")} onClick={function(){setView("recipes");}}>All Recipes</button>
           <button className={"btn btn-toggle"+(view==="ingredients"?" active":"")} onClick={function(){setView("ingredients");}}>Ingredients{overrideCount > 0 ? " ("+overrideCount+")" : ""}</button>
+          <button className={"btn btn-toggle"+(view==="stats"?" active":"")} onClick={function(){setView("stats");setStatsNewData(false);setLastStatsView(Date.now());localStorage.setItem("mealprep_stats_last_view",String(Date.now()));}}>Stats{statsNewData && <span className="stats-badge"></span>}</button>
         </div>
 
         {view === "plan" && plan.map(function(day, di) {
@@ -886,6 +1208,8 @@ function App() {
             </div>
           </div>);
         })()}
+
+        {view === "stats" && <StatsView statsData={statsData} onUpdate={function(d){setStatsData(d);}} />}
       </>)}
 
       {swapTarget && (<div className="modal-overlay" onClick={function(e){if(e.target===e.currentTarget)setSwapTarget(null);}}>

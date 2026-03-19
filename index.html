@@ -800,10 +800,10 @@ function App() {
             })}
             <div className="day-totals"><span>Day Total — Cal: {day.totals.calories}</span><span>C: {day.totals.carbs}g</span><span>P: {day.totals.protein}g</span><span>F: {day.totals.fat}g</span></div>
             <div className="progress-row">
-              <div className="progress-item"><div className="plabel"><span>Calories</span><span>{Math.round(day.totals.calories/calories*100)}%</span></div><ProgressBar value={day.totals.calories} target={calories} className="fill-cal" /></div>
               <div className="progress-item"><div className="plabel"><span>Carbs</span><span>{Math.round(day.totals.carbs/carbGrams*100)}%</span></div><ProgressBar value={day.totals.carbs} target={carbGrams} className="fill-carb" /></div>
               <div className="progress-item"><div className="plabel"><span>Protein</span><span>{Math.round(day.totals.protein/proteinGrams*100)}%</span></div><ProgressBar value={day.totals.protein} target={proteinGrams} className="fill-pro" /></div>
               <div className="progress-item"><div className="plabel"><span>Fat</span><span>{Math.round(day.totals.fat/fatGrams*100)}%</span></div><ProgressBar value={day.totals.fat} target={fatGrams} className="fill-fat" /></div>
+              <div className="progress-item"><div className="plabel"><span>Calories</span><span>{Math.round(day.totals.calories/calories*100)}%</span></div><ProgressBar value={day.totals.calories} target={calories} className="fill-cal" /></div>
             </div>
           </div>);
         })}

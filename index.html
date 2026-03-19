@@ -110,10 +110,10 @@
   .override-reset { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 0.78rem; font-weight: 600; padding: 2px 6px; }
   .override-reset:hover { text-decoration: underline; }
   .override-count { font-size: 0.82rem; color: #2d6a4f; font-weight: 600; margin-left: 8px; }
-  /* Eaten checkboxes */
-  .eaten-cb { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.82rem; color: #3a5a50; user-select: none; }
-  .eaten-cb input { width: 18px; height: 18px; accent-color: #2d6a4f; cursor: pointer; }
-  .eaten-cb.checked { color: #2d6a4f; font-weight: 600; }
+  /* Eaten toggle */
+  .eaten-btn { background: none; border: 1px solid #c8d6d0; border-radius: 6px; padding: 3px 10px; font-size: 0.78rem; color: #6b7f7a; cursor: pointer; transition: all 0.2s; }
+  .eaten-btn:hover { border-color: #2d6a4f; color: #2d6a4f; }
+  .eaten-btn.active { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
   .meal-card.eaten { border-left: 3px solid #2d6a4f; background: #f0faf4; }
   .log-eaten-bar { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #e8f5e9; border-radius: 10px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
   .log-eaten-bar .le-info { font-size: 0.88rem; color: #2d6a4f; font-weight: 600; }
@@ -670,6 +670,8 @@ function recordEatenMeals(plan, eatenMap, targetCal, targetCarbs, targetProtein,
 function StatsView(props) {
   var statsData = props.statsData;
   var onUpdate = props.onUpdate;
+  var savedPlans = props.savedPlans || [];
+  var onSavedPlansUpdate = props.onSavedPlansUpdate;
   var [confirmText, setConfirmText] = React.useState("");
   var [showConfirm, setShowConfirm] = React.useState(false);
   var [importMsg, setImportMsg] = React.useState("");
@@ -747,13 +749,14 @@ function StatsView(props) {
   var targetHistory = plans.map(function(p){return {date:p.date,cal:p.targets.calories,carbs:p.targets.carbs,protein:p.targets.protein,fat:p.targets.fat};});
 
   // === Data Management ===
-  var dataSize = round1(new Blob([JSON.stringify(statsData)]).size / 1024);
+  var dataSize = round1((new Blob([JSON.stringify(statsData)]).size + new Blob([JSON.stringify(savedPlans)]).size) / 1024);
   var totalRecipes = Object.keys(recipeMap).length;
 
   function handleExport() {
-    var blob = new Blob([JSON.stringify(statsData,null,2)], {type:'application/json'});
+    var exportData = { stats: statsData, savedPlans: savedPlans, exportDate: new Date().toISOString() };
+    var blob = new Blob([JSON.stringify(exportData,null,2)], {type:'application/json'});
     var url = URL.createObjectURL(blob);
-    var a = document.createElement('a'); a.href = url; a.download = 'mealprep-stats.json'; a.click(); URL.revokeObjectURL(url);
+    var a = document.createElement('a'); a.href = url; a.download = 'mealprep-data.json'; a.click(); URL.revokeObjectURL(url);
   }
   function handleImport(e) {
     var file = e.target.files[0]; if (!file) return;
@@ -761,14 +764,30 @@ function StatsView(props) {
     reader.onload = function(ev) {
       try {
         var imported = JSON.parse(ev.target.result);
-        if (!imported.plans) { setImportMsg("Invalid file format"); return; }
-        var current = loadStats();
-        var existingIds = {};
-        current.plans.forEach(function(p){existingIds[p.id]=true;});
-        var added = 0;
-        imported.plans.forEach(function(p) { if (!existingIds[p.id]) { current.plans.push(p); added++; } });
-        saveStats(current); onUpdate(current);
-        setImportMsg("Imported "+added+" new plans");
+        var msgs = [];
+        // Handle new format (stats + savedPlans) or old format (just {plans:[]})
+        var importedStats = imported.stats || (imported.plans ? imported : null);
+        if (importedStats && importedStats.plans) {
+          var current = loadStats();
+          var existingIds = {};
+          current.plans.forEach(function(p){existingIds[p.id]=true;});
+          var added = 0;
+          importedStats.plans.forEach(function(p) { if (!existingIds[p.id]) { current.plans.push(p); added++; } });
+          saveStats(current); onUpdate(current);
+          msgs.push(added + " stat entries");
+        }
+        // Import saved plans
+        if (imported.savedPlans && Array.isArray(imported.savedPlans) && onSavedPlansUpdate) {
+          var existingNames = {};
+          savedPlans.forEach(function(p){existingNames[p.name]=true;});
+          var merged = savedPlans.slice();
+          var spAdded = 0;
+          imported.savedPlans.forEach(function(p) { if (!existingNames[p.name]) { merged.push(p); spAdded++; } });
+          onSavedPlansUpdate(merged);
+          msgs.push(spAdded + " saved plans");
+        }
+        if (msgs.length === 0) { setImportMsg("Invalid file format"); return; }
+        setImportMsg("Imported: " + msgs.join(", "));
         setTimeout(function(){setImportMsg("");},3000);
       } catch(err) { setImportMsg("Error reading file"); }
     };
@@ -876,8 +895,9 @@ function StatsView(props) {
     {/* Data Management */}
     <div className="card"><div className="stats-section"><h3>Data Management</h3>
       <div className="stats-dm-summary">
-        <span><strong>{plans.length}</strong> plans</span>
-        <span><strong>{totalRecipes}</strong> recipes logged</span>
+        <span><strong>{plans.length}</strong> logged plans</span>
+        <span><strong>{savedPlans.length}</strong> saved plans</span>
+        <span><strong>{totalRecipes}</strong> recipes tracked</span>
         <span><strong>{dataSize}</strong> KB stored</span>
       </div>
       <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}}>
@@ -1075,7 +1095,7 @@ function App() {
         </div>}
       </div>
 
-      {!plan && view === "stats" && <StatsView statsData={statsData} onUpdate={function(d){setStatsData(d);}} />}
+      {!plan && view === "stats" && <StatsView statsData={statsData} onUpdate={function(d){setStatsData(d);}} savedPlans={savedPlans} onSavedPlansUpdate={function(sp){setSavedPlans(sp);localStorage.setItem("mealprep_plans",JSON.stringify(sp));}} />}
 
       {!plan && view === "ingredients" && (function() {
           var allNames = Object.keys(DEFAULT_MACROS_PER100).sort();
@@ -1134,14 +1154,12 @@ function App() {
               var isEaten = !!eatenMeals[mealKey];
               return (<div className={"meal-card" + (isEaten ? " eaten" : "")} key={mi}>
                 <div className="meal-header">
-                  <span style={{display:'flex',alignItems:'center',gap:8}}>
-                    <label className={"eaten-cb" + (isEaten ? " checked" : "")}><input type="checkbox" checked={isEaten} onChange={function(){toggleEaten(di,mi);}} />{isEaten ? "Eaten" : "Ate this?"}</label>
-                    <span className="meal-name">{meal.name}</span>
-                  </span>
+                  <span className="meal-name">{meal.name}</span>
                   <span style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap'}}>
                     {meal.isBreakfast && <span className="cuisine-tag breakfast-tag">Breakfast</span>}
                     <span className="cuisine-tag">{meal.cuisine}</span>
                     <button className="swap-btn" onClick={function(){setSwapTarget({dayIdx:di,mealIdx:mi});setSwapSearch("");}}>Swap</button>
+                    <button className={"eaten-btn" + (isEaten ? " active" : "")} onClick={function(){toggleEaten(di,mi);}}>{isEaten ? "\u2713 Eaten" : "\u2713"}</button>
                   </span>
                 </div>
                 <table className="ing-table">
@@ -1258,7 +1276,7 @@ function App() {
           </div>);
         })()}
 
-        {view === "stats" && <StatsView statsData={statsData} onUpdate={function(d){setStatsData(d);}} />}
+        {view === "stats" && <StatsView statsData={statsData} onUpdate={function(d){setStatsData(d);}} savedPlans={savedPlans} onSavedPlansUpdate={function(sp){setSavedPlans(sp);localStorage.setItem("mealprep_plans",JSON.stringify(sp));}} />}
       </>)}
 
       {swapTarget && (<div className="modal-overlay" onClick={function(e){if(e.target===e.currentTarget)setSwapTarget(null);}}>

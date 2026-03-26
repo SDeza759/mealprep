@@ -147,26 +147,19 @@
   .meal-card-header { cursor: pointer; }
   .meal-card-header:hover { background: #eef5f1; border-radius: 6px; margin: -4px; padding: 4px; }
   .expand-collapse-bar { display: flex; gap: 6px; }
-  .group-card { background: #f7faf8; border: 1.5px solid #d8f3dc; border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; }
-  .group-card .group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .group-card .group-header .group-label { font-weight: 700; font-size: 0.85rem; color: #2d6a4f; }
-  .group-card .group-days { display: flex; gap: 6px; flex-wrap: wrap; }
-  .group-day-tag { background: #d8f3dc; color: #2d6a4f; padding: 4px 12px; border-radius: 16px; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
-  .group-day-tag button { background: none; border: none; color: #6b7f7a; cursor: pointer; font-size: 0.9rem; padding: 0 2px; line-height: 1; }
-  .group-day-tag button:hover { color: #e74c3c; }
-  .add-to-group-select { padding: 4px 8px; border: 1.5px solid #c8d6d0; border-radius: 8px; font-size: 0.82rem; background: #fff; color: #3a5a50; }
-  .day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
-  .day-chip { padding: 8px 4px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; text-align: center; cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent; user-select: none; }
-  .day-chip.included { background: #e8f5e9; color: #2d6a4f; border-color: #d8f3dc; }
-  .day-chip.included:hover { border-color: #2d6a4f; }
-  .day-chip.excluded { background: #f5f5f5; color: #b0b0b0; border-color: #e0e0e0; text-decoration: line-through; }
-  .day-chip.excluded:hover { border-color: #999; }
-  .day-chip.assigned { background: #d8f3dc; color: #2d6a4f; border-color: #b7e4c7; cursor: default; }
-  .day-chip .day-abbr { font-size: 0.82rem; font-weight: 700; }
-  .day-chip .day-status { font-size: 0.68rem; font-weight: 400; color: #6b7f7a; margin-top: 2px; }
-  .day-chip.excluded .day-status { color: #b0b0b0; }
-  .group-remove-btn { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 0.82rem; font-weight: 600; padding: 2px 6px; border-radius: 6px; transition: all 0.15s; }
-  .group-remove-btn:hover { background: #fde8e8; }
+  .day-pill-row { display: flex; gap: 6px; margin-top: 8px; }
+  .day-pill { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 2px 6px; border-radius: 10px; border: 2px solid #d8f3dc; background: #e8f5e9; cursor: pointer; user-select: none; transition: all 0.15s; position: relative; min-width: 0; }
+  .day-pill .dp-name { font-size: 0.82rem; font-weight: 700; color: #2d6a4f; }
+  .day-pill .dp-label { font-size: 0.62rem; font-weight: 600; color: #6b7f7a; margin-top: 1px; }
+  .day-pill.dp-selected { border-color: #2d6a4f; box-shadow: 0 0 0 2px rgba(45,106,79,0.3); }
+  .day-pill.dp-excluded { background: #f3f3f3; border-color: #e0e0e0; cursor: default; }
+  .day-pill.dp-excluded .dp-name { color: #b0b0b0; text-decoration: line-through; }
+  .day-pill.dp-excluded .dp-label { color: #c0c0c0; }
+  .dp-toggle { position: relative; width: 28px; height: 14px; border-radius: 7px; background: #2d6a4f; margin-top: 5px; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+  .dp-toggle::after { content: ''; position: absolute; top: 2px; left: 14px; width: 10px; height: 10px; border-radius: 50%; background: #fff; transition: left 0.2s; }
+  .dp-toggle.dp-off { background: #c0c0c0; }
+  .dp-toggle.dp-off::after { left: 2px; }
+  .dg-helper { font-size: 0.72rem; color: #9aa8a3; margin-top: 8px; line-height: 1.4; }
   .cook-times { font-size: 0.78rem; color: #6b7f7a; margin-bottom: 8px; display: flex; gap: 12px; }
   .cook-times span { background: #e8f5e9; padding: 2px 8px; border-radius: 6px; }
   .instructions-toggle { background: none; border: 1px solid #d8f3dc; border-radius: 8px; padding: 6px 14px; font-size: 0.82rem; color: #2d6a4f; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px; display: inline-flex; align-items: center; gap: 4px; }
@@ -1244,15 +1237,63 @@ function App() {
     saveDayGroupConfig(dayGroups, nextExcluded);
   }
 
-  function addGroup() { if (unassignedDays.length === 0) return; var next = dayGroups.concat([[]]); setDayGroups(next); saveDayGroupConfig(next, excludedDays); }
-  function removeGroup(gi) { var next = dayGroups.filter(function(_,i){return i!==gi;}); setDayGroups(next); saveDayGroupConfig(next, excludedDays); }
-  function addDayToGroup(gi, d) {
-    var next = dayGroups.map(function(g, i) { return i === gi ? g.concat([d]).sort() : g; });
-    setDayGroups(next); saveDayGroupConfig(next, excludedDays);
+  var [selectedDay, setSelectedDay] = React.useState(null);
+  var clickTimer = React.useRef(null);
+
+  // Group colors palette
+  var GROUP_COLORS = [
+    { bg: '#dbeafe', border: '#3b82f6', text: '#1e40af' },
+    { bg: '#fef3c7', border: '#f59e0b', text: '#92400e' },
+    { bg: '#ede9fe', border: '#8b5cf6', text: '#5b21b6' },
+    { bg: '#ccfbf1', border: '#14b8a6', text: '#115e59' },
+    { bg: '#fce7f3', border: '#ec4899', text: '#9d174d' },
+    { bg: '#ffedd5', border: '#f97316', text: '#9a3412' }
+  ];
+
+  function getGroupColor(gi) { return GROUP_COLORS[gi % GROUP_COLORS.length]; }
+
+  function findDayGroup(d) {
+    for (var i = 0; i < dayGroups.length; i++) { if (dayGroups[i].indexOf(d) !== -1) return i; }
+    return -1;
   }
-  function removeDayFromGroup(gi, d) {
-    var next = dayGroups.map(function(g, i) { return i === gi ? g.filter(function(x){return x!==d;}) : g; }).filter(function(g){return g.length>0;});
+
+  function handlePillClick(d) {
+    if (excludedDays.indexOf(d) !== -1) return;
+    if (selectedDay === null) {
+      setSelectedDay(d);
+    } else if (selectedDay === d) {
+      setSelectedDay(null);
+    } else {
+      // Group selectedDay and d together
+      var gA = findDayGroup(selectedDay), gB = findDayGroup(d);
+      var next;
+      if (gA !== -1 && gB !== -1) {
+        if (gA === gB) { setSelectedDay(null); return; }
+        // Merge group B into group A
+        next = dayGroups.map(function(g, i) {
+          if (i === gA) return g.concat(dayGroups[gB]).sort();
+          return g;
+        }).filter(function(_, i) { return i !== gB; });
+      } else if (gA !== -1) {
+        next = dayGroups.map(function(g, i) { return i === gA ? g.concat([d]).sort() : g; });
+      } else if (gB !== -1) {
+        next = dayGroups.map(function(g, i) { return i === gB ? g.concat([selectedDay]).sort() : g; });
+      } else {
+        next = dayGroups.concat([[selectedDay, d].sort()]);
+      }
+      setDayGroups(next); saveDayGroupConfig(next, excludedDays);
+      setSelectedDay(null);
+    }
+  }
+
+  function handlePillDoubleClick(d) {
+    var gi = findDayGroup(d);
+    if (gi === -1) return;
+    var next = dayGroups.map(function(g, i) {
+      return i === gi ? g.filter(function(x) { return x !== d; }) : g;
+    }).filter(function(g) { return g.length > 1; });
     setDayGroups(next); saveDayGroupConfig(next, excludedDays);
+    setSelectedDay(null);
   }
 
   // Collapsible helpers
@@ -1373,48 +1414,31 @@ function App() {
 
       <div className="card">
         <h2>Day Grouping</h2>
-        <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:4}}>Toggle days on/off, then group days to share identical meals.</p>
 
-        <div className="day-grid">
+        <div className="day-pill-row">
           {[0,1,2,3,4,5,6].map(function(d) {
             var isExcluded = excludedDays.indexOf(d) !== -1;
-            var isAssigned = !!assignedDays[d];
-            var groupIdx = -1;
-            dayGroups.forEach(function(g, gi) { if (g.indexOf(d) !== -1) groupIdx = gi; });
-            var chipClass = "day-chip" + (isExcluded ? " excluded" : isAssigned ? " assigned" : " included");
-            return (<div className={chipClass} key={d} onClick={function(){ if (!isAssigned) toggleExcludeDay(d); }}>
-              <div className="day-abbr">{DAYS_NAMES[d].slice(0,3)}</div>
-              <div className="day-status">{isExcluded ? "off" : isAssigned ? "G" + (groupIdx+1) : "on"}</div>
+            var gi = findDayGroup(d);
+            var gc = gi !== -1 ? getGroupColor(gi) : null;
+            var isSelected = selectedDay === d;
+            var pillClass = "day-pill" + (isExcluded ? " dp-excluded" : "") + (isSelected ? " dp-selected" : "");
+            var pillStyle = {};
+            if (!isExcluded && gc) { pillStyle = { background: gc.bg, borderColor: gc.border }; }
+            return (<div className={pillClass} key={d} style={pillStyle}
+              onClick={function(e) {
+                if (e.target.classList.contains('dp-toggle')) return;
+                if (clickTimer.current) { clearTimeout(clickTimer.current); clickTimer.current = null; handlePillDoubleClick(d); return; }
+                clickTimer.current = setTimeout(function() { clickTimer.current = null; handlePillClick(d); }, 250);
+              }}>
+              <div className="dp-name" style={gc && !isExcluded ? {color: gc.text} : {}}>{DAYS_NAMES[d].slice(0,3)}</div>
+              {gi !== -1 && !isExcluded && <div className="dp-label" style={gc ? {color: gc.text} : {}}>G{gi+1}</div>}
+              <div className={"dp-toggle" + (isExcluded ? " dp-off" : "")} onClick={function(e){e.stopPropagation();toggleExcludeDay(d);}} />
             </div>);
           })}
         </div>
 
         {allDaysExcluded && <div className="warning" style={{marginTop:10}}>All days are excluded. Include at least one day to generate a plan.</div>}
-
-        {dayGroups.length > 0 && <div style={{marginTop:12}}>
-          {dayGroups.map(function(group, gi) {
-            return (<div className="group-card" key={gi}>
-              <div className="group-header">
-                <span className="group-label">Group {gi+1}</span>
-                <button className="group-remove-btn" onClick={function(){removeGroup(gi);}}>Remove</button>
-              </div>
-              <div className="group-days">
-                {group.map(function(d) {
-                  return (<span className="group-day-tag" key={d}>{DAYS_NAMES[d].slice(0,3)}<button onClick={function(){removeDayFromGroup(gi,d);}}>×</button></span>);
-                })}
-                {unassignedDays.length > 0 && <select className="add-to-group-select" value="" onChange={function(e){if(e.target.value)addDayToGroup(gi,Number(e.target.value));e.target.value="";}}>
-                  <option value="">+ Add</option>
-                  {unassignedDays.map(function(d){return <option key={d} value={d}>{DAYS_NAMES[d]}</option>;})}
-                </select>}
-              </div>
-            </div>);
-          })}
-        </div>}
-
-        <div style={{marginTop:10,display:'flex',gap:6}}>
-          <button className="btn btn-sm btn-secondary" onClick={addGroup} disabled={unassignedDays.length<2}>New Group</button>
-          {dayGroups.length > 0 && <button className="btn btn-sm btn-secondary" onClick={function(){var next=[]; setDayGroups(next); saveDayGroupConfig(next, excludedDays);}}>Clear Groups</button>}
-        </div>
+        <div className="dg-helper">Tap a pill to select, then tap another to group. Double-tap to ungroup. Toggle switch to include/exclude.</div>
       </div>
 
       <div className="btn-row">

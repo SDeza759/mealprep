@@ -147,15 +147,26 @@
   .meal-card-header { cursor: pointer; }
   .meal-card-header:hover { background: #eef5f1; border-radius: 6px; margin: -4px; padding: 4px; }
   .expand-collapse-bar { display: flex; gap: 6px; }
-  .group-card { background: #f7faf8; border: 1.5px solid #d8f3dc; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; }
-  .group-card .group-days { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-  .group-day-tag { background: #d8f3dc; color: #2d6a4f; padding: 3px 10px; border-radius: 16px; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+  .group-card { background: #f7faf8; border: 1.5px solid #d8f3dc; border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; }
+  .group-card .group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .group-card .group-header .group-label { font-weight: 700; font-size: 0.85rem; color: #2d6a4f; }
+  .group-card .group-days { display: flex; gap: 6px; flex-wrap: wrap; }
+  .group-day-tag { background: #d8f3dc; color: #2d6a4f; padding: 4px 12px; border-radius: 16px; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
   .group-day-tag button { background: none; border: none; color: #6b7f7a; cursor: pointer; font-size: 0.9rem; padding: 0 2px; line-height: 1; }
   .group-day-tag button:hover { color: #e74c3c; }
-  .unassigned-days { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
-  .unassigned-day-btn { background: #e0e8e4; color: #3a5a50; border: none; padding: 4px 12px; border-radius: 16px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-  .unassigned-day-btn:hover { background: #2d6a4f; color: #fff; }
-  .add-to-group-select { padding: 3px 8px; border: 1.5px solid #c8d6d0; border-radius: 6px; font-size: 0.82rem; }
+  .add-to-group-select { padding: 4px 8px; border: 1.5px solid #c8d6d0; border-radius: 8px; font-size: 0.82rem; background: #fff; color: #3a5a50; }
+  .day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
+  .day-chip { padding: 8px 4px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; text-align: center; cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent; user-select: none; }
+  .day-chip.included { background: #e8f5e9; color: #2d6a4f; border-color: #d8f3dc; }
+  .day-chip.included:hover { border-color: #2d6a4f; }
+  .day-chip.excluded { background: #f5f5f5; color: #b0b0b0; border-color: #e0e0e0; text-decoration: line-through; }
+  .day-chip.excluded:hover { border-color: #999; }
+  .day-chip.assigned { background: #d8f3dc; color: #2d6a4f; border-color: #b7e4c7; cursor: default; }
+  .day-chip .day-abbr { font-size: 0.82rem; font-weight: 700; }
+  .day-chip .day-status { font-size: 0.68rem; font-weight: 400; color: #6b7f7a; margin-top: 2px; }
+  .day-chip.excluded .day-status { color: #b0b0b0; }
+  .group-remove-btn { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 0.82rem; font-weight: 600; padding: 2px 6px; border-radius: 6px; transition: all 0.15s; }
+  .group-remove-btn:hover { background: #fde8e8; }
   .cook-times { font-size: 0.78rem; color: #6b7f7a; margin-bottom: 8px; display: flex; gap: 12px; }
   .cook-times span { background: #e8f5e9; padding: 2px 8px; border-radius: 6px; }
   .instructions-toggle { background: none; border: 1px solid #d8f3dc; border-radius: 8px; padding: 6px 14px; font-size: 0.82rem; color: #2d6a4f; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px; display: inline-flex; align-items: center; gap: 4px; }
@@ -666,8 +677,9 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
   return allMealData;
 }
 
-function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, overrides, dayGroups) {
+function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, overrides, dayGroups, excludedDays) {
   var days = new Array(7), ingredientFrequency = {};
+  var excluded = excludedDays || [];
 
   // Build generation slots: each group shares one plan, ungrouped days get individual plans
   var assigned = {};
@@ -675,7 +687,7 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
   (dayGroups || []).forEach(function(group) {
     if (group.length > 0) { slots.push(group.slice()); group.forEach(function(d) { assigned[d] = true; }); }
   });
-  for (var dd = 0; dd < 7; dd++) { if (!assigned[dd]) slots.push([dd]); }
+  for (var dd = 0; dd < 7; dd++) { if (!assigned[dd] && excluded.indexOf(dd) === -1) slots.push([dd]); }
   slots.sort(function(a, b) { return a[0] - b[0]; });
 
   for (var si = 0; si < slots.length; si++) {
@@ -758,6 +770,7 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
 function buildGroceryList(plan) {
   var map = {};
   plan.forEach(function(day, di) {
+    if (!day) return;
     day.meals.forEach(function(meal) {
       meal.ingredients.forEach(function(ing) {
         if (!map[ing.name]) map[ing.name] = { name: ing.name, totalGrams: 0, totalUnits: 0, appearances: [], isSpice: !!ing.isSpice };
@@ -845,6 +858,7 @@ function recordEatenMeals(plan, eatenMap, targetCal, targetCarbs, targetProtein,
   var ingredientGrams = {}; // track by total grams, not count
   var cuisines = {};
   plan.forEach(function(day, di) {
+    if (!day) return;
     var dayAte = false;
     day.meals.forEach(function(meal, mi) {
       var key = di + "-" + mi;
@@ -1185,26 +1199,60 @@ function App() {
   var overrideCount = Object.keys(ingredientOverrides).length;
 
   var [eatenMeals, setEatenMeals] = React.useState({});
-  var [dayGroups, setDayGroups] = React.useState([]);
+  var [dayGroups, setDayGroups] = React.useState(function() {
+    try { var saved = JSON.parse(localStorage.getItem("mealprep_daygroups") || "null"); return saved && saved.groups ? saved.groups : []; } catch(e) { return []; }
+  });
+  var [excludedDays, setExcludedDays] = React.useState(function() {
+    try { var saved = JSON.parse(localStorage.getItem("mealprep_daygroups") || "null"); return saved && saved.excluded ? saved.excluded : []; } catch(e) { return []; }
+  });
   var [expandedDays, setExpandedDays] = React.useState({});
   var [expandedMeals, setExpandedMeals] = React.useState({});
   var [expandedInstructions, setExpandedInstructions] = React.useState({});
 
+  // Persist day grouping config to localStorage
+  function saveDayGroupConfig(groups, excluded) {
+    localStorage.setItem("mealprep_daygroups", JSON.stringify({ groups: groups, excluded: excluded }));
+  }
+
   // Day grouping helpers
   var assignedDays = {};
   dayGroups.forEach(function(g) { g.forEach(function(d) { assignedDays[d] = true; }); });
+  var includedDays = [];
   var unassignedDays = [];
-  for (var ud = 0; ud < 7; ud++) { if (!assignedDays[ud]) unassignedDays.push(ud); }
+  for (var ud = 0; ud < 7; ud++) {
+    if (excludedDays.indexOf(ud) === -1) {
+      includedDays.push(ud);
+      if (!assignedDays[ud]) unassignedDays.push(ud);
+    }
+  }
+  var allDaysExcluded = includedDays.length === 0;
 
-  function addGroup() { if (unassignedDays.length === 0) return; setDayGroups(dayGroups.concat([[]])); }
-  function removeGroup(gi) { var g = dayGroups[gi]; setDayGroups(dayGroups.filter(function(_,i){return i!==gi;})); }
+  function toggleExcludeDay(d) {
+    var nextExcluded;
+    if (excludedDays.indexOf(d) !== -1) {
+      nextExcluded = excludedDays.filter(function(x) { return x !== d; });
+    } else {
+      // Remove from any group first
+      var nextGroups = dayGroups.map(function(g) { return g.filter(function(x) { return x !== d; }); }).filter(function(g) { return g.length > 0; });
+      nextExcluded = excludedDays.concat([d]).sort();
+      setDayGroups(nextGroups);
+      saveDayGroupConfig(nextGroups, nextExcluded);
+      setExcludedDays(nextExcluded);
+      return;
+    }
+    setExcludedDays(nextExcluded);
+    saveDayGroupConfig(dayGroups, nextExcluded);
+  }
+
+  function addGroup() { if (unassignedDays.length === 0) return; var next = dayGroups.concat([[]]); setDayGroups(next); saveDayGroupConfig(next, excludedDays); }
+  function removeGroup(gi) { var next = dayGroups.filter(function(_,i){return i!==gi;}); setDayGroups(next); saveDayGroupConfig(next, excludedDays); }
   function addDayToGroup(gi, d) {
     var next = dayGroups.map(function(g, i) { return i === gi ? g.concat([d]).sort() : g; });
-    setDayGroups(next);
+    setDayGroups(next); saveDayGroupConfig(next, excludedDays);
   }
   function removeDayFromGroup(gi, d) {
     var next = dayGroups.map(function(g, i) { return i === gi ? g.filter(function(x){return x!==d;}) : g; }).filter(function(g){return g.length>0;});
-    setDayGroups(next);
+    setDayGroups(next); saveDayGroupConfig(next, excludedDays);
   }
 
   // Collapsible helpers
@@ -1213,14 +1261,14 @@ function App() {
   function expandAll() {
     if (!plan) return;
     var d = {}, m = {};
-    plan.forEach(function(day, di) { d[di] = true; day.meals.forEach(function(_, mi) { m[di+"-"+mi] = true; }); });
+    plan.forEach(function(day, di) { if (!day) return; d[di] = true; day.meals.forEach(function(_, mi) { m[di+"-"+mi] = true; }); });
     setExpandedDays(d); setExpandedMeals(m);
   }
   function collapseAll() { setExpandedDays({}); setExpandedMeals({}); }
 
   function handleGenerate() {
-    if (!pctValid) return;
-    var p = generatePlan(calories, carbGrams, proteinGrams, fatGrams, ingredientOverrides, dayGroups);
+    if (!pctValid || allDaysExcluded) return;
+    var p = generatePlan(calories, carbGrams, proteinGrams, fatGrams, ingredientOverrides, dayGroups, excludedDays);
     setPlan(p);
     setView("plan");
     setEatenMeals({});
@@ -1325,36 +1373,52 @@ function App() {
 
       <div className="card">
         <h2>Day Grouping</h2>
-        <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:8}}>Group days to receive identical meals. Ungrouped days get unique meals.</p>
-        {dayGroups.map(function(group, gi) {
-          return (<div className="group-card" key={gi}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-              <span style={{fontWeight:600,fontSize:'0.88rem',color:'#2d6a4f'}}>Group {gi+1}</span>
-              <button className="btn btn-sm btn-danger" onClick={function(){removeGroup(gi);}}>Remove</button>
-            </div>
-            <div className="group-days">
-              {group.map(function(d) {
-                return (<span className="group-day-tag" key={d}>{DAYS_NAMES[d]}<button onClick={function(){removeDayFromGroup(gi,d);}}>×</button></span>);
-              })}
-              {unassignedDays.length > 0 && <select className="add-to-group-select" value="" onChange={function(e){if(e.target.value)addDayToGroup(gi,Number(e.target.value));e.target.value="";}}>
-                <option value="">+ Add day</option>
-                {unassignedDays.map(function(d){return <option key={d} value={d}>{DAYS_NAMES[d]}</option>;})}
-              </select>}
-            </div>
-          </div>);
-        })}
-        {unassignedDays.length > 0 && (<div className="unassigned-days">
-          <span style={{fontSize:'0.82rem',color:'#6b7f7a'}}>Unassigned:</span>
-          {unassignedDays.map(function(d) { return <span className="unassigned-day-btn" key={d} style={{cursor:'default'}}>{DAYS_NAMES[d]}</span>; })}
-        </div>)}
-        <div style={{marginTop:10}}>
-          <button className="btn btn-sm btn-secondary" onClick={addGroup} disabled={unassignedDays.length===0}>New Group</button>
-          {dayGroups.length > 0 && <button className="btn btn-sm btn-secondary" style={{marginLeft:6}} onClick={function(){setDayGroups([]);}}>Clear All Groups</button>}
+        <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:4}}>Toggle days on/off, then group days to share identical meals.</p>
+
+        <div className="day-grid">
+          {[0,1,2,3,4,5,6].map(function(d) {
+            var isExcluded = excludedDays.indexOf(d) !== -1;
+            var isAssigned = !!assignedDays[d];
+            var groupIdx = -1;
+            dayGroups.forEach(function(g, gi) { if (g.indexOf(d) !== -1) groupIdx = gi; });
+            var chipClass = "day-chip" + (isExcluded ? " excluded" : isAssigned ? " assigned" : " included");
+            return (<div className={chipClass} key={d} onClick={function(){ if (!isAssigned) toggleExcludeDay(d); }}>
+              <div className="day-abbr">{DAYS_NAMES[d].slice(0,3)}</div>
+              <div className="day-status">{isExcluded ? "off" : isAssigned ? "G" + (groupIdx+1) : "on"}</div>
+            </div>);
+          })}
+        </div>
+
+        {allDaysExcluded && <div className="warning" style={{marginTop:10}}>All days are excluded. Include at least one day to generate a plan.</div>}
+
+        {dayGroups.length > 0 && <div style={{marginTop:12}}>
+          {dayGroups.map(function(group, gi) {
+            return (<div className="group-card" key={gi}>
+              <div className="group-header">
+                <span className="group-label">Group {gi+1}</span>
+                <button className="group-remove-btn" onClick={function(){removeGroup(gi);}}>Remove</button>
+              </div>
+              <div className="group-days">
+                {group.map(function(d) {
+                  return (<span className="group-day-tag" key={d}>{DAYS_NAMES[d].slice(0,3)}<button onClick={function(){removeDayFromGroup(gi,d);}}>×</button></span>);
+                })}
+                {unassignedDays.length > 0 && <select className="add-to-group-select" value="" onChange={function(e){if(e.target.value)addDayToGroup(gi,Number(e.target.value));e.target.value="";}}>
+                  <option value="">+ Add</option>
+                  {unassignedDays.map(function(d){return <option key={d} value={d}>{DAYS_NAMES[d]}</option>;})}
+                </select>}
+              </div>
+            </div>);
+          })}
+        </div>}
+
+        <div style={{marginTop:10,display:'flex',gap:6}}>
+          <button className="btn btn-sm btn-secondary" onClick={addGroup} disabled={unassignedDays.length<2}>New Group</button>
+          {dayGroups.length > 0 && <button className="btn btn-sm btn-secondary" onClick={function(){var next=[]; setDayGroups(next); saveDayGroupConfig(next, excludedDays);}}>Clear Groups</button>}
         </div>
       </div>
 
       <div className="btn-row">
-        <button className="btn btn-primary" onClick={handleGenerate} disabled={!pctValid}>Generate Weekly Plan</button>
+        <button className="btn btn-primary" onClick={handleGenerate} disabled={!pctValid || allDaysExcluded}>Generate Weekly Plan</button>
       </div>
 
       <div className="card">
@@ -1392,6 +1456,7 @@ function App() {
             </div>
           </div>
           {plan.map(function(day, di) {
+          if (!day) return null;
           var isDayExpanded = !!expandedDays[di];
           return (<div className="card day-card" key={di}>
             <div className="day-summary" onClick={function(){toggleDay(di);}}>

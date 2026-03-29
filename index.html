@@ -678,7 +678,8 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
   var assigned = {};
   var slots = [];
   (dayGroups || []).forEach(function(group) {
-    if (group.length > 0) { slots.push(group.slice()); group.forEach(function(d) { assigned[d] = true; }); }
+    var active = group.filter(function(d) { return excluded.indexOf(d) === -1; });
+    if (active.length > 0) { slots.push(active); active.forEach(function(d) { assigned[d] = true; }); }
   });
   for (var dd = 0; dd < 7; dd++) { if (!assigned[dd] && excluded.indexOf(dd) === -1) slots.push([dd]); }
   slots.sort(function(a, b) { return a[0] - b[0]; });
@@ -1346,7 +1347,7 @@ function App() {
   function handleDeleteSaved(name) { var u = savedPlans.filter(function(p) { return p.name !== name; }); setSavedPlans(u); localStorage.setItem("mealprep_plans", JSON.stringify(u)); }
 
   function handleCopyGrocery() {
-    navigator.clipboard.writeText(groceryToText(buildGroceryList(plan))).then(function() { setCopyMsg("Copied!"); setTimeout(function() { setCopyMsg(""); }, 2000); });
+    navigator.clipboard.writeText(groceryToText(groceryList)).then(function() { setCopyMsg("Copied!"); setTimeout(function() { setCopyMsg(""); }, 2000); });
   }
 
   function handleSwap(newRecipe) {
@@ -1377,7 +1378,7 @@ function App() {
     setPlan(newPlan); setSwapTarget(null);
   }
 
-  var groceryList = plan ? buildGroceryList(plan) : [];
+  var groceryList = plan ? buildGroceryList(plan.map(function(day, di) { return excludedDays.indexOf(di) !== -1 ? null : day; })) : [];
   var filteredRecipes = RECIPES.filter(function(r) {
     var ms = !recipeSearch || r.name.toLowerCase().indexOf(recipeSearch.toLowerCase()) !== -1 || r.ingredients.some(function(i) { return i.name.toLowerCase().indexOf(recipeSearch.toLowerCase()) !== -1; });
     return ms && (recipeCuisine === "All" || r.cuisine === recipeCuisine);
@@ -1480,7 +1481,7 @@ function App() {
             </div>
           </div>
           {plan.map(function(day, di) {
-          if (!day) return null;
+          if (!day || excludedDays.indexOf(di) !== -1) return null;
           var isDayExpanded = !!expandedDays[di];
           return (<div className="card day-card" key={di}>
             <div className="day-summary" onClick={function(){toggleDay(di);}}>

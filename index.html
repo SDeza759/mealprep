@@ -160,6 +160,10 @@
   .dp-toggle.dp-off { background: #c0c0c0; }
   .dp-toggle.dp-off::after { left: 2px; }
   .dg-helper { font-size: 0.72rem; color: #9aa8a3; margin-top: 8px; line-height: 1.4; }
+  .servings-ctrl { display: inline-flex; align-items: center; gap: 0; border: 1px solid #c8d6d0; border-radius: 6px; overflow: hidden; font-size: 0.78rem; vertical-align: middle; }
+  .servings-ctrl button { background: #e0e8e4; border: none; color: #2d6a4f; font-weight: 700; cursor: pointer; padding: 2px 8px; font-size: 0.82rem; line-height: 1.4; transition: background 0.15s; }
+  .servings-ctrl button:hover { background: #c8d6d0; }
+  .servings-ctrl .sv-val { padding: 2px 6px; font-weight: 600; color: #2d6a4f; min-width: 20px; text-align: center; background: #fff; font-size: 0.78rem; }
   .cook-times { font-size: 0.78rem; color: #6b7f7a; margin-bottom: 8px; display: flex; gap: 12px; }
   .cook-times span { background: #e8f5e9; padding: 2px 8px; border-radius: 6px; }
   .instructions-toggle { background: none; border: 1px solid #d8f3dc; border-radius: 8px; padding: 6px 14px; font-size: 0.82rem; color: #2d6a4f; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px; display: inline-flex; align-items: center; gap: 4px; }
@@ -761,16 +765,18 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
   return days;
 }
 
-function buildGroceryList(plan) {
+function buildGroceryList(plan, servingsMap) {
   var map = {};
+  var sv = servingsMap || {};
   plan.forEach(function(day, di) {
     if (!day) return;
-    day.meals.forEach(function(meal) {
+    day.meals.forEach(function(meal, mi) {
+      var servings = sv[di + "-" + mi] || 1;
       meal.ingredients.forEach(function(ing) {
         if (!map[ing.name]) map[ing.name] = { name: ing.name, totalGrams: 0, totalUnits: 0, appearances: [], isSpice: !!ing.isSpice };
-        map[ing.name].totalGrams += ing.grams;
-        if (isUnitBased(ing.name)) map[ing.name].totalUnits += Math.max(1, getUnitCount(ing.name, ing.grams));
-        map[ing.name].appearances.push("Day " + (di+1) + " \u2013 " + meal.name);
+        map[ing.name].totalGrams += ing.grams * servings;
+        if (isUnitBased(ing.name)) map[ing.name].totalUnits += Math.max(1, getUnitCount(ing.name, ing.grams)) * servings;
+        map[ing.name].appearances.push("Day " + (di+1) + " \u2013 " + meal.name + (servings > 1 ? " (\u00D7" + servings + ")" : ""));
       });
     });
   });
@@ -1193,6 +1199,7 @@ function App() {
   var overrideCount = Object.keys(ingredientOverrides).length;
 
   var [eatenMeals, setEatenMeals] = React.useState({});
+  var [mealServings, setMealServings] = React.useState({});
   var [dayGroups, setDayGroups] = React.useState(function() {
     try { var saved = JSON.parse(localStorage.getItem("mealprep_daygroups") || "null"); return saved && saved.groups ? saved.groups : []; } catch(e) { return []; }
   });
@@ -1314,6 +1321,7 @@ function App() {
     setPlan(p);
     setView("plan");
     setEatenMeals({});
+    setMealServings({});
     setExpandedDays({});
     setExpandedMeals({});
   }
@@ -1378,7 +1386,7 @@ function App() {
     setPlan(newPlan); setSwapTarget(null);
   }
 
-  var groceryList = plan ? buildGroceryList(plan.map(function(day, di) { return excludedDays.indexOf(di) !== -1 ? null : day; })) : [];
+  var groceryList = plan ? buildGroceryList(plan.map(function(day, di) { return excludedDays.indexOf(di) !== -1 ? null : day; }), mealServings) : [];
   var filteredRecipes = RECIPES.filter(function(r) {
     var ms = !recipeSearch || r.name.toLowerCase().indexOf(recipeSearch.toLowerCase()) !== -1 || r.ingredients.some(function(i) { return i.name.toLowerCase().indexOf(recipeSearch.toLowerCase()) !== -1; });
     return ms && (recipeCuisine === "All" || r.cuisine === recipeCuisine);
@@ -1509,6 +1517,11 @@ function App() {
                       {meal.isBreakfast && <span className="cuisine-tag breakfast-tag">Breakfast</span>}
                       <span className="cuisine-tag">{meal.cuisine}</span>
                       <span style={{fontSize:'0.78rem',color:'#3a5a50'}}>Cal: {round1(meal.totalMacros.calories)} | C: {round1(meal.totalMacros.carbs)}g | P: {round1(meal.totalMacros.protein)}g | F: {round1(meal.totalMacros.fat)}g</span>
+                      <span className="servings-ctrl">
+                        <button onClick={function(e){e.stopPropagation();var k=di+"-"+mi;var cur=mealServings[k]||1;if(cur>1){var n=Object.assign({},mealServings);n[k]=cur-1;if(n[k]===1)delete n[k];setMealServings(n);}}}>−</button>
+                        <span className="sv-val">{mealServings[di+"-"+mi]||1}</span>
+                        <button onClick={function(e){e.stopPropagation();var k=di+"-"+mi;var n=Object.assign({},mealServings);n[k]=(mealServings[k]||1)+1;setMealServings(n);}}>+</button>
+                      </span>
                       <button className="swap-btn" onClick={function(e){e.stopPropagation();setSwapTarget({dayIdx:di,mealIdx:mi});setSwapSearch("");}}>Swap</button>
                       <button className={"eaten-btn" + (isEaten ? " active" : "")} onClick={function(e){e.stopPropagation();toggleEaten(di,mi);}}>{isEaten ? "\u2713 Eaten" : "\u2713"}</button>
                     </span>

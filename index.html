@@ -716,18 +716,27 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
   return allMealData;
 }
 
-// Global rotation tracker: records how many times each recipe has been selected
-// across all plan generations since page load. Resets on page reload. Never persisted to localStorage.
-// Used by comboScore to penalize over-selected recipes and boost under-selected ones.
+// Session rotation tracker: counts how many times each recipe has been selected across
+// all generatePlan calls since page load. Resets on reload. Never persisted to localStorage.
 var _recipeRotation = { counts: {}, totalSlots: 0 };
 
-// generatePlan: Generates a 7-day meal plan. Changes from previous version:
-// - Fix 1: Removed same-day (usedAttempt) and same-week (recentRecipes) blacklists entirely.
-//   Recipes can now appear multiple times per day and per week, expanding the search space.
-// - Fix 2: Global rotation tracker penalizes over-selected recipes and boosts under-selected ones.
-// - Fix 3: Softmax temperature increased from 0.15 to 0.5 for broader randomization.
-// - Fix 4: Per-week cuisine penalty added — if a cuisine already appeared 2+ times, penalize further picks.
-// - Fix 5: Breakfast slot on every day with 3 meals (removed d%3===0 restriction).
+// ===== RECIPE SELECTION ALGORITHM =====
+// Design philosophy: Every recipe should have approximately equal probability of selection
+// (~1/N where N is pool size). The selection stage is intentionally NOT a macro optimizer —
+// the post-selection adjustDayMeals servo loop handles fitting any recipe to macro targets.
+//
+// The algorithm works in 6 steps per meal slot:
+//   1. CANDIDATE POOL: Full recipe pool, only hard-excluding cuisine repeats (max 2/week)
+//      and same-recipe-same-day duplicates.
+//   2. BASE WEIGHT: Every candidate starts at weight 1.0 (equal probability).
+//   3. MACRO NUDGE: Small multiplicative bonus (0.75x to 1.5x) based on macro proximity.
+//      Narrow enough that no recipe gets >2x the weight of any other from macros alone.
+//   4. SESSION ROTATION: Strongest modifier. Over-selected recipes get multiplied down,
+//      under-selected recipes get multiplied up, driving long-run uniform distribution.
+//   5. WEIGHTED RANDOM DRAW: Single draw from the full weighted distribution. No sorting,
+//      no top-N, no attempt loops.
+//   6. POST-SELECTION ADJUSTMENT: adjustDayMeals scales ingredient quantities to hit
+//      macro targets. This is where accuracy comes from, not step 3.
 function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, overrides, dayGroups, excludedDays) {
   var days = new Array(7);
   var excluded = excludedDays || [];
@@ -742,86 +751,95 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
   for (var dd = 0; dd < 7; dd++) { if (!assigned[dd] && excluded.indexOf(dd) === -1) slots.push([dd]); }
   slots.sort(function(a, b) { return a[0] - b[0]; });
 
-  // Fix 4: Track cuisine counts within this week for cuisine rotation penalty
+  // Cuisine hard limit: max 2 per cuisine per week
   var weekCuisineCounts = {};
+
+  // Step 3 helper: compute macro nudge multiplier for a single recipe (0.75 to 1.5)
+  function macroNudge(recipe) {
+    var rm = recipe.totalMacros;
+    // Per-meal targets (divide daily by estimated meals — use 2.5 as average)
+    var mealCal = targetCal / 2.5, mealCarbs = targetCarbs / 2.5;
+    var mealPro = targetProtein / 2.5, mealFat = targetFat / 2.5;
+    var devCal = Math.abs(rm.calories - mealCal) / Math.max(mealCal, 1);
+    var devCarbs = Math.abs(rm.carbs - mealCarbs) / Math.max(mealCarbs, 1);
+    var devPro = Math.abs(rm.protein - mealPro) / Math.max(mealPro, 1);
+    var devFat = Math.abs(rm.fat - mealFat) / Math.max(mealFat, 1);
+    var avgDev = (devCal + devCarbs + devPro + devFat) / 4;
+    // Map deviation to multiplier: 0% dev → 1.5, 100%+ dev → 0.75
+    // Linear interpolation clamped to [0.75, 1.5]
+    return Math.max(0.75, Math.min(1.5, 1.5 - avgDev * 0.75));
+  }
+
+  // Step 4 helper: compute rotation multiplier based on session history
+  function rotationMultiplier(recipe) {
+    var total = _recipeRotation.totalSlots;
+    if (total < 1) return 1.0;
+    var poolSize = RECIPES.length;
+    var fairShare = total / poolSize;
+    var count = _recipeRotation.counts[recipe.name] || 0;
+    var ratio = count / Math.max(fairShare, 0.1);
+    // Under-selected (ratio < 1): boost up to 3x at ratio=0
+    // At fair share (ratio = 1): multiplier = 1.0
+    // Over-selected (ratio > 1): shrink down, approaching 0.1x at ratio=3+
+    if (ratio <= 1) return 1.0 + (1.0 - ratio) * 2.0;
+    return Math.max(0.1, 1.0 / ratio);
+  }
+
+  // Select one recipe from pool via weighted random draw (Steps 1-5)
+  function selectRecipe(pool, dayRecipeNames) {
+    var candidates = [];
+    for (var i = 0; i < pool.length; i++) {
+      var r = pool[i];
+      // Step 1: Hard exclusions only
+      // Same-day duplicate check
+      if (dayRecipeNames.indexOf(r.name) !== -1) continue;
+      // Cuisine hard limit: max 2 per week
+      if ((weekCuisineCounts[r.cuisine] || 0) >= 2) continue;
+      candidates.push(r);
+    }
+    // Fallback: if all excluded by cuisine limit, relax cuisine constraint
+    if (candidates.length === 0) {
+      for (var j = 0; j < pool.length; j++) {
+        if (dayRecipeNames.indexOf(pool[j].name) === -1) candidates.push(pool[j]);
+      }
+    }
+    if (candidates.length === 0) return pool[Math.floor(Math.random() * pool.length)];
+    // Steps 2-4: Compute final weight for each candidate
+    var weights = [];
+    for (var ci = 0; ci < candidates.length; ci++) {
+      var base = 1.0;                                    // Step 2
+      var macro = macroNudge(candidates[ci]);             // Step 3
+      var rotation = rotationMultiplier(candidates[ci]);  // Step 4
+      weights.push(base * macro * rotation);
+    }
+    // Step 5: Single weighted random draw
+    var totalW = 0;
+    for (var wi = 0; wi < weights.length; wi++) totalW += weights[wi];
+    var rnd = Math.random() * totalW, cumul = 0;
+    for (var si2 = 0; si2 < weights.length; si2++) {
+      cumul += weights[si2];
+      if (rnd <= cumul) return candidates[si2];
+    }
+    return candidates[candidates.length - 1];
+  }
 
   for (var si = 0; si < slots.length; si++) {
     var slot = slots[si];
     var d = slot[0];
     var mealsPerDay = targetCal > 2200 ? 3 : (targetCal < 1500 ? 2 : (d % 2 === 0 ? 3 : 2));
-    // Fix 5: Breakfast included on every day with 3+ meals (was d%3===0)
     var includeBreakfast = mealsPerDay >= 3;
 
-    // Fix 1: No recentRecipes blacklist — recipes can repeat across days
-
-    // comboScore: Absolute macro deviation + global rotation penalty + cuisine penalty.
-    function comboScore(picks) {
-      var tc=0, tb=0, tp=0, tf=0;
-      picks.forEach(function(r) { tc+=r.totalMacros.calories; tb+=r.totalMacros.carbs; tp+=r.totalMacros.protein; tf+=r.totalMacros.fat; });
-      if (tc < 1) return 999;
-      var s = Math.abs((tc-targetCal)/targetCal);
-      s += Math.abs((tb-targetCarbs)/Math.max(targetCarbs,1));
-      s += Math.abs((tp-targetProtein)/Math.max(targetProtein,1));
-      s += Math.abs((tf-targetFat)/Math.max(targetFat,1));
-      return s;
+    var dayRecipeNames = [];
+    var dayPicks = [];
+    for (var m = 0; m < mealsPerDay; m++) {
+      var pool = (m === 0 && includeBreakfast) ? BREAKFAST_RECIPES : MAIN_RECIPES;
+      var picked = selectRecipe(pool, dayRecipeNames);
+      dayPicks.push(picked);
+      dayRecipeNames.push(picked.name);
     }
 
-    // Fix 2: Apply rotation penalty/bonus to individual recipe scores before weighted selection
-    function applyRotationPenalty(score, recipe) {
-      var totalGenerated = _recipeRotation.totalSlots;
-      if (totalGenerated < 1) return score; // no history yet
-      var poolSize = RECIPES.length;
-      var fairShare = totalGenerated / poolSize;
-      var count = _recipeRotation.counts[recipe.name] || 0;
-      var ratio = count / Math.max(fairShare, 0.5);
-      // Penalty: recipes at 2x fair share get +0.3, at 3x get +0.6
-      // Bonus: recipes never selected (ratio=0) get -0.15
-      var adjustment = (ratio - 1) * 0.15;
-      return score + adjustment;
-    }
-
-    // Fix 4: Apply cuisine penalty for recipes whose cuisine already appeared 2+ times this week
-    function applyCuisinePenalty(score, recipe) {
-      var cuisineCount = weekCuisineCounts[recipe.cuisine] || 0;
-      if (cuisineCount >= 2) return score + 0.15 * (cuisineCount - 1);
-      return score;
-    }
-
-    var bestPicks = null, bestScore = Infinity;
-    for (var attempt = 0; attempt < 20; attempt++) {
-      var picks = [];
-      for (var m = 0; m < mealsPerDay; m++) {
-        // Fix 5: Breakfast pool used for first meal slot on all 3-meal days
-        var pool = (m === 0 && includeBreakfast) ? BREAKFAST_RECIPES : MAIN_RECIPES;
-        var scored = [];
-        for (var i = 0; i < pool.length; i++) {
-          var r = pool[i];
-          // Fix 1: No usedAttempt or recentRecipes exclusion — all recipes are candidates
-          var testPicks = picks.concat([r]);
-          var rawScore = comboScore(testPicks);
-          rawScore = applyRotationPenalty(rawScore, r);
-          rawScore = applyCuisinePenalty(rawScore, r);
-          scored.push({ recipe: r, index: i, score: rawScore });
-        }
-        if (scored.length === 0) continue;
-        // Fix 3: Softmax temperature increased from 0.15 to 0.5 — any recipe in the top half
-        // has a meaningful chance of selection, not just the top 3-5.
-        var minScore = scored.reduce(function(a, b) { return a < b.score ? a : b.score; }, scored[0].score);
-        var tau = 0.5;
-        var weights = scored.map(function(s) { return Math.exp(-(s.score - minScore) / tau); });
-        var totalW = weights.reduce(function(a, b) { return a + b; }, 0);
-        var rnd = Math.random() * totalW, cumul = 0, pick = scored[0];
-        for (var wi = 0; wi < weights.length; wi++) {
-          cumul += weights[wi];
-          if (rnd <= cumul) { pick = scored[wi]; break; }
-        }
-        picks.push(pick.recipe);
-      }
-      var sc = comboScore(picks);
-      if (sc < bestScore) { bestScore = sc; bestPicks = picks; }
-    }
-
-    var allMealData = (bestPicks || []).map(function(recipe) {
+    // Step 6: Post-selection macro adjustment
+    var allMealData = dayPicks.map(function(recipe) {
       var ings = recipe.ingredients.map(function(ing) { return Object.assign({}, ing, { adjustment: null }); });
       applyIngredientOverrides(ings, overrides);
       return { recipe: recipe, ingredients: ings };
@@ -833,13 +851,13 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     allMealData.forEach(function(md) {
       var mt = md.ingredients.filter(function(i){return !i.isSpice;}).reduce(function(a, i) { return { calories: a.calories+i.calories, carbs: a.carbs+i.carbs, protein: a.protein+i.protein, fat: a.fat+i.fat }; }, { calories:0, carbs:0, protein:0, fat:0 });
       dayTotals.calories += mt.calories; dayTotals.carbs += mt.carbs; dayTotals.protein += mt.protein; dayTotals.fat += mt.fat;
-      // Fix 2: Update global rotation tracker
+      // Update session rotation tracker
       _recipeRotation.counts[md.recipe.name] = (_recipeRotation.counts[md.recipe.name] || 0) + 1;
       _recipeRotation.totalSlots++;
       dayMeals.push({ originalName: md.recipe.name, name: md.recipe.name, cuisine: md.recipe.cuisine, isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1, ingredients: md.ingredients, totalMacros: mt });
     });
 
-    // Fix 4: Update weekly cuisine counts
+    // Update weekly cuisine counts
     dayMeals.forEach(function(meal) {
       weekCuisineCounts[meal.cuisine] = (weekCuisineCounts[meal.cuisine] || 0) + 1;
     });
@@ -861,9 +879,9 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
 }
 
 // Grocery list verification: buildGroceryList iterates every day and every meal slot,
-// summing ingredient grams by name. Duplicate recipe appearances (same recipe on multiple
-// days or multiple times in one day) are handled correctly — each meal slot contributes
-// independently to the ingredient totals. Verified: no changes needed.
+// summing ingredient grams by name into a shared map. Duplicate recipe appearances (same
+// recipe on multiple days, or same recipe twice in a week) are handled correctly — each
+// meal slot contributes independently. Verified: no changes needed.
 
 function buildGroceryList(plan, servingsMap) {
   var map = {};
@@ -1909,15 +1927,13 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 
-// Background validation: run 1000-week simulation and log distribution summary to console.
-// Reports: recipes below 1%, never selected, and most selected recipe with percentage.
-// Target: fewer than 10 recipes below 1%, no single recipe above 5%.
+// Background validation: run 1000-week simulation and log full distribution summary.
+// Target: zero recipes never selected, no single recipe above 3%.
 (function() {
   var SIM_TOTAL = 1000, SIM_BATCH = 50;
   var freq = {}, totalSlots = 0, done = 0;
   RECIPES.forEach(function(r) { freq[r.name] = 0; });
   var simCal = 2500, simCarbG = round1((2500*0.4)/4), simProG = round1((2500*0.3)/4), simFatG = round1((2500*0.3)/9);
-  // Reset rotation tracker so simulation starts clean
   _recipeRotation = { counts: {}, totalSlots: 0 };
   function batch() {
     var end = Math.min(done + SIM_BATCH, SIM_TOTAL);
@@ -1931,13 +1947,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     var never = sorted.filter(function(r) { return r.count === 0; });
     var below1 = sorted.filter(function(r) { return r.pct < 1; });
     var topPct = sorted[0] ? sorted[0].pct : 0;
-    var passBelow1 = below1.length < 10;
-    var passTop = topPct <= 5;
-    console.log("[MealPrep Distribution Validation] 1000 weeks, " + totalSlots + " total slots");
-    console.log("  Never selected: " + never.length + " recipes" + (never.length > 0 ? " (" + never.map(function(r){return r.name;}).join(", ") + ")" : ""));
-    console.log("  Below 1%: " + below1.length + " recipes " + (passBelow1 ? "(PASS — target <10)" : "(FAIL — target <10)"));
-    console.log("  Most selected: " + sorted[0].name + " at " + sorted[0].pct + "% " + (passTop ? "(PASS — target <=5%)" : "(FAIL — target <=5%)"));
-    // Reset rotation tracker after simulation so it doesn't affect real usage
+    var idealPct = round1(100 / RECIPES.length);
+    console.log("[MealPrep Distribution Validation] 1000 weeks, " + totalSlots + " slots, " + RECIPES.length + " recipes (ideal ~" + idealPct + "% each)");
+    console.log("  Never selected: " + never.length + (never.length === 0 ? " (PASS)" : " (FAIL — target 0)") + (never.length > 0 ? " — " + never.map(function(r){return r.name;}).join(", ") : ""));
+    console.log("  Below 1%: " + below1.length + " recipes");
+    console.log("  Most selected: " + sorted[0].name + " at " + sorted[0].pct + "% " + (topPct <= 3 ? "(PASS — target <=3%)" : "(FAIL — target <=3%)"));
+    console.log("  Least selected: " + sorted[sorted.length-1].name + " at " + sorted[sorted.length-1].pct + "%");
+    console.log("  Spread: top " + sorted[0].pct + "% / bottom " + sorted[sorted.length-1].pct + "% (ratio " + round1(sorted[0].pct / Math.max(sorted[sorted.length-1].pct, 0.1)) + "x)");
     _recipeRotation = { counts: {}, totalSlots: 0 };
   }
   setTimeout(batch, 100);

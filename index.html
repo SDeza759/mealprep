@@ -192,6 +192,13 @@
   .btn-debug { background: #cba6f7; color: #1e1e2e; }
   .btn-debug:hover { background: #b4befe; }
   .btn-debug.active { background: #f38ba8; color: #1e1e2e; }
+  .dbg-ing-row { display: flex; align-items: baseline; gap: 8px; padding: 4px 8px; font-size: 0.82rem; border-bottom: 1px solid #313244; }
+  .dbg-ing-row .di-name { min-width: 160px; font-weight: 600; flex-shrink: 0; }
+  .dbg-ing-row .di-count { min-width: 30px; text-align: center; font-weight: 700; flex-shrink: 0; }
+  .dbg-ing-row .di-recipes { color: #a6adc8; font-size: 0.78rem; word-break: break-word; }
+  .dbg-ing-red { border-left: 3px solid #f38ba8; }
+  .dbg-ing-yellow { border-left: 3px solid #f9e2af; }
+  .dbg-ing-green { border-left: 3px solid #a6e3a1; }
   .dbg-progress { background: #313244; border-radius: 8px; padding: 16px; text-align: center; }
   .dbg-progress-bar { height: 8px; background: #45475a; border-radius: 4px; overflow: hidden; margin-top: 8px; }
   .dbg-progress-fill { height: 100%; background: #cba6f7; border-radius: 4px; transition: width 0.2s; }
@@ -1295,6 +1302,7 @@ function App() {
   var [debugVisible, setDebugVisible] = React.useState(false);
   var [simResults, setSimResults] = React.useState(null);
   var [simProgress, setSimProgress] = React.useState(null);
+  var [ingAnalysis, setIngAnalysis] = React.useState(null);
   var debugBuf = React.useRef("");
 
   React.useEffect(function() {
@@ -1305,7 +1313,7 @@ function App() {
       if (debugBuf.current.endsWith("debug")) {
         debugBuf.current = "";
         setDebugVisible(function(v) {
-          if (v) { setSimResults(null); setSimProgress(null); }
+          if (v) { setSimResults(null); setSimProgress(null); setIngAnalysis(null); }
           return !v;
         });
       }
@@ -1313,6 +1321,26 @@ function App() {
     window.addEventListener("keydown", onKey);
     return function() { window.removeEventListener("keydown", onKey); };
   }, []);
+
+  function runIngredientAnalysis() {
+    var map = {};
+    RECIPES.forEach(function(r) {
+      r.ingredients.forEach(function(ing) {
+        if (ing.isSpice) return;
+        if (!map[ing.name]) map[ing.name] = { name: ing.name, recipes: [] };
+        if (map[ing.name].recipes.indexOf(r.name) === -1) map[ing.name].recipes.push(r.name);
+      });
+    });
+    var all = Object.values(map).map(function(item) {
+      return { name: item.name, count: item.recipes.length, recipes: item.recipes };
+    }).sort(function(a, b) { return a.count - b.count || a.name.localeCompare(b.name); });
+    var unique = all.filter(function(i) { return i.count === 1; });
+    var rare = all.filter(function(i) { return i.count >= 2 && i.count <= 4; });
+    var flagged = unique.concat(rare);
+    var affectedRecipes = {};
+    flagged.forEach(function(i) { i.recipes.forEach(function(r) { affectedRecipes[r] = true; }); });
+    setIngAnalysis({ all: all, unique: unique, rare: rare, affectedCount: Object.keys(affectedRecipes).length, totalIngredients: all.length, totalRecipes: RECIPES.length });
+  }
 
   function runSimulation() {
     // Reset rotation tracker for clean simulation
@@ -1903,6 +1931,59 @@ function App() {
             URL.revokeObjectURL(url);
           }}>Download Report</button></div>
         </>)}
+
+        <div style={{borderTop:'1px solid #45475a',marginTop:24,paddingTop:20}}>
+          <h2 style={{color:'#f38ba8',fontSize:'1.15rem',marginBottom:12}}>Ingredient Frequency Analysis</h2>
+          <p style={{fontSize:'0.82rem',color:'#a6adc8',marginBottom:12}}>Scans all {RECIPES.length} recipes and reports how many recipes each non-spice ingredient appears in.</p>
+          <button className="btn btn-debug" onClick={runIngredientAnalysis} style={{marginBottom:16}}>Run Ingredient Analysis</button>
+
+          {ingAnalysis && (<>
+            <div className="dbg-summary">{ingAnalysis.totalIngredients} unique ingredients across {ingAnalysis.totalRecipes} recipes. Red = &lt;5 recipes, Yellow = 5 recipes, Green = 6+ recipes.</div>
+
+            <h3>Full Ingredient Frequency (least to most used)</h3>
+            {ingAnalysis.all.map(function(ing) {
+              var cls = ing.count < 5 ? "dbg-ing-red" : (ing.count === 5 ? "dbg-ing-yellow" : "dbg-ing-green");
+              return (<div className={"dbg-ing-row " + cls} key={ing.name}>
+                <span className="di-name">{ing.name}</span>
+                <span className="di-count">{ing.count}</span>
+                <span className="di-recipes">{ing.recipes.join(", ")}</span>
+              </div>);
+            })}
+
+            <h3>Flagged Ingredients (&lt;5 recipes)</h3>
+            <div className="dbg-summary">{ingAnalysis.affectedCount} of {ingAnalysis.totalRecipes} recipes contain at least one flagged ingredient.</div>
+
+            {ingAnalysis.unique.length > 0 && (<>
+              <h3 style={{fontSize:'0.9rem',borderBottom:'none',paddingBottom:0}}>Unique to One Recipe ({ingAnalysis.unique.length})</h3>
+              <ul className="dbg-list">{ingAnalysis.unique.map(function(ing) {
+                return <li key={ing.name}><span style={{color:'#f38ba8',fontWeight:600}}>{ing.name}</span> — {ing.recipes[0]}</li>;
+              })}</ul>
+            </>)}
+
+            {ingAnalysis.rare.length > 0 && (<>
+              <h3 style={{fontSize:'0.9rem',borderBottom:'none',paddingBottom:0}}>Rare: 2-4 Recipes ({ingAnalysis.rare.length})</h3>
+              <ul className="dbg-list">{ingAnalysis.rare.map(function(ing) {
+                return <li key={ing.name}><span className="dbg-warn">{ing.name}</span> ({ing.count}) — {ing.recipes.join(", ")}</li>;
+              })}</ul>
+            </>)}
+
+            <div style={{marginTop:20}}><button className="btn btn-debug" onClick={function() {
+              var report = {
+                timestamp: new Date().toISOString(),
+                totalIngredients: ingAnalysis.totalIngredients,
+                totalRecipes: ingAnalysis.totalRecipes,
+                affectedRecipeCount: ingAnalysis.affectedCount,
+                ingredients: ingAnalysis.all.map(function(i) { return { name: i.name, recipeCount: i.count, recipes: i.recipes }; }),
+                uniqueToOneRecipe: ingAnalysis.unique.map(function(i) { return { name: i.name, recipe: i.recipes[0] }; }),
+                rare2to4: ingAnalysis.rare.map(function(i) { return { name: i.name, count: i.count, recipes: i.recipes }; })
+              };
+              var blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+              var url = URL.createObjectURL(blob);
+              var a = document.createElement("a"); a.href = url; a.download = "ingredient-frequency-report.json"; a.click();
+              URL.revokeObjectURL(url);
+            }}>Download Ingredient Report</button></div>
+          </>)}
+        </div>
       </div>)}
 
       {swapTarget && (<div className="modal-overlay" onClick={function(e){if(e.target===e.currentTarget)setSwapTarget(null);}}>

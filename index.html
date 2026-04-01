@@ -171,6 +171,30 @@
   .instructions-list { margin-top: 8px; padding: 10px 14px; background: #f7faf8; border-radius: 8px; border: 1px solid #e0e8e4; }
   .instructions-list ol { margin: 0; padding-left: 20px; font-size: 0.82rem; color: #3a5a50; }
   .instructions-list ol li { padding: 3px 0; line-height: 1.5; }
+  /* Debug Panel */
+  .debug-panel { background: #1e1e2e; color: #cdd6f4; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .debug-panel h2 { color: #f38ba8; font-size: 1.15rem; margin-bottom: 12px; }
+  .debug-panel h3 { color: #cba6f7; font-size: 1rem; margin-bottom: 8px; margin-top: 16px; padding-bottom: 4px; border-bottom: 1px solid #45475a; }
+  .debug-panel .dbg-summary { background: #313244; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 0.88rem; line-height: 1.6; border-left: 4px solid #cba6f7; }
+  .debug-panel .dbg-bar-row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: 0.82rem; }
+  .debug-panel .dbg-bar-name { min-width: 200px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .debug-panel .dbg-bar-track { flex: 1; height: 16px; background: #313244; border-radius: 4px; overflow: hidden; }
+  .debug-panel .dbg-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+  .debug-panel .dbg-bar-val { min-width: 80px; text-align: right; font-size: 0.78rem; color: #a6adc8; }
+  .dbg-fill-green { background: #a6e3a1; }
+  .dbg-fill-yellow { background: #f9e2af; }
+  .dbg-fill-red { background: #f38ba8; }
+  .debug-panel .dbg-list { list-style: none; padding: 0; }
+  .debug-panel .dbg-list li { padding: 4px 8px; font-size: 0.85rem; border-bottom: 1px solid #313244; }
+  .debug-panel .dbg-flag { color: #f38ba8; font-weight: 600; margin-left: 6px; font-size: 0.75rem; }
+  .debug-panel .dbg-pass { color: #a6e3a1; font-weight: 600; }
+  .debug-panel .dbg-warn { color: #f9e2af; font-weight: 600; }
+  .btn-debug { background: #cba6f7; color: #1e1e2e; }
+  .btn-debug:hover { background: #b4befe; }
+  .btn-debug.active { background: #f38ba8; color: #1e1e2e; }
+  .dbg-progress { background: #313244; border-radius: 8px; padding: 16px; text-align: center; }
+  .dbg-progress-bar { height: 8px; background: #45475a; border-radius: 4px; overflow: hidden; margin-top: 8px; }
+  .dbg-progress-fill { height: 100%; background: #cba6f7; border-radius: 4px; transition: width 0.2s; }
   @media (max-width: 600px) {
     .macro-inputs { grid-template-columns: 1fr 1fr; }
     .grocery-item { grid-template-columns: 1fr auto auto; }
@@ -1173,6 +1197,92 @@ function App() {
   var [statsNewData, setStatsNewData] = React.useState(false);
   var [lastStatsView, setLastStatsView] = React.useState(function() { return Number(localStorage.getItem("mealprep_stats_last_view") || "0"); });
 
+  // Debug panel state
+  var [debugVisible, setDebugVisible] = React.useState(false);
+  var [simResults, setSimResults] = React.useState(null);
+  var [simProgress, setSimProgress] = React.useState(null);
+  var debugBuf = React.useRef("");
+
+  React.useEffect(function() {
+    function onKey(e) {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
+      debugBuf.current += e.key.toLowerCase();
+      if (debugBuf.current.length > 10) debugBuf.current = debugBuf.current.slice(-10);
+      if (debugBuf.current.endsWith("debug")) {
+        debugBuf.current = "";
+        setDebugVisible(function(v) {
+          if (v) { setSimResults(null); setSimProgress(null); }
+          return !v;
+        });
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return function() { window.removeEventListener("keydown", onKey); };
+  }, []);
+
+  function runSimulation() {
+    var simCal = calories;
+    var simCarbG = carbGrams;
+    var simProG = proteinGrams;
+    var simFatG = fatGrams;
+    if (!pctValid) {
+      simCal = 2500;
+      simCarbG = round1((2500 * 0.4) / 4);
+      simProG = round1((2500 * 0.3) / 4);
+      simFatG = round1((2500 * 0.3) / 9);
+    }
+    var freq = {};
+    RECIPES.forEach(function(r) { freq[r.name] = 0; });
+    var totalSlots = 0;
+    var done = 0;
+    var TOTAL = 1000;
+    var BATCH = 50;
+    setSimProgress({ done: 0, total: TOTAL });
+    setSimResults(null);
+
+    function runBatch() {
+      var end = Math.min(done + BATCH, TOTAL);
+      for (var i = done; i < end; i++) {
+        var plan = generatePlan(simCal, simCarbG, simProG, simFatG, {}, [], []);
+        plan.forEach(function(day) {
+          if (!day) return;
+          day.meals.forEach(function(meal) {
+            freq[meal.originalName] = (freq[meal.originalName] || 0) + 1;
+            totalSlots++;
+          });
+        });
+      }
+      done = end;
+      setSimProgress({ done: done, total: TOTAL });
+      if (done < TOTAL) {
+        setTimeout(runBatch, 0);
+      } else {
+        var sorted = Object.keys(freq).map(function(name) {
+          return { name: name, count: freq[name], pct: round1((freq[name] / totalSlots) * 100) };
+        }).sort(function(a, b) { return b.count - a.count; });
+        var neverSelected = sorted.filter(function(r) { return r.count === 0; });
+        var rarelySelected = sorted.filter(function(r) { return r.count > 0 && r.pct < 2; });
+        var top10 = sorted.slice(0, 10);
+        var maxCount = sorted[0] ? sorted[0].count : 1;
+        var topName = sorted[0] ? sorted[0].name : "N/A";
+        var topPct = sorted[0] ? sorted[0].pct : 0;
+        var healthy = neverSelected.length === 0 && rarelySelected.length <= 5 && topPct <= 10;
+        var summaryParts = [];
+        if (healthy) {
+          summaryParts.push("Distribution looks healthy.");
+        } else {
+          summaryParts.push("Significant bias issues detected.");
+        }
+        summaryParts.push(neverSelected.length + " recipe" + (neverSelected.length !== 1 ? "s" : "") + " never selected.");
+        summaryParts.push(rarelySelected.length + " recipe" + (rarelySelected.length !== 1 ? "s" : "") + " rarely selected (<2%).");
+        summaryParts.push("Most selected: " + topName + " at " + topPct + "%.");
+        setSimResults({ sorted: sorted, neverSelected: neverSelected, rarelySelected: rarelySelected, top10: top10, maxCount: maxCount, totalSlots: totalSlots, summary: summaryParts.join(" ") });
+        setSimProgress(null);
+      }
+    }
+    setTimeout(runBatch, 0);
+  }
+
   var pctSum = carbPct + proteinPct + fatPct, pctValid = pctSum === 100;
   var carbGrams = round1((calories * (carbPct / 100)) / 4);
   var proteinGrams = round1((calories * (proteinPct / 100)) / 4);
@@ -1477,6 +1587,7 @@ function App() {
         <button className={"btn btn-toggle"+(view==="recipes"?" active":"")} onClick={function(){setView("recipes");}}>All Recipes</button>
         <button className={"btn btn-toggle"+(view==="ingredients"?" active":"")} onClick={function(){setView("ingredients");}}>Ingredients</button>
         <button className={"btn btn-toggle"+(view==="stats"?" active":"")} onClick={function(){setView("stats");setStatsNewData(false);setLastStatsView(Date.now());localStorage.setItem("mealprep_stats_last_view",String(Date.now()));}}>Stats{statsNewData && <span className="stats-badge"></span>}</button>
+        {debugVisible && <button className={"btn btn-debug"+(view==="debug"?" active":"")} onClick={function(){setView("debug");}}>Debug Panel</button>}
       </div>
 
       {plan && (<>
@@ -1635,6 +1746,47 @@ function App() {
 
         {view === "stats" && <StatsView statsData={statsData} onUpdate={function(d){setStatsData(d);}} savedPlans={savedPlans} onSavedPlansUpdate={function(sp){setSavedPlans(sp);localStorage.setItem("mealprep_plans",JSON.stringify(sp));}} />}
       </>)}
+
+      {view === "debug" && debugVisible && (<div className="debug-panel">
+        <h2>Debug Panel — Recipe Distribution Simulator</h2>
+        <p style={{fontSize:'0.82rem',color:'#a6adc8',marginBottom:12}}>Runs {1000} meal plan generations using current macro targets. Read-only — no data is modified.</p>
+        <button className="btn btn-debug" onClick={runSimulation} disabled={!!simProgress} style={{marginBottom:16}}>{simProgress ? "Running..." : "Run Distribution Simulation"}</button>
+
+        {simProgress && (<div className="dbg-progress">
+          <div style={{fontSize:'0.88rem',color:'#cdd6f4'}}>Simulating... {simProgress.done} / {simProgress.total}</div>
+          <div className="dbg-progress-bar"><div className="dbg-progress-fill" style={{width: Math.round(simProgress.done/simProgress.total*100)+"%"}}></div></div>
+        </div>)}
+
+        {simResults && (<>
+          <h3>Bias Summary</h3>
+          <div className="dbg-summary">{simResults.summary}</div>
+
+          <h3>Overall Recipe Frequency ({simResults.sorted.length} recipes, {simResults.totalSlots} total meal slots)</h3>
+          {simResults.sorted.map(function(r) {
+            var barColor = r.count === 0 ? "dbg-fill-red" : (r.pct < 2 ? "dbg-fill-yellow" : "dbg-fill-green");
+            return (<div className="dbg-bar-row" key={r.name}>
+              <span className="dbg-bar-name">{r.name}</span>
+              <div className="dbg-bar-track"><div className={"dbg-bar-fill " + barColor} style={{width: Math.max(r.count > 0 ? 1 : 0, Math.round(r.count/simResults.maxCount*100))+"%"}}></div></div>
+              <span className="dbg-bar-val">{r.count} ({r.pct}%)</span>
+            </div>);
+          })}
+
+          <h3>Never Selected</h3>
+          {simResults.neverSelected.length === 0 ? (<div className="dbg-pass">All recipes were selected at least once.</div>) : (
+            <ul className="dbg-list">{simResults.neverSelected.map(function(r) { return <li key={r.name} style={{color:'#f38ba8'}}>{r.name}</li>; })}</ul>
+          )}
+
+          <h3>Rarely Selected (&lt;2% of slots)</h3>
+          {simResults.rarelySelected.length === 0 ? (<div className="dbg-pass">No recipes below 2% threshold.</div>) : (
+            <ul className="dbg-list">{simResults.rarelySelected.map(function(r) { return <li key={r.name}><span className="dbg-warn">{r.name}</span> — {r.pct}% ({r.count} times)</li>; })}</ul>
+          )}
+
+          <h3>Most Over-Selected (Top 10)</h3>
+          <ul className="dbg-list">{simResults.top10.map(function(r) {
+            return <li key={r.name}>{r.name} — {r.pct}% ({r.count} times){r.pct > 10 ? <span className="dbg-flag">OVER-REPRESENTED</span> : ""}</li>;
+          })}</ul>
+        </>)}
+      </div>)}
 
       {swapTarget && (<div className="modal-overlay" onClick={function(e){if(e.target===e.currentTarget)setSwapTarget(null);}}>
         <div className="modal">

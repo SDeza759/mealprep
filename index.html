@@ -1340,6 +1340,7 @@ function App() {
     setStatsNewData(true);
     setCopyMsg("Logged " + Object.keys(eatenMeals).length + " meals!");
     setTimeout(function() { setCopyMsg(""); }, 2500);
+    setEatenMeals({});
   }
 
   var eatenCount = Object.keys(eatenMeals).length;

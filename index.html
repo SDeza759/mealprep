@@ -1276,7 +1276,7 @@ function App() {
         summaryParts.push(neverSelected.length + " recipe" + (neverSelected.length !== 1 ? "s" : "") + " never selected.");
         summaryParts.push(rarelySelected.length + " recipe" + (rarelySelected.length !== 1 ? "s" : "") + " rarely selected (<2%).");
         summaryParts.push("Most selected: " + topName + " at " + topPct + "%.");
-        setSimResults({ sorted: sorted, neverSelected: neverSelected, rarelySelected: rarelySelected, top10: top10, maxCount: maxCount, totalSlots: totalSlots, summary: summaryParts.join(" ") });
+        setSimResults({ sorted: sorted, neverSelected: neverSelected, rarelySelected: rarelySelected, top10: top10, maxCount: maxCount, totalSlots: totalSlots, summary: summaryParts.join(" "), macros: { calories: simCal, carbGrams: simCarbG, proteinGrams: simProG, fatGrams: simFatG }, weeksSimulated: TOTAL, timestamp: new Date().toISOString() });
         setSimProgress(null);
       }
     }
@@ -1785,6 +1785,24 @@ function App() {
           <ul className="dbg-list">{simResults.top10.map(function(r) {
             return <li key={r.name}>{r.name} — {r.pct}% ({r.count} times){r.pct > 10 ? <span className="dbg-flag">OVER-REPRESENTED</span> : ""}</li>;
           })}</ul>
+
+          <div style={{marginTop:20}}><button className="btn btn-debug" onClick={function() {
+            var report = {
+              timestamp: simResults.timestamp,
+              weeksSimulated: simResults.weeksSimulated,
+              totalMealSlots: simResults.totalSlots,
+              macroTargets: simResults.macros,
+              biasSummary: simResults.summary,
+              recipeFrequency: simResults.sorted.map(function(r) { return { name: r.name, count: r.count, percentage: r.pct }; }),
+              neverSelected: simResults.neverSelected.map(function(r) { return r.name; }),
+              rarelySelected: simResults.rarelySelected.map(function(r) { return { name: r.name, count: r.count, percentage: r.pct }; }),
+              top10OverSelected: simResults.top10.map(function(r) { return { name: r.name, count: r.count, percentage: r.pct, overRepresented: r.pct > 10 }; })
+            };
+            var blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement("a"); a.href = url; a.download = "meal-distribution-report.json"; a.click();
+            URL.revokeObjectURL(url);
+          }}>Download Report</button></div>
         </>)}
       </div>)}
 

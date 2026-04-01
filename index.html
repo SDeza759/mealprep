@@ -718,25 +718,30 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     var mealsPerDay = targetCal > 2200 ? 3 : (targetCal < 1500 ? 2 : (d % 2 === 0 ? 3 : 2));
     var includeBreakfast = mealsPerDay >= 3 && d % 3 === 0;
     var recentRecipes = {};
-    // Look back at previous slots for variety
-    for (var lb = Math.max(0, si - 2); lb < si; lb++) {
+    // Look back at previous 4 slots for variety (Fix 5: extended from 2)
+    for (var lb = Math.max(0, si - 4); lb < si; lb++) {
       slots[lb].forEach(function(dayIdx) { if (days[dayIdx]) days[dayIdx].meals.forEach(function(m) { recentRecipes[m.originalName] = true; }); });
     }
 
+    // comboScore: Scores a candidate meal combo. Changes from original:
+    // - Fix 1: Squared macro errors → absolute errors (linear) to reduce winner-take-all bias
+    // - Fix 3: Ingredient overlap weight increased from 0.01 to 0.08 so variety meaningfully competes with macro fit
+    // - Fix 4: Overlap now checks ALL picks' ingredients, not just picks[0]
     function comboScore(picks) {
       var tc=0, tb=0, tp=0, tf=0;
       picks.forEach(function(r) { tc+=r.totalMacros.calories; tb+=r.totalMacros.carbs; tp+=r.totalMacros.protein; tf+=r.totalMacros.fat; });
       if (tc < 1) return 999;
-      var s = Math.pow((tc-targetCal)/targetCal, 2);
-      s += Math.pow((tb-targetCarbs)/Math.max(targetCarbs,1), 2);
-      s += Math.pow((tp-targetProtein)/Math.max(targetProtein,1), 2);
-      s += Math.pow((tf-targetFat)/Math.max(targetFat,1), 2);
-      var ols = 0; picks[0].ingredients.forEach(function(ing) { if (!ing.isSpice && ingredientFrequency[ing.name]) ols += ingredientFrequency[ing.name]; });
-      return s - ols * 0.01;
+      var s = Math.abs((tc-targetCal)/targetCal);
+      s += Math.abs((tb-targetCarbs)/Math.max(targetCarbs,1));
+      s += Math.abs((tp-targetProtein)/Math.max(targetProtein,1));
+      s += Math.abs((tf-targetFat)/Math.max(targetFat,1));
+      var ols = 0; picks.forEach(function(p) { p.ingredients.forEach(function(ing) { if (!ing.isSpice && ingredientFrequency[ing.name]) ols += ingredientFrequency[ing.name]; }); });
+      return s - ols * 0.08;
     }
 
+    // Fix 2: Weighted random selection via softmax instead of top-3. Fix 6: 20 attempts instead of 8.
     var bestPicks = null, bestScore = Infinity;
-    for (var attempt = 0; attempt < 8; attempt++) {
+    for (var attempt = 0; attempt < 20; attempt++) {
       var picks = [], usedAttempt = {};
       for (var m = 0; m < mealsPerDay; m++) {
         var pool = (m === 0 && includeBreakfast) ? BREAKFAST_RECIPES : MAIN_RECIPES;
@@ -747,9 +752,17 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
           var testPicks = picks.concat([r]);
           scored.push({ recipe: r, index: gi, score: comboScore(testPicks) });
         }
-        scored.sort(function(a, b) { return a.score - b.score; });
-        var pick = scored[Math.min(Math.floor(Math.random() * 3), scored.length - 1)] || scored[0];
-        if (!pick) continue;
+        if (scored.length === 0) continue;
+        // Weighted random: convert scores to weights via softmax with temperature
+        var minScore = scored.reduce(function(a, b) { return a < b.score ? a : b.score; }, scored[0].score);
+        var tau = 0.15;
+        var weights = scored.map(function(s) { return Math.exp(-(s.score - minScore) / tau); });
+        var totalW = weights.reduce(function(a, b) { return a + b; }, 0);
+        var rnd = Math.random() * totalW, cumul = 0, pick = scored[0];
+        for (var wi = 0; wi < weights.length; wi++) {
+          cumul += weights[wi];
+          if (rnd <= cumul) { pick = scored[wi]; break; }
+        }
         usedAttempt[pick.index] = true;
         picks.push(pick.recipe);
       }
@@ -1827,6 +1840,31 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+// Background validation: run 1000-week simulation and log distribution summary to console
+(function() {
+  var SIM_TOTAL = 1000, SIM_BATCH = 50;
+  var freq = {}, totalSlots = 0, done = 0;
+  RECIPES.forEach(function(r) { freq[r.name] = 0; });
+  var simCal = 2500, simCarbG = round1((2500*0.4)/4), simProG = round1((2500*0.3)/4), simFatG = round1((2500*0.3)/9);
+  function batch() {
+    var end = Math.min(done + SIM_BATCH, SIM_TOTAL);
+    for (var i = done; i < end; i++) {
+      var plan = generatePlan(simCal, simCarbG, simProG, simFatG, {}, [], []);
+      plan.forEach(function(day) { if (!day) return; day.meals.forEach(function(meal) { freq[meal.originalName] = (freq[meal.originalName]||0)+1; totalSlots++; }); });
+    }
+    done = end;
+    if (done < SIM_TOTAL) { setTimeout(batch, 0); return; }
+    var sorted = Object.keys(freq).map(function(n) { return { name: n, count: freq[n], pct: round1((freq[n]/totalSlots)*100) }; }).sort(function(a,b) { return b.count - a.count; });
+    var never = sorted.filter(function(r) { return r.count === 0; });
+    var rare = sorted.filter(function(r) { return r.count > 0 && r.pct < 2; });
+    console.log("[MealPrep Distribution Validation] 1000 weeks, " + totalSlots + " total slots");
+    console.log("  Never selected: " + never.length + " recipes" + (never.length > 0 ? " (" + never.map(function(r){return r.name;}).join(", ") + ")" : ""));
+    console.log("  Rarely selected (<2%): " + rare.length + " recipes");
+    console.log("  Most selected: " + sorted[0].name + " at " + sorted[0].pct + "% (" + sorted[0].count + " times)");
+  }
+  setTimeout(batch, 100);
+})();
 </script>
 </body>
 </html>

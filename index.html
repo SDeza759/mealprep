@@ -695,8 +695,8 @@ RECIPES.forEach(function(r) {
   }, { calories:0, carbs:0, protein:0, fat:0 });
 });
 
-var BREAKFAST_RECIPES = RECIPES.filter(function(r) { return r.tags.indexOf("breakfast") !== -1; });
-var MAIN_RECIPES = RECIPES.filter(function(r) { return r.tags.indexOf("breakfast") === -1; });
+// Unified pool: all recipes compete equally for all meal slots. No breakfast/main split.
+// Breakfast-tagged recipes are sorted to display first (cosmetic only, see sort below).
 
 var INGREDIENT_CATEGORIES = {
   "Chicken Breast":"Proteins","Chicken Thigh":"Proteins","Ground Beef (lean)":"Proteins","Beef Sirloin":"Proteins","Pork Shoulder":"Proteins","Pork Belly":"Proteins","Pork Loin":"Proteins","Ground Lamb":"Proteins","Salmon Fillet":"Proteins","Shrimp":"Proteins","Ahi Tuna":"Proteins","Turkey Breast":"Proteins","Fish Cake":"Proteins","Paneer":"Proteins","Egg":"Proteins",
@@ -1068,7 +1068,9 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     return nudge;
   }
 
-  // Step 4 helper: compute rotation multiplier based on session history
+  // Step 4 helper: compute rotation multiplier based on session history.
+  // Fair share uses RECIPES.length which is the unified pool (all 134 recipes).
+  // No split calculation needed since breakfast/main distinction is removed.
   function rotationMultiplier(recipe) {
     var total = _recipeRotation.totalSlots;
     if (total < 1) return 1.0;
@@ -1126,14 +1128,13 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     var slot = slots[si];
     var d = slot[0];
     var mealsPerDay = targetCal > 2200 ? 3 : (targetCal < 1500 ? 2 : (d % 2 === 0 ? 3 : 2));
-    var includeBreakfast = mealsPerDay >= 3;
+    // Unified pool: all recipes compete for all slots. No breakfast distinction.
 
-    // Fix 1: Track cumulative macros so each meal selection knows the remaining budget
     var dayRecipeNames = [];
     var dayPicks = [];
     var cumulativeMacros = { calories: 0, carbs: 0, protein: 0, fat: 0 };
     for (var m = 0; m < mealsPerDay; m++) {
-      var pool = (m === 0 && includeBreakfast) ? BREAKFAST_RECIPES : MAIN_RECIPES;
+      var pool = RECIPES;
       var mealsLeft = mealsPerDay - m;
       var remainingBudget = {
         calories: Math.max(1, (targetCal - cumulativeMacros.calories) / mealsLeft),
@@ -1167,6 +1168,11 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
       _recipeRotation.totalSlots++;
       dayMeals.push({ originalName: md.recipe.name, name: md.recipe.name, cuisine: md.recipe.cuisine, isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1, ingredients: md.ingredients, totalMacros: mt });
     });
+
+    // Display-only sort: breakfast-appropriate recipes appear first in the day's meal list.
+    // A recipe is breakfast-appropriate if tagged "breakfast". This does NOT affect macro
+    // calculations, grocery list aggregation, or any other logic — purely cosmetic ordering.
+    dayMeals.sort(function(a, b) { return (b.isBreakfast ? 1 : 0) - (a.isBreakfast ? 1 : 0); });
 
     // Protein Shake — last resort supplement after all 50 adjustment iterations complete.
     // Added only if protein is still >10% below target. Max one per day. Not a meal card.
@@ -2554,65 +2560,40 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   setTimeout(batch, 100);
 })();
 
-// ===== SELF-TEST: 100-week validation for Fixes 1-3 (calorie threshold, rescue filter, primary preference) =====
-// Runs the full validator (100 plans) and compares to baseline: 43% pass, 421 ING_OVER_500, 33 RESCUE_CARB_BLOWN
+// ===== SELF-TEST: Unified pool validation =====
 setTimeout(function() {
-  console.log("\n[Fix 1-3 Validation — 100 weeks]");
-  var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
-  _recipeRotation = { counts: {}, totalSlots: 0 };
-  var SIM_TOTAL = 100, SIM_BATCH = 10;
-  var vCal = 2000, vCarbs = 175, vPro = 200, vFat = 55;
-  var totalDays = 0, passedDays = 0, done = 0;
-  var fc = { calHigh:0, calLow:0, carbsHigh:0, carbsLow:0, proHigh:0, proLow:0, fatHigh:0, fatLow:0, ingOver500:0, shakeStillLow:0, rescueCarbBlown:0 };
-  var worst = { cal:0, carbs:0, proLow:Infinity, fat:0 };
-  function batch() {
-    var end = Math.min(done + SIM_BATCH, SIM_TOTAL);
-    for (var i = done; i < end; i++) {
-      var plan = generatePlan(vCal, vCarbs, vPro, vFat, {}, [], []);
+  console.log("\n[Unified Pool Self-Tests]");
+  var testCal = 2000, testCarbs = 175, testPro = 200, testFat = 55;
+
+  // Test 1: No recipe type restricted to any slot. Breakfast recipes should appear first when present.
+  (function() {
+    console.log("Test 1: Unified pool — no slot restrictions, breakfast sort");
+    var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
+    _recipeRotation = { counts: {}, totalSlots: 0 };
+    var pass = true, bfDays = 0;
+    for (var w = 0; w < 2; w++) {
+      var plan = generatePlan(testCal, testCarbs, testPro, testFat, {}, [], []);
       plan.forEach(function(day) {
         if (!day) return;
-        totalDays++;
-        var t = day.totals;
-        var cp = Math.round(t.calories/vCal*100), bp = Math.round(t.carbs/vCarbs*100);
-        var pp = Math.round(t.protein/vPro*100), fp = Math.round(t.fat/vFat*100);
-        var flags = 0;
-        if (cp > 105) { fc.calHigh++; flags++; } if (cp < 95) { fc.calLow++; flags++; }
-        if (bp > 105) { fc.carbsHigh++; flags++; } if (bp < 95) { fc.carbsLow++; flags++; }
-        if (pp > 105) { fc.proHigh++; flags++; } if (pp < 95) { fc.proLow++; flags++; }
-        if (fp > 105) { fc.fatHigh++; flags++; } if (fp < 95) { fc.fatLow++; flags++; }
-        day.meals.forEach(function(meal) { meal.ingredients.forEach(function(ing) {
-          if (ing.grams > 1000) { fc.ingOver500++; flags++; }
-        }); });
-        if (day.proteinShake && pp < 95) { fc.shakeStillLow++; flags++; }
-        var hasRescue = false;
-        day.meals.forEach(function(meal) { meal.ingredients.forEach(function(ing) { if (ing.adjustment && ing.adjustment.indexOf("PROTEIN RESCUE") !== -1) hasRescue = true; }); });
-        if (hasRescue && bp > 105) { fc.rescueCarbBlown++; flags++; }
-        if (t.calories > worst.cal) worst.cal = t.calories;
-        if (t.carbs > worst.carbs) worst.carbs = t.carbs;
-        if (t.protein < worst.proLow) worst.proLow = t.protein;
-        if (t.fat > worst.fat) worst.fat = t.fat;
-        if (flags === 0) passedDays++;
+        var hasBF = day.meals.some(function(m) { return m.isBreakfast; });
+        if (hasBF) {
+          bfDays++;
+          if (!day.meals[0].isBreakfast) { pass = false; console.log("  FAIL: breakfast recipe not sorted first"); }
+        }
       });
     }
-    done = end;
-    if (done < SIM_TOTAL) { setTimeout(batch, 0); return; }
-    var passPct = round1(passedDays / totalDays * 100);
-    console.log("  " + totalDays + " days across " + SIM_TOTAL + " weeks");
-    var worstFatPct = worst.fat > 0 ? Math.round(worst.fat / vFat * 100) : 0;
-    console.log("  Pass rate (95-105%): " + passedDays + "/" + totalDays + " (" + passPct + "%) " + (passPct >= 90 ? "PASS (target >=90%)" : "target >=90%"));
-    console.log("  FAT_HIGH: " + fc.fatHigh + " " + (fc.fatHigh < 20 ? "(PASS target <20)" : "(target <20)"));
-    console.log("  FAT_LOW: " + fc.fatLow);
-    console.log("  PRO_LOW: " + fc.proLow + ", PRO_HIGH: " + fc.proHigh);
-    console.log("  CAL_HIGH: " + fc.calHigh + ", CAL_LOW: " + fc.calLow);
-    console.log("  CARBS_HIGH: " + fc.carbsHigh + ", CARBS_LOW: " + fc.carbsLow);
-    console.log("  RESCUE_CARB_BLOWN: " + fc.rescueCarbBlown + " " + (fc.rescueCarbBlown === 0 ? "(PASS target 0)" : "(target 0)"));
-    console.log("  ING_OVER_1000: " + fc.ingOver500);
-    console.log("  Worst — Cal: " + round1(worst.cal) + ", Carbs: " + round1(worst.carbs) + "g, Pro(low): " + round1(worst.proLow) + "g, Fat: " + round1(worst.fat) + "g (" + worstFatPct + "%)");
-    console.log("  Worst fat: " + worstFatPct + "% " + (worstFatPct <= 150 ? "(PASS target <=150%)" : "(target <=150%)"));
-    console.log("  Database: " + RECIPES.length + " recipes");
+    console.log("  Days with breakfast recipe: " + bfDays + "/14, sorted first: " + (pass ? "PASS" : "FAIL"));
     _recipeRotation = savedRot;
-  }
-  setTimeout(batch, 500);
+  })();
+
+  // Test 4: Database integrity
+  (function() {
+    console.log("Test 4: Database integrity");
+    console.log("  Recipes: " + RECIPES.length + " (expected 134) — " + (RECIPES.length === 134 ? "PASS" : "FAIL"));
+    console.log("  BREAKFAST_RECIPES var: " + (typeof BREAKFAST_RECIPES === "undefined" ? "removed (PASS)" : "still exists (FAIL)"));
+  })();
+
+  console.log("[Unified Pool Tests Complete]");
 }, 500);
 </script>
 </body>

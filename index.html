@@ -1477,8 +1477,9 @@ function App() {
     var vFat = pctValid ? fatGrams : round1((2000*0.25)/9);
     var TOTAL = 100, BATCH = 10, done = 0;
     var flagged = [], totalDays = 0, passedDays = 0;
-    var flagCounts = { calHigh:0, calLow:0, macroHigh:0, macroLow:0, ingOver500:0, shakeStillLow:0, rescueCarbBlown:0 };
-    var worst = { calories:0, carbs:0, protein:Infinity, fat:0 };
+    // Tight 95-105% thresholds for all macro checks
+    var flagCounts = { calHigh:0, calLow:0, carbsHigh:0, carbsLow:0, proHigh:0, proLow:0, fatHigh:0, fatLow:0, ingOver500:0, shakeStillLow:0, rescueCarbBlown:0 };
+    var worst = { caloriesHigh:0, caloriesLow:Infinity, carbsHigh:0, carbsLow:Infinity, proteinHigh:0, proteinLow:Infinity, fatHigh:0, fatLow:Infinity };
     var worstDay = null;
     setValidationProgress({ done: 0, total: TOTAL });
     setValidationResults(null);
@@ -1492,58 +1493,52 @@ function App() {
           totalDays++;
           var t = day.totals;
           var flags = [];
-          // Check 1: Calories >150% of target
-          if (t.calories > vCal * 1.5) flags.push("CAL_HIGH: " + round1(t.calories) + " (" + Math.round(t.calories/vCal*100) + "%)");
-          // Check 2: Calories <50% of target
-          if (t.calories < vCal * 0.5) flags.push("CAL_LOW: " + round1(t.calories) + " (" + Math.round(t.calories/vCal*100) + "%)");
-          // Check 3: Any macro >200% of target
-          if (t.carbs > vCarbs * 2) flags.push("CARBS_HIGH: " + round1(t.carbs) + "g (" + Math.round(t.carbs/vCarbs*100) + "%)");
-          if (t.protein > vPro * 2) flags.push("PRO_HIGH: " + round1(t.protein) + "g (" + Math.round(t.protein/vPro*100) + "%)");
-          if (t.fat > vFat * 2) flags.push("FAT_HIGH: " + round1(t.fat) + "g (" + Math.round(t.fat/vFat*100) + "%)");
-          // Check 4: Any macro <30% of target
-          if (t.carbs < vCarbs * 0.3) flags.push("CARBS_LOW: " + round1(t.carbs) + "g (" + Math.round(t.carbs/vCarbs*100) + "%)");
-          if (t.protein < vPro * 0.3) flags.push("PRO_LOW: " + round1(t.protein) + "g (" + Math.round(t.protein/vPro*100) + "%)");
-          if (t.fat < vFat * 0.3) flags.push("FAT_LOW: " + round1(t.fat) + "g (" + Math.round(t.fat/vFat*100) + "%)");
-          // Check 5: Any ingredient >500g
+          var calPct = Math.round(t.calories / vCal * 100);
+          var carbsPct = Math.round(t.carbs / vCarbs * 100);
+          var proPct = Math.round(t.protein / vPro * 100);
+          var fatPct = Math.round(t.fat / vFat * 100);
+          // All checks use tight 95-105% thresholds
+          if (calPct > 105) { flags.push("CAL_HIGH: " + round1(t.calories) + " (" + calPct + "%)"); flagCounts.calHigh++; }
+          if (calPct < 95) { flags.push("CAL_LOW: " + round1(t.calories) + " (" + calPct + "%)"); flagCounts.calLow++; }
+          if (carbsPct > 105) { flags.push("CARBS_HIGH: " + round1(t.carbs) + "g (" + carbsPct + "%)"); flagCounts.carbsHigh++; }
+          if (carbsPct < 95) { flags.push("CARBS_LOW: " + round1(t.carbs) + "g (" + carbsPct + "%)"); flagCounts.carbsLow++; }
+          if (proPct > 105) { flags.push("PRO_HIGH: " + round1(t.protein) + "g (" + proPct + "%)"); flagCounts.proHigh++; }
+          if (proPct < 95) { flags.push("PRO_LOW: " + round1(t.protein) + "g (" + proPct + "%)"); flagCounts.proLow++; }
+          if (fatPct > 105) { flags.push("FAT_HIGH: " + round1(t.fat) + "g (" + fatPct + "%)"); flagCounts.fatHigh++; }
+          if (fatPct < 95) { flags.push("FAT_LOW: " + round1(t.fat) + "g (" + fatPct + "%)"); flagCounts.fatLow++; }
+          // Ingredient >500g check
           day.meals.forEach(function(meal) {
             meal.ingredients.forEach(function(ing) {
-              if (ing.grams > 500) flags.push("ING_OVER_500: " + ing.name + " " + ing.grams + "g in " + meal.name);
+              if (ing.grams > 500) { flags.push("ING_OVER_500: " + ing.name + " " + ing.grams + "g in " + meal.name); flagCounts.ingOver500++; }
             });
           });
-          // Check 6: Shake added but protein still <70% of target
-          if (day.proteinShake && t.protein < vPro * 0.7) flags.push("SHAKE_STILL_LOW: protein " + round1(t.protein) + "g (" + Math.round(t.protein/vPro*100) + "%) after shake");
-          // Check 7: Protein rescue activated but carbs >150% of target
+          // Shake added but protein still <95% of target
+          if (day.proteinShake && proPct < 95) { flags.push("SHAKE_STILL_LOW: protein " + round1(t.protein) + "g (" + proPct + "%) after shake"); flagCounts.shakeStillLow++; }
+          // Rescue active but carbs >105% of target
           var hasRescue = false;
           day.meals.forEach(function(meal) { meal.ingredients.forEach(function(ing) { if (ing.adjustment && ing.adjustment.indexOf("PROTEIN RESCUE") !== -1) hasRescue = true; }); });
-          if (hasRescue && t.carbs > vCarbs * 1.5) flags.push("RESCUE_CARB_BLOWN: carbs " + round1(t.carbs) + "g (" + Math.round(t.carbs/vCarbs*100) + "%) with rescue active");
+          if (hasRescue && carbsPct > 105) { flags.push("RESCUE_CARB_BLOWN: carbs " + round1(t.carbs) + "g (" + carbsPct + "%) with rescue"); flagCounts.rescueCarbBlown++; }
 
-          // Count flags
-          flags.forEach(function(f) {
-            if (f.indexOf("CAL_HIGH") === 0) flagCounts.calHigh++;
-            if (f.indexOf("CAL_LOW") === 0) flagCounts.calLow++;
-            if (f.indexOf("CARBS_HIGH") === 0 || f.indexOf("PRO_HIGH") === 0 || f.indexOf("FAT_HIGH") === 0) flagCounts.macroHigh++;
-            if (f.indexOf("CARBS_LOW") === 0 || f.indexOf("PRO_LOW") === 0 || f.indexOf("FAT_LOW") === 0) flagCounts.macroLow++;
-            if (f.indexOf("ING_OVER_500") === 0) flagCounts.ingOver500++;
-            if (f.indexOf("SHAKE_STILL_LOW") === 0) flagCounts.shakeStillLow++;
-            if (f.indexOf("RESCUE_CARB_BLOWN") === 0) flagCounts.rescueCarbBlown++;
-          });
-
-          // Track worst values
-          if (t.calories > worst.calories) worst.calories = t.calories;
-          if (t.carbs > worst.carbs) worst.carbs = t.carbs;
-          if (t.protein < worst.protein) worst.protein = t.protein;
-          if (t.fat > worst.fat) worst.fat = t.fat;
+          // Track worst values (highest and lowest for each macro)
+          if (t.calories > worst.caloriesHigh) worst.caloriesHigh = t.calories;
+          if (t.calories < worst.caloriesLow) worst.caloriesLow = t.calories;
+          if (t.carbs > worst.carbsHigh) worst.carbsHigh = t.carbs;
+          if (t.carbs < worst.carbsLow) worst.carbsLow = t.carbs;
+          if (t.protein > worst.proteinHigh) worst.proteinHigh = t.protein;
+          if (t.protein < worst.proteinLow) worst.proteinLow = t.protein;
+          if (t.fat > worst.fatHigh) worst.fatHigh = t.fat;
+          if (t.fat < worst.fatLow) worst.fatLow = t.fat;
 
           if (flags.length > 0) {
             var entry = {
               week: i + 1, day: di, dayName: DAYS_NAMES[di] || ("Day " + di),
               meals: day.meals.map(function(m) { return m.name; }),
               totals: { calories: round1(t.calories), carbs: round1(t.carbs), protein: round1(t.protein), fat: round1(t.fat) },
-              shake: !!day.proteinShake, flags: flags
+              pcts: { calories: calPct, carbs: carbsPct, protein: proPct, fat: fatPct },
+              shake: !!day.proteinShake, rescue: hasRescue, flags: flags
             };
             flagged.push(entry);
-            // Track worst overall day
-            if (!worstDay || t.calories > worstDay.totals.calories) worstDay = entry;
+            if (!worstDay || flags.length > worstDay.flags.length) worstDay = entry;
           } else {
             passedDays++;
           }
@@ -2262,28 +2257,32 @@ function App() {
 
           {validationResults && (<>
             <div className="dbg-summary">
-              <strong>{validationResults.totalDays}</strong> days generated across 100 plans.{" "}
-              <strong style={{color: validationResults.flaggedDays === 0 ? '#a6e3a1' : '#f38ba8'}}>{validationResults.passedDays}/{validationResults.totalDays}</strong> passed all checks ({validationResults.passPct}%).{" "}
-              <strong style={{color:'#f38ba8'}}>{validationResults.flaggedDays}</strong> days flagged.
+              <strong>{validationResults.totalDays}</strong> days across 100 plans. Pass = all 4 macros within 95-105% of target + no ingredient &gt;500g.<br/>
+              <strong style={{color: validationResults.flaggedDays === 0 ? '#a6e3a1' : '#f38ba8'}}>{validationResults.passedDays}/{validationResults.totalDays}</strong> passed ({validationResults.passPct}%).{" "}
+              <strong style={{color:'#f38ba8'}}>{validationResults.flaggedDays}</strong> flagged.
             </div>
 
-            <h3>Flag Breakdown</h3>
+            <h3>Flag Breakdown (95-105% thresholds)</h3>
             <ul className="dbg-list">
-              <li>Calories &gt;150% target: <strong>{validationResults.flagCounts.calHigh}</strong></li>
-              <li>Calories &lt;50% target: <strong>{validationResults.flagCounts.calLow}</strong></li>
-              <li>Any macro &gt;200% target: <strong>{validationResults.flagCounts.macroHigh}</strong></li>
-              <li>Any macro &lt;30% target: <strong>{validationResults.flagCounts.macroLow}</strong></li>
+              <li>Calories &gt;105%: <strong>{validationResults.flagCounts.calHigh}</strong></li>
+              <li>Calories &lt;95%: <strong>{validationResults.flagCounts.calLow}</strong></li>
+              <li>Carbs &gt;105%: <strong>{validationResults.flagCounts.carbsHigh}</strong></li>
+              <li>Carbs &lt;95%: <strong>{validationResults.flagCounts.carbsLow}</strong></li>
+              <li>Protein &gt;105%: <strong>{validationResults.flagCounts.proHigh}</strong></li>
+              <li>Protein &lt;95%: <strong>{validationResults.flagCounts.proLow}</strong></li>
+              <li>Fat &gt;105%: <strong>{validationResults.flagCounts.fatHigh}</strong></li>
+              <li>Fat &lt;95%: <strong>{validationResults.flagCounts.fatLow}</strong></li>
               <li>Ingredient &gt;500g: <strong>{validationResults.flagCounts.ingOver500}</strong></li>
-              <li>Shake added, protein still &lt;70%: <strong>{validationResults.flagCounts.shakeStillLow}</strong></li>
-              <li>Rescue active, carbs &gt;150%: <strong>{validationResults.flagCounts.rescueCarbBlown}</strong></li>
+              <li>Shake added, protein still &lt;95%: <strong>{validationResults.flagCounts.shakeStillLow}</strong></li>
+              <li>Rescue active, carbs &gt;105%: <strong>{validationResults.flagCounts.rescueCarbBlown}</strong></li>
             </ul>
 
-            <h3>Worst Values Seen</h3>
+            <h3>Worst Values Seen (range)</h3>
             <ul className="dbg-list">
-              <li>Highest calories: <strong>{round1(validationResults.worst.calories)}</strong> (target {validationResults.targets.calories})</li>
-              <li>Highest carbs: <strong>{round1(validationResults.worst.carbs)}g</strong> (target {round1(validationResults.targets.carbs)}g)</li>
-              <li>Lowest protein: <strong>{round1(validationResults.worst.protein)}g</strong> (target {round1(validationResults.targets.protein)}g)</li>
-              <li>Highest fat: <strong>{round1(validationResults.worst.fat)}g</strong> (target {round1(validationResults.targets.fat)}g)</li>
+              <li>Calories: <strong>{round1(validationResults.worst.caloriesLow)}</strong> – <strong>{round1(validationResults.worst.caloriesHigh)}</strong> (target {validationResults.targets.calories})</li>
+              <li>Carbs: <strong>{round1(validationResults.worst.carbsLow)}g</strong> – <strong>{round1(validationResults.worst.carbsHigh)}g</strong> (target {round1(validationResults.targets.carbs)}g)</li>
+              <li>Protein: <strong>{round1(validationResults.worst.proteinLow)}g</strong> – <strong>{round1(validationResults.worst.proteinHigh)}g</strong> (target {round1(validationResults.targets.protein)}g)</li>
+              <li>Fat: <strong>{round1(validationResults.worst.fatLow)}g</strong> – <strong>{round1(validationResults.worst.fatHigh)}g</strong> (target {round1(validationResults.targets.fat)}g)</li>
             </ul>
 
             {validationResults.flagged.length > 0 && (<>
@@ -2291,7 +2290,7 @@ function App() {
               {validationResults.flagged.slice(0, 50).map(function(entry, idx) {
                 return (<div key={idx} style={{background:'#313244',borderRadius:6,padding:8,marginBottom:6,fontSize:'0.82rem',borderLeft:'3px solid #f38ba8'}}>
                   <div><strong>Week {entry.week}, {entry.dayName}</strong>: {entry.meals.join(" + ")}</div>
-                  <div style={{color:'#a6adc8'}}>Cal: {entry.totals.calories} | C: {entry.totals.carbs}g | P: {entry.totals.protein}g | F: {entry.totals.fat}g{entry.shake ? " + shake" : ""}</div>
+                  <div style={{color:'#a6adc8'}}>Cal: {entry.totals.calories} ({entry.pcts.calories}%) | C: {entry.totals.carbs}g ({entry.pcts.carbs}%) | P: {entry.totals.protein}g ({entry.pcts.protein}%) | F: {entry.totals.fat}g ({entry.pcts.fat}%){entry.shake ? " + shake" : ""}{entry.rescue ? " + rescue" : ""}</div>
                   {entry.flags.map(function(f, fi) { return <div key={fi} style={{color:'#f38ba8',fontSize:'0.78rem'}}>  {f}</div>; })}
                 </div>);
               })}
@@ -2302,6 +2301,7 @@ function App() {
               var blob = new Blob([JSON.stringify({
                 timestamp: validationResults.timestamp,
                 targets: validationResults.targets,
+                thresholds: "95-105% for all macros",
                 totalDays: validationResults.totalDays,
                 passedDays: validationResults.passedDays,
                 passPct: validationResults.passPct,

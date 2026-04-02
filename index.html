@@ -1447,6 +1447,8 @@ function App() {
   var [simResults, setSimResults] = React.useState(null);
   var [simProgress, setSimProgress] = React.useState(null);
   var [ingAnalysis, setIngAnalysis] = React.useState(null);
+  var [validationResults, setValidationResults] = React.useState(null);
+  var [validationProgress, setValidationProgress] = React.useState(null);
   var debugBuf = React.useRef("");
 
   React.useEffect(function() {
@@ -1457,7 +1459,7 @@ function App() {
       if (debugBuf.current.endsWith("debug")) {
         debugBuf.current = "";
         setDebugVisible(function(v) {
-          if (v) { setSimResults(null); setSimProgress(null); setIngAnalysis(null); }
+          if (v) { setSimResults(null); setSimProgress(null); setIngAnalysis(null); setValidationResults(null); setValidationProgress(null); }
           return !v;
         });
       }
@@ -1465,6 +1467,104 @@ function App() {
     window.addEventListener("keydown", onKey);
     return function() { window.removeEventListener("keydown", onKey); };
   }, []);
+
+  function runValidation() {
+    var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
+    _recipeRotation = { counts: {}, totalSlots: 0 };
+    var vCal = pctValid ? calories : 2000;
+    var vCarbs = pctValid ? carbGrams : round1((2000*0.35)/4);
+    var vPro = pctValid ? proteinGrams : 200;
+    var vFat = pctValid ? fatGrams : round1((2000*0.25)/9);
+    var TOTAL = 100, BATCH = 10, done = 0;
+    var flagged = [], totalDays = 0, passedDays = 0;
+    var flagCounts = { calHigh:0, calLow:0, macroHigh:0, macroLow:0, ingOver500:0, shakeStillLow:0, rescueCarbBlown:0 };
+    var worst = { calories:0, carbs:0, protein:Infinity, fat:0 };
+    var worstDay = null;
+    setValidationProgress({ done: 0, total: TOTAL });
+    setValidationResults(null);
+
+    function runBatch() {
+      var end = Math.min(done + BATCH, TOTAL);
+      for (var i = done; i < end; i++) {
+        var plan = generatePlan(vCal, vCarbs, vPro, vFat, {}, [], []);
+        plan.forEach(function(day, di) {
+          if (!day) return;
+          totalDays++;
+          var t = day.totals;
+          var flags = [];
+          // Check 1: Calories >150% of target
+          if (t.calories > vCal * 1.5) flags.push("CAL_HIGH: " + round1(t.calories) + " (" + Math.round(t.calories/vCal*100) + "%)");
+          // Check 2: Calories <50% of target
+          if (t.calories < vCal * 0.5) flags.push("CAL_LOW: " + round1(t.calories) + " (" + Math.round(t.calories/vCal*100) + "%)");
+          // Check 3: Any macro >200% of target
+          if (t.carbs > vCarbs * 2) flags.push("CARBS_HIGH: " + round1(t.carbs) + "g (" + Math.round(t.carbs/vCarbs*100) + "%)");
+          if (t.protein > vPro * 2) flags.push("PRO_HIGH: " + round1(t.protein) + "g (" + Math.round(t.protein/vPro*100) + "%)");
+          if (t.fat > vFat * 2) flags.push("FAT_HIGH: " + round1(t.fat) + "g (" + Math.round(t.fat/vFat*100) + "%)");
+          // Check 4: Any macro <30% of target
+          if (t.carbs < vCarbs * 0.3) flags.push("CARBS_LOW: " + round1(t.carbs) + "g (" + Math.round(t.carbs/vCarbs*100) + "%)");
+          if (t.protein < vPro * 0.3) flags.push("PRO_LOW: " + round1(t.protein) + "g (" + Math.round(t.protein/vPro*100) + "%)");
+          if (t.fat < vFat * 0.3) flags.push("FAT_LOW: " + round1(t.fat) + "g (" + Math.round(t.fat/vFat*100) + "%)");
+          // Check 5: Any ingredient >500g
+          day.meals.forEach(function(meal) {
+            meal.ingredients.forEach(function(ing) {
+              if (ing.grams > 500) flags.push("ING_OVER_500: " + ing.name + " " + ing.grams + "g in " + meal.name);
+            });
+          });
+          // Check 6: Shake added but protein still <70% of target
+          if (day.proteinShake && t.protein < vPro * 0.7) flags.push("SHAKE_STILL_LOW: protein " + round1(t.protein) + "g (" + Math.round(t.protein/vPro*100) + "%) after shake");
+          // Check 7: Protein rescue activated but carbs >150% of target
+          var hasRescue = false;
+          day.meals.forEach(function(meal) { meal.ingredients.forEach(function(ing) { if (ing.adjustment && ing.adjustment.indexOf("PROTEIN RESCUE") !== -1) hasRescue = true; }); });
+          if (hasRescue && t.carbs > vCarbs * 1.5) flags.push("RESCUE_CARB_BLOWN: carbs " + round1(t.carbs) + "g (" + Math.round(t.carbs/vCarbs*100) + "%) with rescue active");
+
+          // Count flags
+          flags.forEach(function(f) {
+            if (f.indexOf("CAL_HIGH") === 0) flagCounts.calHigh++;
+            if (f.indexOf("CAL_LOW") === 0) flagCounts.calLow++;
+            if (f.indexOf("CARBS_HIGH") === 0 || f.indexOf("PRO_HIGH") === 0 || f.indexOf("FAT_HIGH") === 0) flagCounts.macroHigh++;
+            if (f.indexOf("CARBS_LOW") === 0 || f.indexOf("PRO_LOW") === 0 || f.indexOf("FAT_LOW") === 0) flagCounts.macroLow++;
+            if (f.indexOf("ING_OVER_500") === 0) flagCounts.ingOver500++;
+            if (f.indexOf("SHAKE_STILL_LOW") === 0) flagCounts.shakeStillLow++;
+            if (f.indexOf("RESCUE_CARB_BLOWN") === 0) flagCounts.rescueCarbBlown++;
+          });
+
+          // Track worst values
+          if (t.calories > worst.calories) worst.calories = t.calories;
+          if (t.carbs > worst.carbs) worst.carbs = t.carbs;
+          if (t.protein < worst.protein) worst.protein = t.protein;
+          if (t.fat > worst.fat) worst.fat = t.fat;
+
+          if (flags.length > 0) {
+            var entry = {
+              week: i + 1, day: di, dayName: DAYS_NAMES[di] || ("Day " + di),
+              meals: day.meals.map(function(m) { return m.name; }),
+              totals: { calories: round1(t.calories), carbs: round1(t.carbs), protein: round1(t.protein), fat: round1(t.fat) },
+              shake: !!day.proteinShake, flags: flags
+            };
+            flagged.push(entry);
+            // Track worst overall day
+            if (!worstDay || t.calories > worstDay.totals.calories) worstDay = entry;
+          } else {
+            passedDays++;
+          }
+        });
+      }
+      done = end;
+      setValidationProgress({ done: done, total: TOTAL });
+      if (done < TOTAL) { setTimeout(runBatch, 0); return; }
+      setValidationResults({
+        totalDays: totalDays, passedDays: passedDays, flaggedDays: flagged.length,
+        passPct: round1(passedDays / totalDays * 100),
+        flagCounts: flagCounts, worst: worst, worstDay: worstDay,
+        flagged: flagged,
+        targets: { calories: vCal, carbs: vCarbs, protein: vPro, fat: vFat },
+        timestamp: new Date().toISOString()
+      });
+      setValidationProgress(null);
+      _recipeRotation = savedRot;
+    }
+    setTimeout(runBatch, 0);
+  }
 
   function runIngredientAnalysis() {
     var map = {};
@@ -2147,6 +2247,72 @@ function App() {
               var a = document.createElement("a"); a.href = url; a.download = "ingredient-frequency-report.json"; a.click();
               URL.revokeObjectURL(url);
             }}>Download Ingredient Report</button></div>
+          </>)}
+        </div>
+
+        <div style={{borderTop:'1px solid #45475a',marginTop:24,paddingTop:20}}>
+          <h2 style={{color:'#f38ba8',fontSize:'1.15rem',marginBottom:12}}>Validate Meal Plan Quality</h2>
+          <p style={{fontSize:'0.82rem',color:'#a6adc8',marginBottom:12}}>Generates 100 complete meal plans using the full pipeline (selection + adjustDayMeals + protein rescue + shake) and flags pathological outputs.</p>
+          <button className="btn btn-debug" onClick={runValidation} disabled={!!validationProgress} style={{marginBottom:16}}>{validationProgress ? "Validating..." : "Run Validation (100 plans)"}</button>
+
+          {validationProgress && (<div className="dbg-progress">
+            <div style={{fontSize:'0.88rem',color:'#cdd6f4'}}>Validating... {validationProgress.done} / {validationProgress.total} plans</div>
+            <div className="dbg-progress-bar"><div className="dbg-progress-fill" style={{width: Math.round(validationProgress.done/validationProgress.total*100)+"%"}}></div></div>
+          </div>)}
+
+          {validationResults && (<>
+            <div className="dbg-summary">
+              <strong>{validationResults.totalDays}</strong> days generated across 100 plans.{" "}
+              <strong style={{color: validationResults.flaggedDays === 0 ? '#a6e3a1' : '#f38ba8'}}>{validationResults.passedDays}/{validationResults.totalDays}</strong> passed all checks ({validationResults.passPct}%).{" "}
+              <strong style={{color:'#f38ba8'}}>{validationResults.flaggedDays}</strong> days flagged.
+            </div>
+
+            <h3>Flag Breakdown</h3>
+            <ul className="dbg-list">
+              <li>Calories &gt;150% target: <strong>{validationResults.flagCounts.calHigh}</strong></li>
+              <li>Calories &lt;50% target: <strong>{validationResults.flagCounts.calLow}</strong></li>
+              <li>Any macro &gt;200% target: <strong>{validationResults.flagCounts.macroHigh}</strong></li>
+              <li>Any macro &lt;30% target: <strong>{validationResults.flagCounts.macroLow}</strong></li>
+              <li>Ingredient &gt;500g: <strong>{validationResults.flagCounts.ingOver500}</strong></li>
+              <li>Shake added, protein still &lt;70%: <strong>{validationResults.flagCounts.shakeStillLow}</strong></li>
+              <li>Rescue active, carbs &gt;150%: <strong>{validationResults.flagCounts.rescueCarbBlown}</strong></li>
+            </ul>
+
+            <h3>Worst Values Seen</h3>
+            <ul className="dbg-list">
+              <li>Highest calories: <strong>{round1(validationResults.worst.calories)}</strong> (target {validationResults.targets.calories})</li>
+              <li>Highest carbs: <strong>{round1(validationResults.worst.carbs)}g</strong> (target {round1(validationResults.targets.carbs)}g)</li>
+              <li>Lowest protein: <strong>{round1(validationResults.worst.protein)}g</strong> (target {round1(validationResults.targets.protein)}g)</li>
+              <li>Highest fat: <strong>{round1(validationResults.worst.fat)}g</strong> (target {round1(validationResults.targets.fat)}g)</li>
+            </ul>
+
+            {validationResults.flagged.length > 0 && (<>
+              <h3>Flagged Days ({validationResults.flagged.length})</h3>
+              {validationResults.flagged.slice(0, 50).map(function(entry, idx) {
+                return (<div key={idx} style={{background:'#313244',borderRadius:6,padding:8,marginBottom:6,fontSize:'0.82rem',borderLeft:'3px solid #f38ba8'}}>
+                  <div><strong>Week {entry.week}, {entry.dayName}</strong>: {entry.meals.join(" + ")}</div>
+                  <div style={{color:'#a6adc8'}}>Cal: {entry.totals.calories} | C: {entry.totals.carbs}g | P: {entry.totals.protein}g | F: {entry.totals.fat}g{entry.shake ? " + shake" : ""}</div>
+                  {entry.flags.map(function(f, fi) { return <div key={fi} style={{color:'#f38ba8',fontSize:'0.78rem'}}>  {f}</div>; })}
+                </div>);
+              })}
+              {validationResults.flagged.length > 50 && <div style={{color:'#a6adc8',fontSize:'0.82rem'}}>...and {validationResults.flagged.length - 50} more flagged days</div>}
+            </>)}
+
+            <div style={{marginTop:20}}><button className="btn btn-debug" onClick={function() {
+              var blob = new Blob([JSON.stringify({
+                timestamp: validationResults.timestamp,
+                targets: validationResults.targets,
+                totalDays: validationResults.totalDays,
+                passedDays: validationResults.passedDays,
+                passPct: validationResults.passPct,
+                flagCounts: validationResults.flagCounts,
+                worstValues: validationResults.worst,
+                flaggedDays: validationResults.flagged
+              }, null, 2)], { type: "application/json" });
+              var url = URL.createObjectURL(blob);
+              var a = document.createElement("a"); a.href = url; a.download = "meal-plan-validation-report.json"; a.click();
+              URL.revokeObjectURL(url);
+            }}>Download Validation Report</button></div>
           </>)}
         </div>
       </div>)}

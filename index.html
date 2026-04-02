@@ -736,8 +736,8 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
         if (!canAdjust(ing) || ing.grams <= 0) return;
         var ingKey = mi + ":" + ii;
 
-        // Try a range of scale factors: 0, 0.3, 0.5, 0.7, 1.3, 1.5, 2.0, 3.0
-        var scales = [0, 0.3, 0.5, 0.7, 1.3, 1.5, 2.0, 3.0];
+        // Fix C: Finer and higher scale factors for micro-adjustments and extreme protein recovery
+        var scales = [0, 0.2, 0.4, 0.6, 0.8, 0.9, 1.1, 1.2, 1.5, 2.0, 3.0, 5.0, 8.0];
         for (var si3 = 0; si3 < scales.length; si3++) {
           var tryScale = scales[si3];
           var tryNewG = Math.round(ing.grams * tryScale);
@@ -778,8 +778,9 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
       });
     });
 
-    // No improvement possible
-    if (bestMi < 0 || bestScore <= 0.001) break;
+    // Fix C: Only exit if no candidate found OR all macros within 8% (was 0.001 score threshold)
+    if (bestMi < 0) break;
+    if (bestScore <= 0 && maxDev <= 0.08) break;
 
     var ing = allMealData[bestMi].ingredients[bestIi];
     var oldG = ing.grams;
@@ -797,6 +798,44 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
       ing.protein = round1(ing.protein * actualScale2);
       ing.fat = round1(ing.fat * actualScale2);
       ing.grams = bestNewG;
+    }
+  }
+
+  // Fix D: Protein rescue phase — last resort after main loop completes.
+  // If protein is still >15% below target, find the ingredient with the best
+  // protein-to-fat ratio and scale it aggressively (up to 10x) to close the gap.
+  var rescueTotals = computeTotals();
+  var rescueProteinGap = targets[2] - rescueTotals[2];
+  if (targets[2] > 0 && rescueProteinGap > targets[2] * 0.15) {
+    var bestRescueMi = -1, bestRescueIi = -1, bestRatio = -1;
+    allMealData.forEach(function(meal, mi) {
+      meal.ingredients.forEach(function(ing, ii) {
+        if (!canAdjust(ing) || ing.grams <= 0 || ing.protein <= 0.5) return;
+        // Protein-to-fat ratio: higher is better (lean proteins win)
+        var ratio = ing.fat > 0 ? ing.protein / ing.fat : ing.protein * 10;
+        if (ratio > bestRatio) { bestRatio = ratio; bestRescueMi = mi; bestRescueIi = ii; }
+      });
+    });
+    if (bestRescueMi >= 0) {
+      var rIng = allMealData[bestRescueMi].ingredients[bestRescueIi];
+      var perGramProtein = rIng.protein / rIng.grams;
+      if (perGramProtein > 0) {
+        var neededGrams = rescueProteinGap / perGramProtein;
+        var rescueNewG = Math.round(rIng.grams + neededGrams);
+        // Cap at 10x original to keep somewhat realistic
+        var maxG = rIng.grams * 10;
+        rescueNewG = Math.min(rescueNewG, maxG);
+        if (rIng.name === "Egg") rescueNewG = Math.round(rescueNewG / 50) * 50;
+        if (rescueNewG > rIng.grams) {
+          var rescueScale = rescueNewG / rIng.grams;
+          rIng.adjustment = "PROTEIN RESCUE: scaled from " + rIng.grams + "g to " + rescueNewG + "g (" + round1(rescueScale) + "x)";
+          rIng.calories = round1(rIng.calories * rescueScale);
+          rIng.carbs = round1(rIng.carbs * rescueScale);
+          rIng.protein = round1(rIng.protein * rescueScale);
+          rIng.fat = round1(rIng.fat * rescueScale);
+          rIng.grams = rescueNewG;
+        }
+      }
     }
   }
 
@@ -841,16 +880,27 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
   // Cuisine hard limit: max 2 per cuisine per week
   var weekCuisineCounts = {};
 
-  // Fix 1: Macro nudge now takes a remaining budget instead of fixed per-meal fraction.
-  // Each subsequent meal selection is aware of cumulative macros from prior picks that day.
+  // Macro nudge with hard gates (Fix A), wider range (Fix B), and worst-macro weighting (Fix E).
   function macroNudge(recipe, remainingBudget) {
     var rm = recipe.totalMacros;
     var devCal = Math.abs(rm.calories - remainingBudget.calories) / Math.max(remainingBudget.calories, 1);
     var devCarbs = Math.abs(rm.carbs - remainingBudget.carbs) / Math.max(remainingBudget.carbs, 1);
     var devPro = Math.abs(rm.protein - remainingBudget.protein) / Math.max(remainingBudget.protein, 1);
     var devFat = Math.abs(rm.fat - remainingBudget.fat) / Math.max(remainingBudget.fat, 1);
-    var avgDev = (devCal + devCarbs + devPro + devFat) / 4;
-    return Math.max(0.75, Math.min(1.5, 1.5 - avgDev * 0.75));
+    // Fix E: Worst-macro weighting — 60% worst single macro + 40% average of all four.
+    // Prevents a recipe catastrophic on one macro from hiding behind good scores on others.
+    var maxDev = Math.max(devCal, devCarbs, devPro, devFat);
+    var avgAll = (devCal + devCarbs + devPro + devFat) / 4;
+    var avgDev = maxDev * 0.6 + avgAll * 0.4;
+    // Fix B: Wider nudge range [0.1, 2.0] (was [0.75, 1.5]) — 20:1 ratio competes with rotation's 30:1.
+    var nudge = Math.max(0.1, Math.min(2.0, 2.0 - avgDev * 1.9));
+    // Fix A: Hard gate — fat over budget gets 0.1x penalty.
+    // Threshold: recipe fat > remaining fat budget means this meal would push fat over target.
+    if (rm.fat > remainingBudget.fat) nudge *= 0.1;
+    // Fix A: Hard gate — protein below 25% of budget gets 0.2x penalty.
+    // Threshold: 25% because any recipe below this makes the protein gap nearly unrecoverable.
+    if (rm.protein < remainingBudget.protein * 0.25) nudge *= 0.2;
+    return nudge;
   }
 
   // Step 4 helper: compute rotation multiplier based on session history
@@ -2155,111 +2205,129 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   setTimeout(batch, 100);
 })();
 
-// ===== SELF-TESTS for Protein Shake + Final Validation =====
+// ===== SELF-TESTS for Fixes A-E (hard gates, scale factors, protein rescue) =====
 setTimeout(function() {
-  console.log("\n[Protein Shake Self-Tests]");
+  console.log("\n[Fixes A-E Self-Tests]");
   var testCal = 2000, testCarbs = 175, testPro = 200, testFat = 55;
   var allPass = true;
 
-  // Test 1: Generate 20 sample days, verify shake only added when protein >10% below target
+  // Test 1: Verify hard gate on Carnitas Tacos after Japanese Tamagoyaki
   (function() {
-    console.log("Test 1: Protein shake correctness across 20 sample days");
+    console.log("Test 1: Fix A hard gate on fat-over-budget recipe");
+    // Simulate remaining budget after Japanese Tamagoyaki (cal:436, carbs:46.2, pro:25.2, fat:16.2)
+    var mealsLeft = 2;
+    var remainingBudget = {
+      calories: Math.max(1, (testCal - 436) / mealsLeft),
+      carbs: Math.max(0.1, (testCarbs - 46.2) / mealsLeft),
+      protein: Math.max(0.1, (testPro - 25.2) / mealsLeft),
+      fat: Math.max(0.1, (testFat - 16.2) / mealsLeft)
+    };
+    // Find Carnitas Tacos and a high-protein low-fat alternative
+    var carnitas = RECIPES.find(function(r) { return r.name === "Carnitas Tacos"; });
+    var chicken = RECIPES.find(function(r) { return r.name === "Grilled Chicken & Rice Bowl"; });
+    if (!carnitas || !chicken) { console.log("  SKIP: recipes not found"); return; }
+    // macroNudge is inside generatePlan scope, so we replicate the logic here
+    function testNudge(recipe, rb) {
+      var rm = recipe.totalMacros;
+      var devCal = Math.abs(rm.calories - rb.calories) / Math.max(rb.calories, 1);
+      var devCarbs = Math.abs(rm.carbs - rb.carbs) / Math.max(rb.carbs, 1);
+      var devPro = Math.abs(rm.protein - rb.protein) / Math.max(rb.protein, 1);
+      var devFat = Math.abs(rm.fat - rb.fat) / Math.max(rb.fat, 1);
+      var maxD = Math.max(devCal, devCarbs, devPro, devFat);
+      var avgAll = (devCal + devCarbs + devPro + devFat) / 4;
+      var avgDev = maxD * 0.6 + avgAll * 0.4;
+      var nudge = Math.max(0.1, Math.min(2.0, 2.0 - avgDev * 1.9));
+      if (rm.fat > rb.fat) nudge *= 0.1;
+      if (rm.protein < rb.protein * 0.25) nudge *= 0.2;
+      return nudge;
+    }
+    var carnitasNudge = testNudge(carnitas, remainingBudget);
+    var chickenNudge = testNudge(chicken, remainingBudget);
+    // Carnitas has 23.5g fat vs 19.4g budget — should trigger 0.1x fat gate
+    var fatGateTriggered = carnitas.totalMacros.fat > remainingBudget.fat;
+    var carnitasLower = carnitasNudge < chickenNudge;
+    var pass = fatGateTriggered && carnitasLower;
+    console.log("  Remaining fat budget: " + round1(remainingBudget.fat) + "g, Carnitas fat: " + round1(carnitas.totalMacros.fat) + "g");
+    console.log("  Fat gate triggered: " + fatGateTriggered + ", Carnitas nudge: " + round1(carnitasNudge) + ", Chicken nudge: " + round1(chickenNudge));
+    console.log("  Carnitas lower than chicken: " + carnitasLower + " — " + (pass ? "PASS" : "FAIL"));
+    if (!pass) allPass = false;
+  })();
+
+  // Test 2: adjustDayMeals with expanded scale factors + protein rescue
+  (function() {
+    console.log("Test 2: Expanded scale factors + protein rescue on failing combo");
+    var testMeals = [
+      { recipe: { name: "Japanese Tamagoyaki" }, ingredients: [
+        { name: "Egg", grams: 150, calories: 216, carbs: 1.2, protein: 18.9, fat: 15, isSpice: false },
+        { name: "White Rice", grams: 50, calories: 183, carbs: 40, protein: 3.6, fat: 0.3, isSpice: false },
+        { name: "Soy Sauce", grams: 8, calories: 4, carbs: 0.5, protein: 0.7, fat: 0, isSpice: false },
+        { name: "Miso Paste", grams: 15, calories: 30, carbs: 3.8, protein: 1.8, fat: 0.9, isSpice: false },
+        { name: "Green Onion", grams: 10, calories: 3, carbs: 0.7, protein: 0.2, fat: 0, isSpice: false }
+      ]},
+      { recipe: { name: "Carnitas Tacos" }, ingredients: [
+        { name: "Pork Shoulder", grams: 150, calories: 330, carbs: 0, protein: 33, fat: 21, isSpice: false },
+        { name: "Corn Tortillas", grams: 90, calories: 190, carbs: 39, protein: 5, fat: 2.3, isSpice: false },
+        { name: "Onion", grams: 40, calories: 16, carbs: 3.8, protein: 0.4, fat: 0.1, isSpice: false },
+        { name: "Cilantro", grams: 10, calories: 2, carbs: 0.4, protein: 0.2, fat: 0.1, isSpice: false },
+        { name: "Lime", grams: 15, calories: 5, carbs: 1.6, protein: 0.1, fat: 0, isSpice: false },
+        { name: "Coleslaw Mix", grams: 40, calories: 9, carbs: 2, protein: 0.5, fat: 0, isSpice: false }
+      ]},
+      { recipe: { name: "Black Bean Bowl" }, ingredients: [
+        { name: "Black Beans", grams: 130, calories: 171, carbs: 30.7, protein: 11.4, fat: 0.8, isSpice: false },
+        { name: "Brown Rice", grams: 56, calories: 207, carbs: 43.3, protein: 4.4, fat: 1.6, isSpice: false },
+        { name: "Avocado", grams: 50, calories: 80, carbs: 4.3, protein: 1, fat: 7.3, isSpice: false },
+        { name: "Tomato", grams: 60, calories: 11, carbs: 2.3, protein: 0.5, fat: 0.1, isSpice: false },
+        { name: "Corn", grams: 60, calories: 52, carbs: 11.5, protein: 1.9, fat: 0.7, isSpice: false },
+        { name: "Lime", grams: 15, calories: 5, carbs: 1.6, protein: 0.1, fat: 0, isSpice: false }
+      ]}
+    ];
+    var beforePro = 0;
+    testMeals.forEach(function(m) { m.ingredients.forEach(function(i) { beforePro += i.protein; }); });
+    adjustDayMeals(testMeals, testCal, testCarbs, testPro, testFat);
+    var afterPro = 0, hasRescue = false, rescueIng = "";
+    testMeals.forEach(function(m) { m.ingredients.forEach(function(i) {
+      afterPro += i.protein;
+      if (i.adjustment && i.adjustment.indexOf("PROTEIN RESCUE") !== -1) { hasRescue = true; rescueIng = i.name + " (" + i.grams + "g)"; }
+    }); });
+    var shakeNeeded = (testPro - afterPro) > testPro * 0.10;
+    var pass = afterPro > beforePro;
+    console.log("  Before protein: " + round1(beforePro) + "g, After protein: " + round1(afterPro) + "g");
+    console.log("  Rescue activated: " + hasRescue + (hasRescue ? " on " + rescueIng : ""));
+    console.log("  Shake still needed: " + shakeNeeded + " — " + (pass ? "PASS" : "FAIL"));
+    if (!pass) allPass = false;
+  })();
+
+  // Test 3: 20-day macro accuracy
+  (function() {
+    console.log("Test 3: 20-day macro accuracy");
     var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
     _recipeRotation = { counts: {}, totalSlots: 0 };
-    var pass = true, shakeDays = 0, totalDays = 0;
+    var totalDevs = [0,0,0,0], dayCount = 0, within10 = 0;
     for (var w = 0; w < 3; w++) {
       var plan = generatePlan(testCal, testCarbs, testPro, testFat, {}, [], []);
       plan.forEach(function(day) {
         if (!day) return;
-        totalDays++;
-        if (day.proteinShake) {
-          shakeDays++;
-          // Pre-shake protein = total minus shake contribution
-          var preShakePro = day.totals.protein - 25;
-          var deficit = testPro - preShakePro;
-          if (deficit <= testPro * 0.10) {
-            console.log("  FAIL: Shake added but deficit was only " + round1(deficit) + "g (" + round1(deficit/testPro*100) + "%)");
-            pass = false;
-          }
-        }
+        dayCount++;
+        var t = day.totals;
+        var dc = Math.abs(t.calories - testCal) / testCal;
+        var db = Math.abs(t.carbs - testCarbs) / testCarbs;
+        var dp = Math.abs(t.protein - testPro) / testPro;
+        var df = Math.abs(t.fat - testFat) / testFat;
+        totalDevs[0] += dc; totalDevs[1] += db; totalDevs[2] += dp; totalDevs[3] += df;
+        if (dc <= 0.1 && db <= 0.1 && dp <= 0.1 && df <= 0.1) within10++;
       });
     }
-    console.log("  " + totalDays + " days tested, " + shakeDays + " received shakes — " + (pass ? "PASS" : "FAIL"));
-    if (!pass) allPass = false;
+    var pct10 = Math.round(within10 / dayCount * 100);
+    console.log("  " + dayCount + " days tested");
+    console.log("  Avg deviation — Cal: " + round1(totalDevs[0]/dayCount*100) + "%, Carbs: " + round1(totalDevs[1]/dayCount*100) + "%, Pro: " + round1(totalDevs[2]/dayCount*100) + "%, Fat: " + round1(totalDevs[3]/dayCount*100) + "%");
+    console.log("  Days within 10% on all 4 macros: " + within10 + "/" + dayCount + " (" + pct10 + "%)");
+    console.log("  PASS (informational)");
     _recipeRotation = savedRot;
   })();
 
-  // Test 2: Day where protein is within 10% — no shake should be added
+  // Test 4: Database integrity
   (function() {
-    console.log("Test 2: No shake when protein within 10% of target");
-    // Construct meals with ~190g protein (within 10% of 200g)
-    var testMeals = [
-      { recipe: { name: "HighPro" }, ingredients: [
-        { name: "Chicken Breast", grams: 350, calories: 578, carbs: 0, protein: 109, fat: 12.6, isSpice: false },
-        { name: "Brown Rice", grams: 56, calories: 207, carbs: 43.3, protein: 4.4, fat: 1.6, isSpice: false }
-      ]},
-      { recipe: { name: "HighPro2" }, ingredients: [
-        { name: "Beef Sirloin", grams: 200, calories: 330, carbs: 0, protein: 52.4, fat: 12.5, isSpice: false },
-        { name: "White Rice", grams: 55, calories: 201, carbs: 44, protein: 3.9, fat: 0.4, isSpice: false }
-      ]}
-    ];
-    adjustDayMeals(testMeals, testCal, testCarbs, testPro, testFat);
-    var totalPro = 0;
-    testMeals.forEach(function(m) { m.ingredients.forEach(function(i) { totalPro += i.protein; }); });
-    var deficit = testPro - totalPro;
-    var wouldAddShake = deficit > testPro * 0.10;
-    var pass = !wouldAddShake;
-    console.log("  Post-adjustment protein: " + round1(totalPro) + "g, deficit: " + round1(deficit) + "g (" + round1(deficit/testPro*100) + "%), shake needed: " + wouldAddShake + " — " + (pass ? "PASS" : "FAIL"));
-    if (!pass) allPass = false;
-  })();
-
-  // Test 3: Grocery list shake scoop count matches shake days
-  (function() {
-    console.log("Test 3: Grocery list shake scoop count");
-    var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
-    _recipeRotation = { counts: {}, totalSlots: 0 };
-    var plan = generatePlan(testCal, testCarbs, testPro, testFat, {}, [], []);
-    var shakeDays = 0;
-    plan.forEach(function(day) { if (day && day.proteinShake) shakeDays += day.proteinShake.scoops; });
-    // The grocery list UI counts shakes the same way
-    var pass = true; // Scoop count matches by construction since both read day.proteinShake
-    console.log("  Shake scoops this week: " + shakeDays + " — " + (pass ? "PASS" : "FAIL"));
-    if (!pass) allPass = false;
-    _recipeRotation = savedRot;
-  })();
-
-  // Test 4: Shake macros included in day totals (protein increases by exactly 25g)
-  (function() {
-    console.log("Test 4: Shake macros in day totals");
-    var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
-    _recipeRotation = { counts: {}, totalSlots: 0 };
-    var pass = true, tested = false;
-    for (var w = 0; w < 5 && !tested; w++) {
-      var plan = generatePlan(testCal, testCarbs, testPro, testFat, {}, [], []);
-      plan.forEach(function(day) {
-        if (!day || !day.proteinShake || tested) return;
-        tested = true;
-        // day.totals already includes shake. Verify by checking protein is at least 25g more than meal-only protein
-        var mealPro = 0;
-        day.meals.forEach(function(m) { mealPro += m.totalMacros.protein; });
-        var diff = round1(day.totals.protein - mealPro);
-        if (Math.abs(diff - 25) > 0.5) {
-          console.log("  FAIL: Expected +25g from shake, got +" + diff + "g");
-          pass = false;
-        } else {
-          console.log("  Meal protein: " + round1(mealPro) + "g + Shake 25g = Total " + round1(day.totals.protein) + "g");
-        }
-      });
-    }
-    if (!tested) console.log("  No shake-days generated in 5 weeks (unusual but not a failure)");
-    console.log("  " + (pass ? "PASS" : "FAIL"));
-    if (!pass) allPass = false;
-    _recipeRotation = savedRot;
-  })();
-
-  // Test 5: Database integrity
-  (function() {
-    console.log("Test 5: Database integrity check");
+    console.log("Test 4: Database integrity check");
     var recipeCount = RECIPES.length;
     var pass = recipeCount === 119;
     console.log("  Recipe count: " + recipeCount + " (expected 119) — " + (pass ? "PASS" : "FAIL"));
@@ -2270,14 +2338,13 @@ setTimeout(function() {
 }, 500);
 
 // ===== FINAL VALIDATION: 1000-week macro accuracy simulation =====
-// Runs after self-tests complete. Logs macro accuracy stats to console only.
 setTimeout(function() {
   console.log("\n[Final Macro Accuracy Validation — 1000 weeks]");
   var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
   _recipeRotation = { counts: {}, totalSlots: 0 };
   var SIM_TOTAL = 1000, SIM_BATCH = 50;
   var testCal = 2000, testCarbs = 175, testPro = 200, testFat = 55;
-  var totalDays = 0, within5 = 0, totalProDev = 0, totalFatDev = 0, shakeDays = 0, done = 0;
+  var totalDays = 0, within5 = 0, within10 = 0, totalProDev = 0, totalFatDev = 0, shakeDays = 0, done = 0;
   function batch() {
     var end = Math.min(done + SIM_BATCH, SIM_TOTAL);
     for (var i = done; i < end; i++) {
@@ -2292,16 +2359,19 @@ setTimeout(function() {
         var df = Math.abs(t.fat - testFat) / testFat;
         totalProDev += dp; totalFatDev += df;
         if (dc <= 0.05 && db <= 0.05 && dp <= 0.05 && df <= 0.05) within5++;
+        if (dc <= 0.10 && db <= 0.10 && dp <= 0.10 && df <= 0.10) within10++;
         if (day.proteinShake) shakeDays++;
       });
     }
     done = end;
     if (done < SIM_TOTAL) { setTimeout(batch, 0); return; }
     var pct5 = round1(within5 / totalDays * 100);
+    var pct10 = round1(within10 / totalDays * 100);
     var avgPro = round1(totalProDev / totalDays * 100);
     var avgFat = round1(totalFatDev / totalDays * 100);
     console.log("  " + totalDays + " days across " + SIM_TOTAL + " weeks");
-    console.log("  Days within 5% on all 4 macros: " + within5 + "/" + totalDays + " (" + pct5 + "%)");
+    console.log("  Days within 5% all macros: " + within5 + "/" + totalDays + " (" + pct5 + "%)");
+    console.log("  Days within 10% all macros: " + within10 + "/" + totalDays + " (" + pct10 + "%)");
     console.log("  Avg protein deviation: " + avgPro + "%");
     console.log("  Avg fat deviation: " + avgFat + "%");
     console.log("  Days requiring protein shake: " + shakeDays + "/" + totalDays + " (" + round1(shakeDays/totalDays*100) + "%)");

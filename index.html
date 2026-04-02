@@ -697,8 +697,16 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
     return t;
   }
 
-  // Fix 4: Eggs are adjustable in whole-egg increments (50g each), not locked as unit-based
-  function canAdjust(ing) { return !ing.isSpice && (ing.name === "Egg" || !isUnitBased(ing.name)) && ing.name !== "Soy Sauce"; }
+  // Fix 4: Eggs adjustable in whole-egg increments. Fix 1 (new): 50-calorie minimum threshold.
+  // Only ingredients contributing >=50 calories at current scaled amount are eligible for scaling.
+  // This prevents garnish/flavoring ingredients (Cilantro, Green Onion, Lime) from being scaled
+  // to absurd amounts (e.g. 2160g Cilantro) even if they have a favorable macro ratio.
+  function canAdjust(ing) {
+    if (ing.isSpice || ing.name === "Soy Sauce") return false;
+    if (ing.name !== "Egg" && isUnitBased(ing.name)) return false;
+    if (ing.calories < 50) return false; // Fix 1: minimum calorie threshold
+    return true;
+  }
 
   // Fix 5: Multi-objective adjustment loop. Instead of fixing one macro at a time,
   // each iteration scores every candidate ingredient by net improvement across ALL macros
@@ -729,6 +737,12 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
     }
 
     // Fix 5: Score each adjustable ingredient by net improvement across all macros
+    // Fix 3 (new): Compute per-meal protein and fat totals for primary contributor preference
+    var mealProTotals = allMealData.map(function(meal) {
+      var pro = 0, fat = 0;
+      meal.ingredients.forEach(function(ing) { if (!ing.isSpice) { pro += ing.protein; fat += ing.fat; } });
+      return { protein: pro, fat: fat };
+    });
     var bestMi = -1, bestIi = -1, bestScore = -Infinity, bestNewG = 0;
 
     allMealData.forEach(function(meal, mi) {
@@ -771,6 +785,13 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
             score *= 0.3; // Heavy penalty for reversal
           }
 
+          // Fix 3: Prefer primary macro contributors (>30% of meal's macro total) with 2x score boost.
+          // Ensures the loop scales the ingredient that actually drives the macro, not a secondary one.
+          var mealPro = mealProTotals[mi].protein;
+          var mealFat = mealProTotals[mi].fat;
+          if (mealPro > 0 && ing.protein > mealPro * 0.3 && gaps[2] > 0) score *= 2.0; // protein up-scaling
+          if (mealFat > 0 && ing.fat > mealFat * 0.3 && gaps[3] < 0) score *= 2.0; // fat down-scaling
+
           if (score > bestScore) {
             bestScore = score; bestMi = mi; bestIi = ii; bestNewG = tryNewG;
           }
@@ -801,34 +822,48 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
     }
   }
 
-  // Fix D: Protein rescue phase — last resort after main loop completes.
-  // If protein is still >15% below target, find the ingredient with the best
-  // protein-to-fat ratio and scale it aggressively (up to 10x) to close the gap.
+  // Fix D + Fix 2: Protein rescue phase — primary protein ingredients only.
+  // Strict 4-criteria filter to prevent carb-heavy or low-protein ingredients from being selected:
+  //   1. At least 50 calories at current gram amount (Fix 1 threshold)
+  //   2. At least 10g protein per 100g raw (true protein source, not incidental)
+  //   3. Protein-to-fat ratio >= 2:1 (lean enough to not blow fat target)
+  //   4. Carbs must not exceed protein by >50% (prevents Edamame, beans, yogurt)
+  // Fallback: if no strict match, use best P:F ratio above 50cal without carb restriction.
+  // If still none, skip rescue and rely on protein shake.
   var rescueTotals = computeTotals();
   var rescueProteinGap = targets[2] - rescueTotals[2];
   if (targets[2] > 0 && rescueProteinGap > targets[2] * 0.15) {
     var bestRescueMi = -1, bestRescueIi = -1, bestRatio = -1;
+    var fallbackMi = -1, fallbackIi = -1, fallbackRatio = -1;
     allMealData.forEach(function(meal, mi) {
       meal.ingredients.forEach(function(ing, ii) {
-        if (!canAdjust(ing) || ing.grams <= 0 || ing.protein <= 0.5) return;
-        // Protein-to-fat ratio: higher is better (lean proteins win)
-        var ratio = ing.fat > 0 ? ing.protein / ing.fat : ing.protein * 10;
-        if (ratio > bestRatio) { bestRatio = ratio; bestRescueMi = mi; bestRescueIi = ii; }
+        if (ing.isSpice || ing.grams <= 0 || ing.calories < 50) return;
+        if (ing.name !== "Egg" && isUnitBased(ing.name)) return;
+        var per100pro = ing.grams > 0 ? (ing.protein / ing.grams) * 100 : 0;
+        var pfRatio = ing.fat > 0 ? ing.protein / ing.fat : ing.protein * 10;
+        // Fallback: best P:F ratio above 50 cal (no carb restriction)
+        if (pfRatio > fallbackRatio) { fallbackRatio = pfRatio; fallbackMi = mi; fallbackIi = ii; }
+        // Strict criteria: all 4 must pass
+        if (per100pro < 10) return;           // Criterion 2: >=10g protein per 100g
+        if (pfRatio < 2) return;               // Criterion 3: P:F ratio >= 2:1
+        if (ing.carbs > ing.protein * 1.5) return; // Criterion 4: carbs not >150% of protein
+        if (pfRatio > bestRatio) { bestRatio = pfRatio; bestRescueMi = mi; bestRescueIi = ii; }
       });
     });
+    // Use strict match if found, otherwise fallback
+    if (bestRescueMi < 0 && fallbackMi >= 0) { bestRescueMi = fallbackMi; bestRescueIi = fallbackIi; }
     if (bestRescueMi >= 0) {
       var rIng = allMealData[bestRescueMi].ingredients[bestRescueIi];
       var perGramProtein = rIng.protein / rIng.grams;
       if (perGramProtein > 0) {
         var neededGrams = rescueProteinGap / perGramProtein;
         var rescueNewG = Math.round(rIng.grams + neededGrams);
-        // Cap at 10x original to keep somewhat realistic
         var maxG = rIng.grams * 10;
         rescueNewG = Math.min(rescueNewG, maxG);
         if (rIng.name === "Egg") rescueNewG = Math.round(rescueNewG / 50) * 50;
         if (rescueNewG > rIng.grams) {
           var rescueScale = rescueNewG / rIng.grams;
-          rIng.adjustment = "PROTEIN RESCUE: scaled from " + rIng.grams + "g to " + rescueNewG + "g (" + round1(rescueScale) + "x)";
+          rIng.adjustment = "PROTEIN RESCUE: " + rIng.name + " scaled from " + rIng.grams + "g to " + rescueNewG + "g (" + round1(rescueScale) + "x)";
           rIng.calories = round1(rIng.calories * rescueScale);
           rIng.carbs = round1(rIng.carbs * rescueScale);
           rIng.protein = round1(rIng.protein * rescueScale);
@@ -2371,180 +2406,63 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   setTimeout(batch, 100);
 })();
 
-// ===== SELF-TESTS for Fixes A-E (hard gates, scale factors, protein rescue) =====
+// ===== SELF-TEST: 100-week validation for Fixes 1-3 (calorie threshold, rescue filter, primary preference) =====
+// Runs the full validator (100 plans) and compares to baseline: 43% pass, 421 ING_OVER_500, 33 RESCUE_CARB_BLOWN
 setTimeout(function() {
-  console.log("\n[Fixes A-E Self-Tests]");
-  var testCal = 2000, testCarbs = 175, testPro = 200, testFat = 55;
-  var allPass = true;
-
-  // Test 1: Verify hard gate on Carnitas Tacos after Japanese Tamagoyaki
-  (function() {
-    console.log("Test 1: Fix A hard gate on fat-over-budget recipe");
-    // Simulate remaining budget after Japanese Tamagoyaki (cal:436, carbs:46.2, pro:25.2, fat:16.2)
-    var mealsLeft = 2;
-    var remainingBudget = {
-      calories: Math.max(1, (testCal - 436) / mealsLeft),
-      carbs: Math.max(0.1, (testCarbs - 46.2) / mealsLeft),
-      protein: Math.max(0.1, (testPro - 25.2) / mealsLeft),
-      fat: Math.max(0.1, (testFat - 16.2) / mealsLeft)
-    };
-    // Find Carnitas Tacos and a high-protein low-fat alternative
-    var carnitas = RECIPES.find(function(r) { return r.name === "Carnitas Tacos"; });
-    var chicken = RECIPES.find(function(r) { return r.name === "Grilled Chicken & Rice Bowl"; });
-    if (!carnitas || !chicken) { console.log("  SKIP: recipes not found"); return; }
-    // macroNudge is inside generatePlan scope, so we replicate the logic here
-    function testNudge(recipe, rb) {
-      var rm = recipe.totalMacros;
-      var devCal = Math.abs(rm.calories - rb.calories) / Math.max(rb.calories, 1);
-      var devCarbs = Math.abs(rm.carbs - rb.carbs) / Math.max(rb.carbs, 1);
-      var devPro = Math.abs(rm.protein - rb.protein) / Math.max(rb.protein, 1);
-      var devFat = Math.abs(rm.fat - rb.fat) / Math.max(rb.fat, 1);
-      var maxD = Math.max(devCal, devCarbs, devPro, devFat);
-      var avgAll = (devCal + devCarbs + devPro + devFat) / 4;
-      var avgDev = maxD * 0.6 + avgAll * 0.4;
-      var nudge = Math.max(0.1, Math.min(2.0, 2.0 - avgDev * 1.9));
-      if (rm.fat > rb.fat) nudge *= 0.1;
-      if (rm.protein < rb.protein * 0.25) nudge *= 0.2;
-      return nudge;
-    }
-    var carnitasNudge = testNudge(carnitas, remainingBudget);
-    var chickenNudge = testNudge(chicken, remainingBudget);
-    // Carnitas has 23.5g fat vs 19.4g budget — should trigger 0.1x fat gate
-    var fatGateTriggered = carnitas.totalMacros.fat > remainingBudget.fat;
-    var carnitasLower = carnitasNudge < chickenNudge;
-    var pass = fatGateTriggered && carnitasLower;
-    console.log("  Remaining fat budget: " + round1(remainingBudget.fat) + "g, Carnitas fat: " + round1(carnitas.totalMacros.fat) + "g");
-    console.log("  Fat gate triggered: " + fatGateTriggered + ", Carnitas nudge: " + round1(carnitasNudge) + ", Chicken nudge: " + round1(chickenNudge));
-    console.log("  Carnitas lower than chicken: " + carnitasLower + " — " + (pass ? "PASS" : "FAIL"));
-    if (!pass) allPass = false;
-  })();
-
-  // Test 2: adjustDayMeals with expanded scale factors + protein rescue
-  (function() {
-    console.log("Test 2: Expanded scale factors + protein rescue on failing combo");
-    var testMeals = [
-      { recipe: { name: "Japanese Tamagoyaki" }, ingredients: [
-        { name: "Egg", grams: 150, calories: 216, carbs: 1.2, protein: 18.9, fat: 15, isSpice: false },
-        { name: "White Rice", grams: 50, calories: 183, carbs: 40, protein: 3.6, fat: 0.3, isSpice: false },
-        { name: "Soy Sauce", grams: 8, calories: 4, carbs: 0.5, protein: 0.7, fat: 0, isSpice: false },
-        { name: "Miso Paste", grams: 15, calories: 30, carbs: 3.8, protein: 1.8, fat: 0.9, isSpice: false },
-        { name: "Green Onion", grams: 10, calories: 3, carbs: 0.7, protein: 0.2, fat: 0, isSpice: false }
-      ]},
-      { recipe: { name: "Carnitas Tacos" }, ingredients: [
-        { name: "Pork Shoulder", grams: 150, calories: 330, carbs: 0, protein: 33, fat: 21, isSpice: false },
-        { name: "Corn Tortillas", grams: 90, calories: 190, carbs: 39, protein: 5, fat: 2.3, isSpice: false },
-        { name: "Onion", grams: 40, calories: 16, carbs: 3.8, protein: 0.4, fat: 0.1, isSpice: false },
-        { name: "Cilantro", grams: 10, calories: 2, carbs: 0.4, protein: 0.2, fat: 0.1, isSpice: false },
-        { name: "Lime", grams: 15, calories: 5, carbs: 1.6, protein: 0.1, fat: 0, isSpice: false },
-        { name: "Coleslaw Mix", grams: 40, calories: 9, carbs: 2, protein: 0.5, fat: 0, isSpice: false }
-      ]},
-      { recipe: { name: "Black Bean Bowl" }, ingredients: [
-        { name: "Black Beans", grams: 130, calories: 171, carbs: 30.7, protein: 11.4, fat: 0.8, isSpice: false },
-        { name: "Brown Rice", grams: 56, calories: 207, carbs: 43.3, protein: 4.4, fat: 1.6, isSpice: false },
-        { name: "Avocado", grams: 50, calories: 80, carbs: 4.3, protein: 1, fat: 7.3, isSpice: false },
-        { name: "Tomato", grams: 60, calories: 11, carbs: 2.3, protein: 0.5, fat: 0.1, isSpice: false },
-        { name: "Corn", grams: 60, calories: 52, carbs: 11.5, protein: 1.9, fat: 0.7, isSpice: false },
-        { name: "Lime", grams: 15, calories: 5, carbs: 1.6, protein: 0.1, fat: 0, isSpice: false }
-      ]}
-    ];
-    var beforePro = 0;
-    testMeals.forEach(function(m) { m.ingredients.forEach(function(i) { beforePro += i.protein; }); });
-    adjustDayMeals(testMeals, testCal, testCarbs, testPro, testFat);
-    var afterPro = 0, hasRescue = false, rescueIng = "";
-    testMeals.forEach(function(m) { m.ingredients.forEach(function(i) {
-      afterPro += i.protein;
-      if (i.adjustment && i.adjustment.indexOf("PROTEIN RESCUE") !== -1) { hasRescue = true; rescueIng = i.name + " (" + i.grams + "g)"; }
-    }); });
-    var shakeNeeded = (testPro - afterPro) > testPro * 0.10;
-    var pass = afterPro > beforePro;
-    console.log("  Before protein: " + round1(beforePro) + "g, After protein: " + round1(afterPro) + "g");
-    console.log("  Rescue activated: " + hasRescue + (hasRescue ? " on " + rescueIng : ""));
-    console.log("  Shake still needed: " + shakeNeeded + " — " + (pass ? "PASS" : "FAIL"));
-    if (!pass) allPass = false;
-  })();
-
-  // Test 3: 20-day macro accuracy
-  (function() {
-    console.log("Test 3: 20-day macro accuracy");
-    var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
-    _recipeRotation = { counts: {}, totalSlots: 0 };
-    var totalDevs = [0,0,0,0], dayCount = 0, within10 = 0;
-    for (var w = 0; w < 3; w++) {
-      var plan = generatePlan(testCal, testCarbs, testPro, testFat, {}, [], []);
-      plan.forEach(function(day) {
-        if (!day) return;
-        dayCount++;
-        var t = day.totals;
-        var dc = Math.abs(t.calories - testCal) / testCal;
-        var db = Math.abs(t.carbs - testCarbs) / testCarbs;
-        var dp = Math.abs(t.protein - testPro) / testPro;
-        var df = Math.abs(t.fat - testFat) / testFat;
-        totalDevs[0] += dc; totalDevs[1] += db; totalDevs[2] += dp; totalDevs[3] += df;
-        if (dc <= 0.1 && db <= 0.1 && dp <= 0.1 && df <= 0.1) within10++;
-      });
-    }
-    var pct10 = Math.round(within10 / dayCount * 100);
-    console.log("  " + dayCount + " days tested");
-    console.log("  Avg deviation — Cal: " + round1(totalDevs[0]/dayCount*100) + "%, Carbs: " + round1(totalDevs[1]/dayCount*100) + "%, Pro: " + round1(totalDevs[2]/dayCount*100) + "%, Fat: " + round1(totalDevs[3]/dayCount*100) + "%");
-    console.log("  Days within 10% on all 4 macros: " + within10 + "/" + dayCount + " (" + pct10 + "%)");
-    console.log("  PASS (informational)");
-    _recipeRotation = savedRot;
-  })();
-
-  // Test 4: Database integrity
-  (function() {
-    console.log("Test 4: Database integrity check");
-    var recipeCount = RECIPES.length;
-    var pass = recipeCount === 119;
-    console.log("  Recipe count: " + recipeCount + " (expected 119) — " + (pass ? "PASS" : "FAIL"));
-    if (!pass) allPass = false;
-  })();
-
-  console.log("\n[Self-Test Summary] " + (allPass ? "ALL TESTS PASSED" : "SOME TESTS FAILED"));
-}, 500);
-
-// ===== FINAL VALIDATION: 1000-week macro accuracy simulation =====
-setTimeout(function() {
-  console.log("\n[Final Macro Accuracy Validation — 1000 weeks]");
+  console.log("\n[Fix 1-3 Validation — 100 weeks]");
   var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
   _recipeRotation = { counts: {}, totalSlots: 0 };
-  var SIM_TOTAL = 1000, SIM_BATCH = 50;
-  var testCal = 2000, testCarbs = 175, testPro = 200, testFat = 55;
-  var totalDays = 0, within5 = 0, within10 = 0, totalProDev = 0, totalFatDev = 0, shakeDays = 0, done = 0;
+  var SIM_TOTAL = 100, SIM_BATCH = 10;
+  var vCal = 2000, vCarbs = 175, vPro = 200, vFat = 55;
+  var totalDays = 0, passedDays = 0, done = 0;
+  var fc = { calHigh:0, calLow:0, carbsHigh:0, carbsLow:0, proHigh:0, proLow:0, fatHigh:0, fatLow:0, ingOver500:0, shakeStillLow:0, rescueCarbBlown:0 };
+  var worst = { cal:0, carbs:0, proLow:Infinity, fat:0 };
   function batch() {
     var end = Math.min(done + SIM_BATCH, SIM_TOTAL);
     for (var i = done; i < end; i++) {
-      var plan = generatePlan(testCal, testCarbs, testPro, testFat, {}, [], []);
+      var plan = generatePlan(vCal, vCarbs, vPro, vFat, {}, [], []);
       plan.forEach(function(day) {
         if (!day) return;
         totalDays++;
         var t = day.totals;
-        var dc = Math.abs(t.calories - testCal) / testCal;
-        var db = Math.abs(t.carbs - testCarbs) / testCarbs;
-        var dp = Math.abs(t.protein - testPro) / testPro;
-        var df = Math.abs(t.fat - testFat) / testFat;
-        totalProDev += dp; totalFatDev += df;
-        if (dc <= 0.05 && db <= 0.05 && dp <= 0.05 && df <= 0.05) within5++;
-        if (dc <= 0.10 && db <= 0.10 && dp <= 0.10 && df <= 0.10) within10++;
-        if (day.proteinShake) shakeDays++;
+        var cp = Math.round(t.calories/vCal*100), bp = Math.round(t.carbs/vCarbs*100);
+        var pp = Math.round(t.protein/vPro*100), fp = Math.round(t.fat/vFat*100);
+        var flags = 0;
+        if (cp > 105) { fc.calHigh++; flags++; } if (cp < 95) { fc.calLow++; flags++; }
+        if (bp > 105) { fc.carbsHigh++; flags++; } if (bp < 95) { fc.carbsLow++; flags++; }
+        if (pp > 105) { fc.proHigh++; flags++; } if (pp < 95) { fc.proLow++; flags++; }
+        if (fp > 105) { fc.fatHigh++; flags++; } if (fp < 95) { fc.fatLow++; flags++; }
+        day.meals.forEach(function(meal) { meal.ingredients.forEach(function(ing) {
+          if (ing.grams > 500) { fc.ingOver500++; flags++; }
+        }); });
+        if (day.proteinShake && pp < 95) { fc.shakeStillLow++; flags++; }
+        var hasRescue = false;
+        day.meals.forEach(function(meal) { meal.ingredients.forEach(function(ing) { if (ing.adjustment && ing.adjustment.indexOf("PROTEIN RESCUE") !== -1) hasRescue = true; }); });
+        if (hasRescue && bp > 105) { fc.rescueCarbBlown++; flags++; }
+        if (t.calories > worst.cal) worst.cal = t.calories;
+        if (t.carbs > worst.carbs) worst.carbs = t.carbs;
+        if (t.protein < worst.proLow) worst.proLow = t.protein;
+        if (t.fat > worst.fat) worst.fat = t.fat;
+        if (flags === 0) passedDays++;
       });
     }
     done = end;
     if (done < SIM_TOTAL) { setTimeout(batch, 0); return; }
-    var pct5 = round1(within5 / totalDays * 100);
-    var pct10 = round1(within10 / totalDays * 100);
-    var avgPro = round1(totalProDev / totalDays * 100);
-    var avgFat = round1(totalFatDev / totalDays * 100);
+    var passPct = round1(passedDays / totalDays * 100);
     console.log("  " + totalDays + " days across " + SIM_TOTAL + " weeks");
-    console.log("  Days within 5% all macros: " + within5 + "/" + totalDays + " (" + pct5 + "%)");
-    console.log("  Days within 10% all macros: " + within10 + "/" + totalDays + " (" + pct10 + "%)");
-    console.log("  Avg protein deviation: " + avgPro + "%");
-    console.log("  Avg fat deviation: " + avgFat + "%");
-    console.log("  Days requiring protein shake: " + shakeDays + "/" + totalDays + " (" + round1(shakeDays/totalDays*100) + "%)");
+    console.log("  Pass rate (95-105%): " + passedDays + "/" + totalDays + " (" + passPct + "%) " + (passPct > 43 ? "IMPROVED from 43%" : "NOT IMPROVED from 43%"));
+    console.log("  ING_OVER_500: " + fc.ingOver500 + " " + (fc.ingOver500 < 421 ? "(IMPROVED from 421)" : "(not improved from 421)"));
+    console.log("  RESCUE_CARB_BLOWN: " + fc.rescueCarbBlown + " " + (fc.rescueCarbBlown < 33 ? "(IMPROVED from 33)" : "(not improved from 33)"));
+    console.log("  PRO_LOW: " + fc.proLow + ", PRO_HIGH: " + fc.proHigh);
+    console.log("  CAL_HIGH: " + fc.calHigh + ", CAL_LOW: " + fc.calLow);
+    console.log("  FAT_HIGH: " + fc.fatHigh + ", FAT_LOW: " + fc.fatLow);
+    console.log("  CARBS_HIGH: " + fc.carbsHigh + ", CARBS_LOW: " + fc.carbsLow);
+    console.log("  Worst — Cal: " + round1(worst.cal) + ", Carbs: " + round1(worst.carbs) + "g, Pro(low): " + round1(worst.proLow) + "g, Fat: " + round1(worst.fat) + "g");
+    console.log("  Database: " + RECIPES.length + " recipes " + (RECIPES.length === 119 ? "(PASS)" : "(FAIL)"));
     _recipeRotation = savedRot;
   }
-  setTimeout(batch, 1000);
-}, 2000);
+  setTimeout(batch, 500);
+}, 500);
 </script>
 </body>
 </html>

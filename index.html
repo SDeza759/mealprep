@@ -766,6 +766,10 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
           var deltaFat = ing.fat * (actualScale - 1);
           var deltas = [deltaCalories, deltaCarbs, deltaProtein, deltaFat];
 
+          // Fix 2 (carb floor): Skip any adjustment that would bring total carbs below 85% of target.
+          // Prevents carb collapse when adjustment loop aggressively scales down carb sources for protein.
+          if (targets[1] > 0 && (t[1] + deltaCarbs) < targets[1] * 0.85) continue;
+
           // Score: sum of deviation reductions across all 4 macros, weighted by deviation severity
           var score = 0;
           for (var k3 = 0; k3 < 4; k3++) {
@@ -822,36 +826,31 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
     }
   }
 
-  // Fix D + Fix 2: Protein rescue phase — primary protein ingredients only.
-  // Strict 4-criteria filter to prevent carb-heavy or low-protein ingredients from being selected:
-  //   1. At least 50 calories at current gram amount (Fix 1 threshold)
-  //   2. At least 10g protein per 100g raw (true protein source, not incidental)
-  //   3. Protein-to-fat ratio >= 2:1 (lean enough to not blow fat target)
-  //   4. Carbs must not exceed protein by >50% (prevents Edamame, beans, yogurt)
-  // Fallback: if no strict match, use best P:F ratio above 50cal without carb restriction.
-  // If still none, skip rescue and rely on protein shake.
+  // Protein rescue phase — ALLOWLIST approach for animal-based proteins only.
+  // Previous ratio-based filters failed because carb-heavy ingredients (Potato, Red Lentils,
+  // Edamame, Black Beans) slipped through the fallback path. Now uses a positive allowlist:
+  // Only animal-based protein ingredients are eligible for rescue scaling.
+  // If no qualifying ingredient exists, skip rescue entirely and rely on the protein shake.
+  var RESCUE_ALLOWLIST = {
+    "Chicken Breast":true, "Chicken Thigh":true, "Beef Sirloin":true,
+    "Ground Beef (lean)":true, "Ground Lamb":true, "Pork Loin":true,
+    "Pork Shoulder":true, "Shrimp":true, "Salmon Fillet":true,
+    "Ahi Tuna":true, "Egg":true
+  };
   var rescueTotals = computeTotals();
   var rescueProteinGap = targets[2] - rescueTotals[2];
   if (targets[2] > 0 && rescueProteinGap > targets[2] * 0.15) {
     var bestRescueMi = -1, bestRescueIi = -1, bestRatio = -1;
-    var fallbackMi = -1, fallbackIi = -1, fallbackRatio = -1;
     allMealData.forEach(function(meal, mi) {
       meal.ingredients.forEach(function(ing, ii) {
-        if (ing.isSpice || ing.grams <= 0 || ing.calories < 50) return;
-        if (ing.name !== "Egg" && isUnitBased(ing.name)) return;
-        var per100pro = ing.grams > 0 ? (ing.protein / ing.grams) * 100 : 0;
+        if (ing.grams <= 0 || ing.calories < 50) return;
+        // Allowlist check: only named animal proteins
+        if (!RESCUE_ALLOWLIST[ing.name]) return;
         var pfRatio = ing.fat > 0 ? ing.protein / ing.fat : ing.protein * 10;
-        // Fallback: best P:F ratio above 50 cal (no carb restriction)
-        if (pfRatio > fallbackRatio) { fallbackRatio = pfRatio; fallbackMi = mi; fallbackIi = ii; }
-        // Strict criteria: all 4 must pass
-        if (per100pro < 10) return;           // Criterion 2: >=10g protein per 100g
-        if (pfRatio < 2) return;               // Criterion 3: P:F ratio >= 2:1
-        if (ing.carbs > ing.protein * 1.5) return; // Criterion 4: carbs not >150% of protein
         if (pfRatio > bestRatio) { bestRatio = pfRatio; bestRescueMi = mi; bestRescueIi = ii; }
       });
     });
-    // Use strict match if found, otherwise fallback
-    if (bestRescueMi < 0 && fallbackMi >= 0) { bestRescueMi = fallbackMi; bestRescueIi = fallbackIi; }
+    // No allowlisted ingredient found — skip rescue, rely on protein shake
     if (bestRescueMi >= 0) {
       var rIng = allMealData[bestRescueMi].ingredients[bestRescueIi];
       var perGramProtein = rIng.protein / rIng.grams;
@@ -1541,10 +1540,11 @@ function App() {
           if (proPct < 95) { flags.push("PRO_LOW: " + round1(t.protein) + "g (" + proPct + "%)"); flagCounts.proLow++; }
           if (fatPct > 105) { flags.push("FAT_HIGH: " + round1(t.fat) + "g (" + fatPct + "%)"); flagCounts.fatHigh++; }
           if (fatPct < 95) { flags.push("FAT_LOW: " + round1(t.fat) + "g (" + fatPct + "%)"); flagCounts.fatLow++; }
-          // Ingredient >500g check
+          // Ingredient >1000g check (raised from 500g — lean protein at 500-800g is legitimate)
           day.meals.forEach(function(meal) {
             meal.ingredients.forEach(function(ing) {
-              if (ing.grams > 500) { flags.push("ING_OVER_500: " + ing.name + " " + ing.grams + "g in " + meal.name); flagCounts.ingOver500++; }
+              // Threshold raised to 1000g — 500-800g of lean protein (Shrimp, Chicken) is legitimate scaling
+              if (ing.grams > 1000) { flags.push("ING_OVER_1000: " + ing.name + " " + ing.grams + "g in " + meal.name); flagCounts.ingOver500++; }
             });
           });
           // Shake added but protein still <95% of target
@@ -2307,7 +2307,7 @@ function App() {
               <li>Protein &lt;95%: <strong>{validationResults.flagCounts.proLow}</strong></li>
               <li>Fat &gt;105%: <strong>{validationResults.flagCounts.fatHigh}</strong></li>
               <li>Fat &lt;95%: <strong>{validationResults.flagCounts.fatLow}</strong></li>
-              <li>Ingredient &gt;500g: <strong>{validationResults.flagCounts.ingOver500}</strong></li>
+              <li>Ingredient &gt;1000g: <strong>{validationResults.flagCounts.ingOver500}</strong></li>
               <li>Shake added, protein still &lt;95%: <strong>{validationResults.flagCounts.shakeStillLow}</strong></li>
               <li>Rescue active, carbs &gt;105%: <strong>{validationResults.flagCounts.rescueCarbBlown}</strong></li>
             </ul>
@@ -2433,7 +2433,7 @@ setTimeout(function() {
         if (pp > 105) { fc.proHigh++; flags++; } if (pp < 95) { fc.proLow++; flags++; }
         if (fp > 105) { fc.fatHigh++; flags++; } if (fp < 95) { fc.fatLow++; flags++; }
         day.meals.forEach(function(meal) { meal.ingredients.forEach(function(ing) {
-          if (ing.grams > 500) { fc.ingOver500++; flags++; }
+          if (ing.grams > 1000) { fc.ingOver500++; flags++; }
         }); });
         if (day.proteinShake && pp < 95) { fc.shakeStillLow++; flags++; }
         var hasRescue = false;

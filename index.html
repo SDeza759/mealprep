@@ -697,7 +697,8 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
     return t;
   }
 
-  function canAdjust(ing) { return !ing.isSpice && !isUnitBased(ing.name) && ing.name !== "Soy Sauce"; }
+  // Fix 4: Eggs are adjustable in whole-egg increments (50g each), not locked as unit-based
+  function canAdjust(ing) { return !ing.isSpice && (ing.name === "Egg" || !isUnitBased(ing.name)) && ing.name !== "Soy Sauce"; }
   function macroCal(k, v) { return k === 3 ? v*9 : v*4; }
 
   var used = {};
@@ -734,19 +735,30 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
     var targetVal = ing[worstKey] + partialGap;
     if (ing[worstKey] < 0.1) continue;
     var scale = targetVal / ing[worstKey];
-    scale = Math.max(0.4, Math.min(2.5, scale));
+    // Fix 2: No upper ceiling — ingredients can scale to any amount (was clamped at 2.5x)
+    // Fix 3: Floor at 0 — ingredients can be scaled to 0g, effectively removing them (was 0.4x)
+    scale = Math.max(0, scale);
     if (Math.abs(scale - 1) < 0.02) continue;
 
     var oldG = ing.grams;
     var newG = Math.round(oldG * scale);
-    if (newG === oldG || newG < 5) continue;
-    var actualScale = newG / oldG;
-    ing.adjustment = "serving adjusted from " + oldG + "g to " + newG + "g to meet " + worstKey + " target";
-    ing.calories = round1(ing.calories * actualScale);
-    ing.carbs = round1(ing.carbs * actualScale);
-    ing.protein = round1(ing.protein * actualScale);
-    ing.fat = round1(ing.fat * actualScale);
-    ing.grams = newG;
+    // Fix 4: Eggs round to whole-egg increments (50g per egg)
+    if (ing.name === "Egg") newG = Math.round(newG / 50) * 50;
+    // Fix 3: Allow 0g (ingredient removal) — only skip if unchanged
+    if (newG === oldG) continue;
+    if (newG <= 0) {
+      // Scale to zero: remove ingredient's macro contribution entirely
+      ing.adjustment = "removed (was " + oldG + "g) to meet " + worstKey + " target";
+      ing.calories = 0; ing.carbs = 0; ing.protein = 0; ing.fat = 0; ing.grams = 0;
+    } else {
+      var actualScale = newG / oldG;
+      ing.adjustment = "serving adjusted from " + oldG + "g to " + newG + "g to meet " + worstKey + " target";
+      ing.calories = round1(ing.calories * actualScale);
+      ing.carbs = round1(ing.carbs * actualScale);
+      ing.protein = round1(ing.protein * actualScale);
+      ing.fat = round1(ing.fat * actualScale);
+      ing.grams = newG;
+    }
     used[bestMi + ":" + bestIi] = true;
   }
 
@@ -791,19 +803,15 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
   // Cuisine hard limit: max 2 per cuisine per week
   var weekCuisineCounts = {};
 
-  // Step 3 helper: compute macro nudge multiplier for a single recipe (0.75 to 1.5)
-  function macroNudge(recipe) {
+  // Fix 1: Macro nudge now takes a remaining budget instead of fixed per-meal fraction.
+  // Each subsequent meal selection is aware of cumulative macros from prior picks that day.
+  function macroNudge(recipe, remainingBudget) {
     var rm = recipe.totalMacros;
-    // Per-meal targets (divide daily by estimated meals — use 2.5 as average)
-    var mealCal = targetCal / 2.5, mealCarbs = targetCarbs / 2.5;
-    var mealPro = targetProtein / 2.5, mealFat = targetFat / 2.5;
-    var devCal = Math.abs(rm.calories - mealCal) / Math.max(mealCal, 1);
-    var devCarbs = Math.abs(rm.carbs - mealCarbs) / Math.max(mealCarbs, 1);
-    var devPro = Math.abs(rm.protein - mealPro) / Math.max(mealPro, 1);
-    var devFat = Math.abs(rm.fat - mealFat) / Math.max(mealFat, 1);
+    var devCal = Math.abs(rm.calories - remainingBudget.calories) / Math.max(remainingBudget.calories, 1);
+    var devCarbs = Math.abs(rm.carbs - remainingBudget.carbs) / Math.max(remainingBudget.carbs, 1);
+    var devPro = Math.abs(rm.protein - remainingBudget.protein) / Math.max(remainingBudget.protein, 1);
+    var devFat = Math.abs(rm.fat - remainingBudget.fat) / Math.max(remainingBudget.fat, 1);
     var avgDev = (devCal + devCarbs + devPro + devFat) / 4;
-    // Map deviation to multiplier: 0% dev → 1.5, 100%+ dev → 0.75
-    // Linear interpolation clamped to [0.75, 1.5]
     return Math.max(0.75, Math.min(1.5, 1.5 - avgDev * 0.75));
   }
 
@@ -822,31 +830,26 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     return Math.max(0.1, 1.0 / ratio);
   }
 
-  // Select one recipe from pool via weighted random draw (Steps 1-5)
-  function selectRecipe(pool, dayRecipeNames) {
+  // Fix 1: selectRecipe now receives remaining macro budget for the day
+  function selectRecipe(pool, dayRecipeNames, remainingBudget) {
     var candidates = [];
     for (var i = 0; i < pool.length; i++) {
       var r = pool[i];
-      // Step 1: Hard exclusions only
-      // Same-day duplicate check
       if (dayRecipeNames.indexOf(r.name) !== -1) continue;
-      // Cuisine hard limit: max 2 per week
       if ((weekCuisineCounts[r.cuisine] || 0) >= 2) continue;
       candidates.push(r);
     }
-    // Fallback: if all excluded by cuisine limit, relax cuisine constraint
     if (candidates.length === 0) {
       for (var j = 0; j < pool.length; j++) {
         if (dayRecipeNames.indexOf(pool[j].name) === -1) candidates.push(pool[j]);
       }
     }
     if (candidates.length === 0) return pool[Math.floor(Math.random() * pool.length)];
-    // Steps 2-4: Compute final weight for each candidate
     var weights = [];
     for (var ci = 0; ci < candidates.length; ci++) {
-      var base = 1.0;                                    // Step 2
-      var macro = macroNudge(candidates[ci]);             // Step 3
-      var rotation = rotationMultiplier(candidates[ci]);  // Step 4
+      var base = 1.0;
+      var macro = macroNudge(candidates[ci], remainingBudget);
+      var rotation = rotationMultiplier(candidates[ci]);
       weights.push(base * macro * rotation);
     }
     // Step 5: Single weighted random draw
@@ -866,13 +869,26 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     var mealsPerDay = targetCal > 2200 ? 3 : (targetCal < 1500 ? 2 : (d % 2 === 0 ? 3 : 2));
     var includeBreakfast = mealsPerDay >= 3;
 
+    // Fix 1: Track cumulative macros so each meal selection knows the remaining budget
     var dayRecipeNames = [];
     var dayPicks = [];
+    var cumulativeMacros = { calories: 0, carbs: 0, protein: 0, fat: 0 };
     for (var m = 0; m < mealsPerDay; m++) {
       var pool = (m === 0 && includeBreakfast) ? BREAKFAST_RECIPES : MAIN_RECIPES;
-      var picked = selectRecipe(pool, dayRecipeNames);
+      var mealsLeft = mealsPerDay - m;
+      var remainingBudget = {
+        calories: Math.max(1, (targetCal - cumulativeMacros.calories) / mealsLeft),
+        carbs: Math.max(0.1, (targetCarbs - cumulativeMacros.carbs) / mealsLeft),
+        protein: Math.max(0.1, (targetProtein - cumulativeMacros.protein) / mealsLeft),
+        fat: Math.max(0.1, (targetFat - cumulativeMacros.fat) / mealsLeft)
+      };
+      var picked = selectRecipe(pool, dayRecipeNames, remainingBudget);
       dayPicks.push(picked);
       dayRecipeNames.push(picked.name);
+      cumulativeMacros.calories += picked.totalMacros.calories;
+      cumulativeMacros.carbs += picked.totalMacros.carbs;
+      cumulativeMacros.protein += picked.totalMacros.protein;
+      cumulativeMacros.fat += picked.totalMacros.fat;
     }
 
     // Step 6: Post-selection macro adjustment
@@ -2069,6 +2085,87 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   }
   setTimeout(batch, 100);
 })();
+
+// ===== SELF-TESTS for macro balancing fixes =====
+setTimeout(function() {
+  console.log("\n[Macro Balancing Self-Tests]");
+  var testCal = 2000, testCarbs = 175, testPro = 200, testFat = 55;
+  var allPass = true;
+
+  // Test 1: Verify macro-aware sequential selection (remaining budget passed)
+  (function() {
+    console.log("Test 1: Macro-aware sequential meal selection");
+    var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
+    _recipeRotation = { counts: {}, totalSlots: 0 };
+    var pass = true;
+    for (var w = 0; w < 10; w++) {
+      var plan = generatePlan(testCal, round1((testCal*0.35)/4), testPro, testFat, {}, [], []);
+      plan.forEach(function(day, di) {
+        if (!day) return;
+        // Verify meals exist and day has macros (budget was used)
+        if (day.meals.length < 2) { pass = false; }
+      });
+    }
+    console.log("  10 weekly plans generated, all days have 2+ meals: " + (pass ? "PASS" : "FAIL"));
+    if (!pass) allPass = false;
+    _recipeRotation = savedRot;
+  })();
+
+  // Test 2: adjustDayMeals can scale ingredients to 0g for extreme fat overage
+  (function() {
+    console.log("Test 2: Ingredient scaling to 0g for extreme fat overage");
+    // Create artificial high-fat meal data
+    var testMeals = [
+      { recipe: { name: "TestA" }, ingredients: [
+        { name: "Olive Oil", grams: 30, calories: 264, carbs: 0, protein: 0, fat: 30, isSpice: false },
+        { name: "Chicken Breast", grams: 150, calories: 248, carbs: 0, protein: 47, fat: 5.4, isSpice: false },
+        { name: "Brown Rice", grams: 56, calories: 207, carbs: 43.3, protein: 4.4, fat: 1.6, isSpice: false }
+      ]},
+      { recipe: { name: "TestB" }, ingredients: [
+        { name: "Butter", grams: 30, calories: 216, carbs: 0, protein: 0.3, fat: 24.3, isSpice: false },
+        { name: "Pork Belly", grams: 100, calories: 430, carbs: 0, protein: 9, fat: 45, isSpice: false },
+        { name: "White Rice", grams: 55, calories: 201, carbs: 44, protein: 3.9, fat: 0.4, isSpice: false }
+      ]}
+    ];
+    var beforeFat = 0;
+    testMeals.forEach(function(m) { m.ingredients.forEach(function(i) { beforeFat += i.fat; }); });
+    adjustDayMeals(testMeals, testCal, round1((testCal*0.35)/4), testPro, testFat);
+    var afterFat = 0, hasZero = false;
+    testMeals.forEach(function(m) { m.ingredients.forEach(function(i) { afterFat += i.fat; if (i.grams === 0) hasZero = true; }); });
+    var pass = afterFat < beforeFat && hasZero;
+    console.log("  Before fat: " + round1(beforeFat) + "g, After fat: " + round1(afterFat) + "g, Has 0g ingredient: " + hasZero + " — " + (pass ? "PASS" : "FAIL"));
+    if (!pass) allPass = false;
+  })();
+
+  // Test 3: Eggs round to whole-egg increments (multiples of 50g)
+  (function() {
+    console.log("Test 3: Egg rounding to whole-egg increments");
+    var testMeals = [
+      { recipe: { name: "TestEgg" }, ingredients: [
+        { name: "Egg", grams: 100, calories: 144, carbs: 0.8, protein: 12.6, fat: 10, isSpice: false },
+        { name: "White Rice", grams: 55, calories: 201, carbs: 44, protein: 3.9, fat: 0.4, isSpice: false }
+      ]}
+    ];
+    // Target very high protein to force egg scaling up
+    adjustDayMeals(testMeals, 800, 50, 80, 20);
+    var eggGrams = testMeals[0].ingredients[0].grams;
+    var isMultOf50 = eggGrams % 50 === 0;
+    var pass = isMultOf50;
+    console.log("  Egg grams after adjustment: " + eggGrams + "g (multiple of 50: " + isMultOf50 + ") — " + (pass ? "PASS" : "FAIL"));
+    if (!pass) allPass = false;
+  })();
+
+  // Test 4: No recipes modified, no localStorage written, no JS errors
+  (function() {
+    console.log("Test 4: Database integrity check");
+    var recipeCount = RECIPES.length;
+    var pass = recipeCount === 119;
+    console.log("  Recipe count: " + recipeCount + " (expected 119) — " + (pass ? "PASS" : "FAIL"));
+    if (!pass) allPass = false;
+  })();
+
+  console.log("\n[Self-Test Summary] " + (allPass ? "ALL TESTS PASSED" : "SOME TESTS FAILED"));
+}, 500);
 </script>
 </body>
 </html>

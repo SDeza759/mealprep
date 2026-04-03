@@ -2668,22 +2668,31 @@ setTimeout(function() {
     console.log("\nTest 5: Variant System Infrastructure");
     var pass5 = true;
     var variantRecipes = RECIPES.filter(function(r) { return r.variants && r.variants.length > 0; });
-    console.log("  Recipes with variants: " + variantRecipes.length + " (22 expected — 9 CB, 6 CT, 3 pork-loin, 2 cod, 2 no-rice)");
-    // Verify selectVariant sets selectedVariant to null for recipes without variants
-    var testR = RECIPES[0];
-    if (testR) {
-      testR.selectedVariant = "test";
-      // selectVariant is inside generatePlan scope, so test indirectly via plan generation
-      var vPlan = generatePlan(testCal, testCarbs, testPro, testFat, {}, [], []);
-      var hasVariantLabel = false;
-      vPlan.forEach(function(day) {
+    console.log("  Recipes with variants: " + variantRecipes.length + " (22 expected)");
+    // Verify variant labels appear ONLY on recipes that have variants defined.
+    // Labels on variant-equipped recipes are expected; labels on non-variant recipes are a bug.
+    var vPlan = generatePlan(testCal, testCarbs, testPro, testFat, {}, [], []);
+    var labelCount = 0, noLabelCount = 0, spuriousLabels = 0;
+    var variantNameSet = {};
+    variantRecipes.forEach(function(r) { variantNameSet[r.name] = true; });
+    for (var vw = 0; vw < 5; vw++) {
+      var vp = (vw === 0) ? vPlan : generatePlan(testCal, testCarbs, testPro, testFat, {}, [], []);
+      vp.forEach(function(day) {
         if (!day) return;
-        day.meals.forEach(function(m) { if (m.variantLabel) hasVariantLabel = true; });
+        day.meals.forEach(function(m) {
+          if (m.variantLabel) {
+            labelCount++;
+            // Check if this recipe actually has variants — if not, label is spurious
+            if (!variantNameSet[m.originalName]) { spuriousLabels++; console.log("  SPURIOUS: " + m.originalName + " got label '" + m.variantLabel + "' but has no variants"); }
+          } else {
+            noLabelCount++;
+          }
+        });
       });
-      console.log("  variantLabel on meals (should be none without variant data): " + (hasVariantLabel ? "FOUND (unexpected)" : "none (PASS)"));
-      if (hasVariantLabel) pass5 = false;
-      testR.selectedVariant = null; // cleanup
     }
+    if (spuriousLabels > 0) pass5 = false;
+    console.log("  Across 5 plans: " + labelCount + " meals with variant label, " + noLabelCount + " without");
+    console.log("  Spurious labels (on non-variant recipes): " + spuriousLabels + " — " + (spuriousLabels === 0 ? "PASS" : "FAIL"));
     console.log("  " + (pass5 ? "PASS — variant infrastructure ready, no variants active" : "FAIL"));
 
     // Summary

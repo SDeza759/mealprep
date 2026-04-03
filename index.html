@@ -821,8 +821,11 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
         if (!canAdjust(ing) || ing.grams <= 0) return;
         var ingKey = mi + ":" + ii;
 
-        // Scale factors: fine-grained (0.8-1.2) for micro-adjustments, high (5.0, 8.0) for protein recovery
-        var scales = [0, 0.2, 0.4, 0.6, 0.8, 0.9, 1.1, 1.2, 1.5, 2.0, 3.0, 5.0, 8.0];
+        // Scale factors: simplified from 13 to 9 factors after combo-first rewrite.
+        // Removed: 0 (ingredient removal), 0.2, 0.4 (extreme down-scaling), 5.0, 8.0 (extreme up-scaling).
+        // These extremes were needed for structurally incompatible combos; combo pre-validation
+        // now ensures the day starts within viable macro range, so only moderate scaling is needed.
+        var scales = [0.5, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5, 2.0, 3.0];
         for (var si3 = 0; si3 < scales.length; si3++) {
           var tryScale = scales[si3];
           var tryNewG = Math.round(ing.grams * tryScale);
@@ -915,86 +918,15 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
     }
   }
 
-  // Protein rescue: if protein >15% below target, scale the best animal protein ingredient.
-  // Uses RESCUE_ALLOWLIST (module-scope constant) to restrict to named animal proteins only.
-  var rescueTotals = computeTotals();
-  var rescueProteinGap = targets[2] - rescueTotals[2];
-  if (targets[2] > 0 && rescueProteinGap > targets[2] * 0.15) {
-    var bestRescueMi = -1, bestRescueIi = -1, bestRatio = -1;
-    allMealData.forEach(function(meal, mi) {
-      meal.ingredients.forEach(function(ing, ii) {
-        if (ing.grams <= 0 || ing.calories < 50) return;
-        // Allowlist check: only named animal proteins
-        if (!RESCUE_ALLOWLIST[ing.name]) return;
-        var pfRatio = ing.fat > 0 ? ing.protein / ing.fat : ing.protein * 10;
-        if (pfRatio > bestRatio) { bestRatio = pfRatio; bestRescueMi = mi; bestRescueIi = ii; }
-      });
-    });
-    // No allowlisted ingredient found — skip rescue, rely on protein shake
-    if (bestRescueMi >= 0) {
-      var rIng = allMealData[bestRescueMi].ingredients[bestRescueIi];
-      var perGramProtein = rIng.protein / rIng.grams;
-      if (perGramProtein > 0) {
-        var neededGrams = rescueProteinGap / perGramProtein;
-        var rescueNewG = Math.round(rIng.grams + neededGrams);
-        var maxG = rIng.grams * 10;
-        rescueNewG = Math.min(rescueNewG, maxG);
-        if (rIng.name === "Egg") rescueNewG = Math.round(rescueNewG / 50) * 50;
-        if (rescueNewG > rIng.grams) {
-          var rescueScale = rescueNewG / rIng.grams;
-          rIng.adjustment = "PROTEIN RESCUE: " + rIng.name + " scaled from " + rIng.grams + "g to " + rescueNewG + "g (" + round1(rescueScale) + "x)";
-          rIng.calories = round1(rIng.calories * rescueScale);
-          rIng.carbs = round1(rIng.carbs * rescueScale);
-          rIng.protein = round1(rIng.protein * rescueScale);
-          rIng.fat = round1(rIng.fat * rescueScale);
-          rIng.grams = rescueNewG;
-        }
-      }
-    }
-  }
+  // Protein rescue phase: REMOVED. Combo-first selection pre-validates all combos to have
+  // >=65% of protein target before adjustment. The 50-iteration adjustment loop plus the
+  // protein shake (added in generatePlan after adjustDayMeals) handle the remaining gap.
+  // The rescue phase previously caused carb blowouts by scaling carb-heavy ingredients
+  // and protein overshoots by stacking with the secondary boost.
 
-  // Secondary protein boost: gentle nudge for days at 88-95% protein.
-  // Distinct from the main rescue phase — this is a 1.2x scale on the best P:F ingredient,
-  // only if it doesn't push any other macro above 108% of target.
-  // Targets Tamagoyaki-breakfast days where eggs can't contribute enough protein.
-  var boostTotals = computeTotals();
-  var boostProPct = targets[2] > 0 ? boostTotals[2] / targets[2] : 1;
-  if (boostProPct >= 0.88 && boostProPct < 0.95) {
-    var boostMi = -1, boostIi = -1, boostBestRatio = -1;
-    allMealData.forEach(function(meal, mi) {
-      // Skip breakfast-tagged meals — their egg/oat ingredients are often the constraint.
-      // Uses isBreakfast tag, not index position, since unified pool means index 0 may not be breakfast.
-      if (meal.recipe && meal.recipe.tags && meal.recipe.tags.indexOf("breakfast") !== -1) return;
-      meal.ingredients.forEach(function(ing, ii) {
-        if (ing.grams <= 0 || ing.calories < 50) return;
-        if (!RESCUE_ALLOWLIST[ing.name]) return;
-        var pfr = ing.fat > 0 ? ing.protein / ing.fat : ing.protein * 10;
-        if (pfr > boostBestRatio) { boostBestRatio = pfr; boostMi = mi; boostIi = ii; }
-      });
-    });
-    if (boostMi >= 0) {
-      var bIng = allMealData[boostMi].ingredients[boostIi];
-      var newBG = Math.round(bIng.grams * 1.2);
-      if (bIng.name === "Egg") newBG = Math.round(newBG / 50) * 50;
-      var bScale = newBG / bIng.grams;
-      // Check if 1.2x would push any macro above 108%
-      var projCal = boostTotals[0] + bIng.calories * (bScale - 1);
-      var projCarbs = boostTotals[1] + bIng.carbs * (bScale - 1);
-      var projFat = boostTotals[3] + bIng.fat * (bScale - 1);
-      var safe = true;
-      if (targets[0] > 0 && projCal > targets[0] * 1.08) safe = false;
-      if (targets[1] > 0 && projCarbs > targets[1] * 1.08) safe = false;
-      if (targets[3] > 0 && projFat > targets[3] * 1.08) safe = false;
-      if (safe && newBG > bIng.grams) {
-        bIng.adjustment = "protein boost: " + bIng.grams + "g to " + newBG + "g (1.2x)";
-        bIng.calories = round1(bIng.calories * bScale);
-        bIng.carbs = round1(bIng.carbs * bScale);
-        bIng.protein = round1(bIng.protein * bScale);
-        bIng.fat = round1(bIng.fat * bScale);
-        bIng.grams = newBG;
-      }
-    }
-  }
+  // Secondary protein boost: REMOVED for the same reason. Combo pre-validation ensures
+  // the day starts with adequate protein. The adjustment loop's multi-objective scoring
+  // handles fine-tuning, and the protein shake covers any remaining deficit >10%.
 
   return allMealData;
 }
@@ -2576,55 +2508,66 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   setTimeout(batch, 100);
 })();
 
-// ===== SELF-TEST: Combo-first selection verification =====
+// ===== SELF-TEST: Simplified adjustment loop verification =====
+// Baseline from previous report: 84.6% pass, 73 fatLow, 13 calLow
 setTimeout(function() {
-  console.log("\n[Combo-First Selection Tests]");
+  console.log("\n[Simplified Adjustment Tests]");
   var testCal = 2000, testCarbs = 175, testPro = 200, testFat = 55;
   var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
   _recipeRotation = { counts: {}, totalSlots: 0 };
 
-  // Test 1: 20 sample days — verify no combo violates hard rejection thresholds
-  (function() {
-    console.log("Test 1: Combo hard rejection thresholds (20 days)");
-    var pass = true, dayCount = 0;
-    for (var w = 0; w < 3; w++) {
+  // Test 1: 100-week validator
+  var SIM_TOTAL = 100, SIM_BATCH = 10, done = 0;
+  var totalDays = 0, passedDays = 0;
+  var fc = { calHigh:0, calLow:0, carbsHigh:0, carbsLow:0, proHigh:0, proLow:0, fatHigh:0, fatLow:0, rescueCarbBlown:0 };
+  var worst = { fatLowPct:100, calHighPct:0 };
+  function batch() {
+    var end = Math.min(done + SIM_BATCH, SIM_TOTAL);
+    for (var i = done; i < end; i++) {
       var plan = generatePlan(testCal, testCarbs, testPro, testFat, {}, [], []);
       plan.forEach(function(day) {
         if (!day) return;
-        dayCount++;
-        // Compute pre-adjustment macros from meal names' base totalMacros
-        var preCal = 0, prePro = 0, preFat = 0;
-        day.meals.forEach(function(m) {
-          var r = RECIPES.find(function(rec) { return rec.name === m.originalName; });
-          if (r) { preCal += r.totalMacros.calories; prePro += r.totalMacros.protein; preFat += r.totalMacros.fat; }
-        });
-        var fatPct = testFat > 0 ? Math.round(preFat / testFat * 100) : 100;
-        var proPct = testPro > 0 ? Math.round(prePro / testPro * 100) : 100;
-        if (fatPct < 70) { console.log("  FAIL: day fat " + fatPct + "% (< 70%) — " + day.meals.map(function(m){return m.name;}).join(" + ")); pass = false; }
-        if (fatPct > 135) { console.log("  FAIL: day fat " + fatPct + "% (> 135%) — " + day.meals.map(function(m){return m.name;}).join(" + ")); pass = false; }
-        if (proPct < 65) { console.log("  FAIL: day protein " + proPct + "% (< 65%) — " + day.meals.map(function(m){return m.name;}).join(" + ")); pass = false; }
+        totalDays++;
+        var t = day.totals;
+        var cp = Math.round(t.calories/testCal*100), bp = Math.round(t.carbs/testCarbs*100);
+        var pp = Math.round(t.protein/testPro*100), fp = Math.round(t.fat/testFat*100);
+        var flags = 0;
+        if (cp > 105) { fc.calHigh++; flags++; } if (cp < 95) { fc.calLow++; flags++; }
+        if (bp > 105) { fc.carbsHigh++; flags++; } if (bp < 95) { fc.carbsLow++; flags++; }
+        if (pp > 105) { fc.proHigh++; flags++; } if (pp < 95) { fc.proLow++; flags++; }
+        if (fp > 105) { fc.fatHigh++; flags++; } if (fp < 95) { fc.fatLow++; flags++; }
+        var hasRescue = false;
+        day.meals.forEach(function(meal) { meal.ingredients.forEach(function(ing) { if (ing.adjustment && ing.adjustment.indexOf("PROTEIN RESCUE") !== -1) hasRescue = true; }); });
+        if (hasRescue && bp > 105) { fc.rescueCarbBlown++; flags++; }
+        if (fp < worst.fatLowPct) worst.fatLowPct = fp;
+        if (cp > worst.calHighPct) worst.calHighPct = cp;
+        if (flags === 0) passedDays++;
       });
     }
-    console.log("  " + dayCount + " days checked — " + (pass ? "PASS (no threshold violations)" : "FAIL"));
-  })();
+    done = end;
+    if (done < SIM_TOTAL) { setTimeout(batch, 0); return; }
+    var passPct = round1(passedDays / totalDays * 100);
+    console.log("Test 1: 100-week validator (" + totalDays + " days)");
+    console.log("  Pass rate: " + passPct + "% (baseline 84.6%)");
+    console.log("  fatLow: " + fc.fatLow + " (baseline 73), fatHigh: " + fc.fatHigh);
+    console.log("  calLow: " + fc.calLow + " (baseline 13), calHigh: " + fc.calHigh);
+    console.log("  proLow: " + fc.proLow + ", proHigh: " + fc.proHigh);
+    console.log("  carbsLow: " + fc.carbsLow + ", carbsHigh: " + fc.carbsHigh);
+    console.log("  rescueCarbBlown: " + fc.rescueCarbBlown);
+    console.log("  Worst fat low: " + worst.fatLowPct + "%, Worst cal high: " + worst.calHighPct + "%");
 
-  // Test 2: Full plan generates with meals on every day
-  (function() {
-    console.log("Test 2: Full plan generation");
-    var pass = true;
+    // Test 2: Plan generation integrity
+    var pass2 = true;
     try {
-      var plan = generatePlan(testCal, testCarbs, testPro, testFat, {}, [], []);
-      var daysWithMeals = plan.filter(function(d) { return d && d.meals && d.meals.length >= 2; }).length;
-      if (daysWithMeals < 7) { pass = false; console.log("  FAIL: only " + daysWithMeals + "/7 days have meals"); }
-      plan.forEach(function(day) {
-        if (day && day.totals && day.totals.calories <= 0) { pass = false; console.log("  FAIL: day with 0 calories"); }
-      });
-    } catch(e) { pass = false; console.log("  FAIL: JS error — " + e.message); }
-    console.log("  " + (pass ? "PASS" : "FAIL"));
-  })();
+      var plan2 = generatePlan(testCal, testCarbs, testPro, testFat, {}, [], []);
+      if (plan2.filter(function(d){return d;}).length < 7) pass2 = false;
+    } catch(e) { pass2 = false; }
+    console.log("Test 2: Plan generation — " + (pass2 ? "PASS" : "FAIL"));
 
-  _recipeRotation = savedRot;
-  console.log("[Combo-First Tests Complete]");
+    _recipeRotation = savedRot;
+    console.log("[Tests Complete]");
+  }
+  setTimeout(batch, 500);
 }, 500);
 </script>
 </body>

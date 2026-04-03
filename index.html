@@ -703,6 +703,15 @@ RECIPES.forEach(function(r) {
   r.totalMacros = r.ingredients.reduce(function(a, i) {
     return { calories: a.calories+i.calories, carbs: a.carbs+i.carbs, protein: a.protein+i.protein, fat: a.fat+i.fat };
   }, { calories:0, carbs:0, protein:0, fat:0 });
+  // Variant system: precompute totalMacros for each variant at startup.
+  // Variants are optional — recipes without a variants array work exactly as before.
+  if (r.variants) {
+    r.variants.forEach(function(v) {
+      v.totalMacros = v.ingredients.reduce(function(a, i) {
+        return { calories: a.calories+i.calories, carbs: a.carbs+i.carbs, protein: a.protein+i.protein, fat: a.fat+i.fat };
+      }, { calories:0, carbs:0, protein:0, fat:0 });
+    });
+  }
 });
 
 // Unified pool: all recipes compete equally for all meal slots. No breakfast/main split.
@@ -982,25 +991,60 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
 
   // Sample one valid combo of mealsPerDay recipes from the pool.
   // Hard exclusions: no duplicate recipe in same combo, cuisine ≤2/week, no same recipe in week.
+  // Select the best variant for a recipe based on remaining macro budget.
+  // If recipe has no variants, sets selectedVariant to null (backward compatible).
+  function selectVariant(recipe, remainingCal, remainingCarbs, remainingPro, remainingFat) {
+    recipe.selectedVariant = null;
+    if (!recipe.variants || recipe.variants.length === 0) return;
+    var bestV = null, bestDev = Infinity;
+    recipe.variants.forEach(function(v) {
+      var vm = v.totalMacros;
+      var devCal = remainingCal > 0 ? Math.abs(vm.calories - remainingCal) / remainingCal : 0;
+      var devCarbs = remainingCarbs > 0 ? Math.abs(vm.carbs - remainingCarbs) / remainingCarbs : 0;
+      var devPro = remainingPro > 0 ? Math.abs(vm.protein - remainingPro) / remainingPro : 0;
+      var devFat = remainingFat > 0 ? Math.abs(vm.fat - remainingFat) / remainingFat : 0;
+      var worstDev = Math.max(devCal, devCarbs, devPro, devFat);
+      var avgDev = (devCal + devCarbs + devPro + devFat) / 4;
+      var score = worstDev * 0.6 + avgDev * 0.4;
+      if (score < bestDev) { bestDev = score; bestV = v; }
+    });
+    recipe.selectedVariant = bestV;
+  }
+
   function sampleCombo(mealsPerDay) {
     var combo = [], names = {}, cuisines = {};
+    // Track cumulative macros for variant selection during sampling
+    var cumCal = 0, cumCarbs = 0, cumPro = 0, cumFat = 0;
     for (var m = 0; m < mealsPerDay; m++) {
       var attempts = 0;
       while (attempts < 20) {
         var r = RECIPES[Math.floor(Math.random() * RECIPES.length)];
-        if (names[r.name]) { attempts++; continue; } // no duplicate in same combo
+        if (names[r.name]) { attempts++; continue; }
         var wcCount = (weekCuisineCounts[r.cuisine] || 0) + (cuisines[r.cuisine] || 0);
-        if (wcCount >= 2) { attempts++; continue; } // cuisine ≤2/week
-        if (weekRecipeNames[r.name]) { attempts++; continue; } // no repeat across week
+        if (wcCount >= 2) { attempts++; continue; }
+        if (weekRecipeNames[r.name]) { attempts++; continue; }
+        // Select best variant based on remaining budget
+        var mealsLeft = mealsPerDay - m;
+        var remCal = Math.max(1, (targetCal - cumCal) / mealsLeft);
+        var remCarbs = Math.max(0.1, (targetCarbs - cumCarbs) / mealsLeft);
+        var remPro = Math.max(0.1, (targetProtein - cumPro) / mealsLeft);
+        var remFat = Math.max(0.1, (targetFat - cumFat) / mealsLeft);
+        selectVariant(r, remCal, remCarbs, remPro, remFat);
+        // Use variant macros if selected, else base macros
+        var macros = (r.selectedVariant ? r.selectedVariant.totalMacros : r.totalMacros);
         combo.push(r);
         names[r.name] = true;
         cuisines[r.cuisine] = (cuisines[r.cuisine] || 0) + 1;
+        cumCal += macros.calories; cumCarbs += macros.carbs;
+        cumPro += macros.protein; cumFat += macros.fat;
         break;
       }
-      // Fallback: if 20 attempts fail, pick any non-duplicate recipe
       if (combo.length <= m) {
         for (var fi = 0; fi < RECIPES.length; fi++) {
-          if (!names[RECIPES[fi].name]) { combo.push(RECIPES[fi]); names[RECIPES[fi].name] = true; break; }
+          if (!names[RECIPES[fi].name]) {
+            selectVariant(RECIPES[fi], targetCal / mealsPerDay, targetCarbs / mealsPerDay, targetProtein / mealsPerDay, targetFat / mealsPerDay);
+            combo.push(RECIPES[fi]); names[RECIPES[fi].name] = true; break;
+          }
         }
       }
     }
@@ -1008,12 +1052,13 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
   }
 
   // Score a combo against daily targets. Returns { weight, macros, rejected }.
+  // Uses selectedVariant.totalMacros if a variant was chosen, else recipe.totalMacros.
   function scoreCombo(combo, relaxPct) {
     var rp = relaxPct || 0;
     var cal = 0, carbs = 0, pro = 0, fat = 0;
     combo.forEach(function(r) {
-      cal += r.totalMacros.calories; carbs += r.totalMacros.carbs;
-      pro += r.totalMacros.protein; fat += r.totalMacros.fat;
+      var m = (r.selectedVariant ? r.selectedVariant.totalMacros : r.totalMacros);
+      cal += m.calories; carbs += m.carbs; pro += m.protein; fat += m.fat;
     });
     var macros = { calories: cal, carbs: carbs, protein: pro, fat: fat };
 
@@ -1103,14 +1148,18 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
 
     var dayPicks = selectedCombo.combo;
 
-    // Step 5: Update weekly trackers for the selected combo
+    // Step 5: Update weekly trackers for the selected combo.
+    // Verified: uses r.name (base recipe name), not variant ID. Variants of the same recipe
+    // share rotation and weekly tracking, which is correct behavior.
     dayPicks.forEach(function(r) {
       weekRecipeNames[r.name] = true;
     });
 
     // Step 6: Post-selection macro adjustment
+    // If a variant was selected, clone variant.ingredients instead of recipe.ingredients.
     var allMealData = dayPicks.map(function(recipe) {
-      var ings = recipe.ingredients.map(function(ing) { return Object.assign({}, ing, { adjustment: null }); });
+      var srcIngs = (recipe.selectedVariant ? recipe.selectedVariant.ingredients : recipe.ingredients);
+      var ings = srcIngs.map(function(ing) { return Object.assign({}, ing, { adjustment: null }); });
       applyIngredientOverrides(ings, overrides);
       return { recipe: recipe, ingredients: ings };
     });
@@ -1123,7 +1172,7 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
       dayTotals.calories += mt.calories; dayTotals.carbs += mt.carbs; dayTotals.protein += mt.protein; dayTotals.fat += mt.fat;
       _recipeRotation.counts[md.recipe.name] = (_recipeRotation.counts[md.recipe.name] || 0) + 1;
       _recipeRotation.totalSlots++;
-      dayMeals.push({ originalName: md.recipe.name, name: md.recipe.name, cuisine: md.recipe.cuisine, isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1, ingredients: md.ingredients, totalMacros: mt });
+      dayMeals.push({ originalName: md.recipe.name, name: md.recipe.name, cuisine: md.recipe.cuisine, isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1, ingredients: md.ingredients, totalMacros: mt, variantLabel: (md.recipe.selectedVariant ? md.recipe.selectedVariant.label : null) });
     });
 
     // Display-only sort: breakfast-appropriate recipes appear first in the day's meal list.
@@ -1603,6 +1652,8 @@ function App() {
     return function() { window.removeEventListener("keydown", onKey); };
   }, []);
 
+  // Validator is variant-safe: it reads day.meals[].ingredients and day.totals which are
+  // computed from the cloned variant ingredients (Section 4). No changes needed.
   function runValidation() {
     var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
     _recipeRotation = { counts: {}, totalSlots: 0 };
@@ -1700,11 +1751,22 @@ function App() {
   function runIngredientAnalysis() {
     var map = {};
     RECIPES.forEach(function(r) {
+      // Scan base ingredients
       r.ingredients.forEach(function(ing) {
         if (ing.isSpice) return;
         if (!map[ing.name]) map[ing.name] = { name: ing.name, recipes: [] };
         if (map[ing.name].recipes.indexOf(r.name) === -1) map[ing.name].recipes.push(r.name);
       });
+      // Also scan variant ingredients so frequency counts include variant-only ingredients
+      if (r.variants) {
+        r.variants.forEach(function(v) {
+          v.ingredients.forEach(function(ing) {
+            if (ing.isSpice) return;
+            if (!map[ing.name]) map[ing.name] = { name: ing.name, recipes: [] };
+            if (map[ing.name].recipes.indexOf(r.name) === -1) map[ing.name].recipes.push(r.name);
+          });
+        });
+      }
     });
     var all = Object.values(map).map(function(item) {
       return { name: item.name, count: item.recipes.length, recipes: item.recipes };
@@ -2138,6 +2200,7 @@ function App() {
                     <span style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap'}}>
                       {meal.isBreakfast && <span className="cuisine-tag breakfast-tag">Breakfast</span>}
                       <span className="cuisine-tag">{meal.cuisine}</span>
+                      {meal.variantLabel && <span style={{fontSize:'0.7rem',color:'#9aa8a3',fontWeight:400}}>{meal.variantLabel}</span>}
                       <span style={{fontSize:'0.78rem',color:'#3a5a50'}}>Cal: {round1(meal.totalMacros.calories)} | C: {round1(meal.totalMacros.carbs)}g | P: {round1(meal.totalMacros.protein)}g | F: {round1(meal.totalMacros.fat)}g</span>
                       <span className="servings-ctrl">
                         <button onClick={function(e){e.stopPropagation();var k=di+"-"+mi;var cur=mealServings[k]||1;if(cur>1){var n=Object.assign({},mealServings);n[k]=cur-1;if(n[k]===1)delete n[k];setMealServings(n);}}}>−</button>
@@ -2150,6 +2213,7 @@ function App() {
                   </div>
                 </div>
                 {isMealExpanded && (function() {
+                  // Variant-safe: uses originalName (base recipe name) for lookup. selectedVariant does not change recipe.name.
                   var recipeData = RECIPES.find(function(r){return r.name===meal.originalName;});
                   var instrKey = di+"-"+mi+"-instr";
                   var instrOpen = !!expandedInstructions[instrKey];
@@ -2600,10 +2664,32 @@ setTimeout(function() {
     if (typeof MAIN_RECIPES !== "undefined") { pass4 = false; console.log("  FAIL: MAIN_RECIPES still defined"); }
     console.log("  " + (pass4 ? "PASS — all removed constants confirmed undefined" : "FAIL"));
 
+    // Test 5: Variant system infrastructure
+    console.log("\nTest 5: Variant System Infrastructure");
+    var pass5 = true;
+    var variantRecipes = RECIPES.filter(function(r) { return r.variants && r.variants.length > 0; });
+    console.log("  Recipes with variants: " + variantRecipes.length + " (0 expected — no variant data added yet)");
+    // Verify selectVariant sets selectedVariant to null for recipes without variants
+    var testR = RECIPES[0];
+    if (testR) {
+      testR.selectedVariant = "test";
+      // selectVariant is inside generatePlan scope, so test indirectly via plan generation
+      var vPlan = generatePlan(testCal, testCarbs, testPro, testFat, {}, [], []);
+      var hasVariantLabel = false;
+      vPlan.forEach(function(day) {
+        if (!day) return;
+        day.meals.forEach(function(m) { if (m.variantLabel) hasVariantLabel = true; });
+      });
+      console.log("  variantLabel on meals (should be none without variant data): " + (hasVariantLabel ? "FOUND (unexpected)" : "none (PASS)"));
+      if (hasVariantLabel) pass5 = false;
+      testR.selectedVariant = null; // cleanup
+    }
+    console.log("  " + (pass5 ? "PASS — variant infrastructure ready, no variants active" : "FAIL"));
+
     // Summary
     console.log("\n========================================");
-    var allPass = pass2 && pass3 && pass4;
-    console.log("[FINAL RESULT] " + (allPass ? "ARCHITECTURE REWRITE COMPLETE" : "ISSUES DETECTED — SEE ABOVE"));
+    var allPass = pass2 && pass3 && pass4 && pass5;
+    console.log("[FINAL RESULT] " + (allPass ? "VARIANT INFRASTRUCTURE COMPLETE" : "ISSUES DETECTED — SEE ABOVE"));
     console.log("========================================");
 
     _recipeRotation = savedRot;

@@ -936,38 +936,16 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
     return m;
   }
 
-  // Check if all macros are in the [95%, 105%] zone
-  function inZone(macros) {
+  // Check if all macros are within pct of target
+  function converged(macros, pct) {
     for (var k = 0; k < 4; k++) {
-      if (targets[k] > 0 && (macros[k] < targets[k] * 0.95 || macros[k] > targets[k] * 1.05)) return false;
+      if (targets[k] > 0 && Math.abs(macros[k] - targets[k]) / targets[k] > pct) return false;
     }
     return true;
   }
 
-  // Zone-penalty errors: 0 when in inner zone [96%, 104%], signed distance outside.
-  // Inner zone is tighter than the validation zone [95%, 105%] so the gradient has
-  // corrective signal until solutions are well inside the validation bounds.
-  // This prevents boundary oscillation from coupled gradient updates.
-  function zoneErrors(macros) {
-    var errors = [0, 0, 0, 0];
-    for (var k = 0; k < 4; k++) {
-      if (targets[k] <= 0) continue;
-      var lo = targets[k] * 0.96, hi = targets[k] * 1.04;
-      if (macros[k] > hi) errors[k] = macros[k] - hi;
-      else if (macros[k] < lo) errors[k] = macros[k] - lo;
-    }
-    return errors;
-  }
-
-  // Sum of squared zone violations (for comparing solutions across restarts)
-  function violation(macros) {
-    var v = 0, errs = zoneErrors(macros);
-    for (var k = 0; k < 4; k++) v += w[k] * errs[k] * errs[k];
-    return v;
-  }
-
-  // Standard sum-of-squares loss (for Phase 2 centering)
-  function centerLoss(macros) {
+  // Weighted sum of squared errors (percentage-normalized)
+  function loss(macros) {
     var L = 0;
     for (var k = 0; k < 4; k++) { var d = macros[k] - targets[k]; L += w[k] * d * d; }
     return L;
@@ -989,160 +967,182 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
     }
   }
 
-  // Shared gradient step: computes gradient from errors/weights, returns step size used.
-  // Modifies scales in-place. Returns alpha used (0 if no progress possible).
-  function gradientStep(scales, errors, wEff, maxAlpha) {
-    var grad = new Array(K);
-    var gradNormSq = 0;
-    for (var i = 0; i < K; i++) {
-      if (vars[i].isBinderEgg) { grad[i] = 0; continue; }
-      var g = 0;
-      for (var k = 0; k < 4; k++) g += wEff[k] * errors[k] * vars[i].A[k];
-      grad[i] = 2 * g;
-      gradNormSq += grad[i] * grad[i];
-    }
-    if (gradNormSq < 1e-15) return 0;
-
-    // Exact quadratic step: α = ||g||² / (g^T H g)
-    var Ag = [0, 0, 0, 0];
-    for (var k2 = 0; k2 < 4; k2++) {
-      for (var j = 0; j < K; j++) Ag[k2] += grad[j] * vars[j].A[k2];
-    }
-    var gHg = 0;
-    for (var k3 = 0; k3 < 4; k3++) gHg += 2 * wEff[k3] * Ag[k3] * Ag[k3];
-    var alpha = gHg > 1e-15 ? gradNormSq / gHg : 0.01;
-    alpha = Math.min(alpha, maxAlpha);
-
-    for (var i2 = 0; i2 < K; i2++) {
-      if (!vars[i2].isBinderEgg) scales[i2] -= alpha * grad[i2];
-    }
-    clamp(scales);
-    return alpha;
-  }
-
-  // ===== PHASE 1: FEASIBILITY — get all macros into [95%, 105%] zone =====
-  // Uses zone-penalty errors: gradient is zero for in-range macros, so the solver
-  // focuses entirely on out-of-range macros without disturbing satisfied ones.
-  function solveFeasibility(initScales) {
+  // ===== PROJECTED GRADIENT DESCENT SOLVER (sum-of-squares) =====
+  function solve(initScales) {
     var scales = initScales.slice();
     clamp(scales);
 
     for (var iter = 0; iter < 100; iter++) {
       var macros = computeMacros(scales);
-      if (inZone(macros)) break;
+      if (converged(macros, 0.03)) break;
 
-      // Carb floor (Fix 3): relaxed to 80% when protein is the binding constraint
+      // Carb floor (Fix 3): relaxed to 80% when protein is binding constraint
       var carbFloor = 0.88;
       if (targets[2] > 0 && macros[2] < targets[2] * 0.92 && macros[1] > targets[1]) {
         carbFloor = 0.80;
       }
       var carbFloorVal = targets[1] * carbFloor;
 
-      var errors = zoneErrors(macros);
+      var errors = [0, 0, 0, 0];
       var wEff = [w[0], w[1], w[2], w[3]];
-
-      // Carb floor override: if below floor, target the floor with boosted weight
+      for (var k = 0; k < 4; k++) errors[k] = macros[k] - targets[k];
       if (macros[1] < carbFloorVal) {
         errors[1] = macros[1] - carbFloorVal;
         wEff[1] = w[1] * 4;
       }
 
-      if (gradientStep(scales, errors, wEff, 2.0) === 0) break;
+      // Gradient: g_i = 2 * Σ_k wEff_k * error_k * A_ki
+      var grad = new Array(K);
+      var gradNormSq = 0;
+      for (var i = 0; i < K; i++) {
+        if (vars[i].isBinderEgg) { grad[i] = 0; continue; }
+        var g = 0;
+        for (var k2 = 0; k2 < 4; k2++) g += wEff[k2] * errors[k2] * vars[i].A[k2];
+        grad[i] = 2 * g;
+        gradNormSq += grad[i] * grad[i];
+      }
+      if (gradNormSq < 1e-15) break;
+
+      // Exact quadratic step: α = ||g||² / (g^T H g)
+      var Ag = [0, 0, 0, 0];
+      for (var k3 = 0; k3 < 4; k3++) {
+        for (var j = 0; j < K; j++) Ag[k3] += grad[j] * vars[j].A[k3];
+      }
+      var gHg = 0;
+      for (var k4 = 0; k4 < 4; k4++) gHg += 2 * wEff[k4] * Ag[k4] * Ag[k4];
+      var alpha = gHg > 1e-15 ? gradNormSq / gHg : 0.01;
+      alpha = Math.min(alpha, 2.0);
+
+      for (var i2 = 0; i2 < K; i2++) {
+        if (!vars[i2].isBinderEgg) scales[i2] -= alpha * grad[i2];
+      }
+      clamp(scales);
     }
     return scales;
   }
 
-  // ===== PHASE 2: CENTERING — push toward 100% without leaving zone =====
-  // Only runs if Phase 1 achieved feasibility. Uses standard sum-of-squares
-  // targeting 100%, but binary-searches step size to stay within zone.
-  function solveCenter(initScales) {
-    var scales = initScales.slice();
-
-    for (var iter = 0; iter < 50; iter++) {
-      var macros = computeMacros(scales);
-
-      // Within 2% on all macros = well centered, stop
-      var centered = true;
-      for (var ck = 0; ck < 4; ck++) {
-        if (targets[ck] > 0 && Math.abs(macros[ck] - targets[ck]) / targets[ck] > 0.02) { centered = false; break; }
-      }
-      if (centered) break;
-
-      // Standard errors targeting 100%
-      var errors = [0, 0, 0, 0];
-      for (var k = 0; k < 4; k++) errors[k] = macros[k] - targets[k];
-
-      // Save state, take full gradient step
-      var saved = scales.slice();
-      var alpha = gradientStep(scales, errors, w, 1.0);
-      if (alpha === 0) break;
-
-      // If step left the zone, binary-search for largest safe step
-      if (!inZone(computeMacros(scales))) {
-        var lo = 0, hi = alpha;
-        for (var bs = 0; bs < 12; bs++) {
-          var mid = (lo + hi) / 2;
-          var tryScales = saved.slice();
-          for (var i = 0; i < K; i++) {
-            if (!vars[i].isBinderEgg) tryScales[i] = saved[i]; // reset
-          }
-          // Recompute step at reduced alpha — use saved + direction * mid
-          // We need the gradient direction, recompute from saved state
-          var gDir = new Array(K);
-          for (var gi = 0; gi < K; gi++) gDir[gi] = (saved[gi] - scales[gi]) / alpha; // unit direction scaled by alpha
-          // Actually: scales = saved - alpha * grad (before clamp). We saved pre-step.
-          // The direction is (saved - scales_after_full_step) but clamping makes this nonlinear.
-          // Simpler: lerp between saved and full-step result
-          for (var li = 0; li < K; li++) {
-            tryScales[li] = saved[li] + (scales[li] - saved[li]) * (mid / alpha);
-          }
-          clamp(tryScales);
-          if (inZone(computeMacros(tryScales))) { lo = mid; } else { hi = mid; }
-        }
-        // Apply safe step
-        for (var si2 = 0; si2 < K; si2++) {
-          scales[si2] = saved[si2] + (scales[si2] - saved[si2]) * (lo / alpha);
-        }
-        clamp(scales);
-        if (lo < alpha * 0.001) break; // can't make progress without leaving zone
-      }
-    }
-    return scales;
-  }
-
-  // ===== RUN: Phase 1 → random restarts → Phase 2 → apply =====
+  // ===== RUN: solve from current proportions, random restarts if needed =====
+  var rawMacros = computeMacros(new Array(K + 1).join("1").split("").map(Number)); // macros at scale 1.0
   var init = [];
   for (var si = 0; si < K; si++) init.push(1.0);
-
-  var bestScales = solveFeasibility(init);
+  var bestScales = solve(init);
   var bestMacros = computeMacros(bestScales);
-  var bestViol = violation(bestMacros);
-  var feasible = inZone(bestMacros);
+  var bestLoss = loss(bestMacros);
+  var solverConverged = converged(bestMacros, 0.03);
 
-  // Random restarts if Phase 1 didn't achieve zone
-  if (!feasible) {
+  // Random restarts if not converged within 5%
+  if (!converged(bestMacros, 0.05)) {
     for (var restart = 0; restart < 5; restart++) {
       var rand = [];
       for (var ri = 0; ri < K; ri++) rand.push(0.5 + Math.random() * 2.5);
-      var tryS = solveFeasibility(rand);
+      var tryS = solve(rand);
       var tryM = computeMacros(tryS);
-      var tryV = violation(tryM);
-      if (tryV < bestViol) { bestViol = tryV; bestScales = tryS; bestMacros = tryM; }
-      if (inZone(tryM)) { feasible = true; break; }
+      var tryL = loss(tryM);
+      if (tryL < bestLoss) { bestLoss = tryL; bestScales = tryS; bestMacros = tryM; }
+      if (converged(tryM, 0.05)) { solverConverged = true; break; }
     }
   }
 
-  // Phase 2: centering (only if feasible)
-  if (feasible) {
-    bestScales = solveCenter(bestScales);
-    bestMacros = computeMacros(bestScales);
-  } else {
-    // Diagnostic: feasibility pre-filter passed but solver couldn't achieve zone
-    var pcts = [];
-    for (var dk = 0; dk < 4; dk++) pcts.push(Math.round(bestMacros[dk] / targets[dk] * 100));
-    console.warn("[Solver] Zone [95%,105%] not achieved. " +
-      "cal=" + pcts[0] + "% carbs=" + pcts[1] + "% pro=" + pcts[2] + "% fat=" + pcts[3] + "%. " +
-      "Feasibility pre-filter may need tightening.");
+  // ===== DIAGNOSTIC LOGGING: fires when any macro is outside [95%, 105%] =====
+  var inZone = true;
+  for (var zk = 0; zk < 4; zk++) {
+    if (targets[zk] > 0 && (bestMacros[zk] < targets[zk] * 0.95 || bestMacros[zk] > targets[zk] * 1.05)) {
+      inZone = false; break;
+    }
+  }
+  if (!inZone) {
+    var comboNames = allMealData.map(function(md) { return md.recipe.name; }).join(" + ");
+    var mLabels = ["cal", "carbs", "pro", "fat"];
+    var rawPcts = rawMacros.map(function(v, k) { return Math.round(v / targets[k] * 100); });
+    var finalPcts = bestMacros.map(function(v, k) { return Math.round(v / targets[k] * 100); });
+
+    var lines = [];
+    lines.push("[Solver Diag] FAILED: " + comboNames);
+    lines.push("  Raw macros:   " + mLabels.map(function(l, k) { return l + "=" + Math.round(rawMacros[k]) + " (" + rawPcts[k] + "%)"; }).join("  "));
+    lines.push("  Final macros: " + mLabels.map(function(l, k) { return l + "=" + Math.round(bestMacros[k]) + " (" + finalPcts[k] + "%)"; }).join("  "));
+    lines.push("  Objective: " + bestLoss.toFixed(6) + "  Converged(3%): " + solverConverged);
+
+    // Scale factors with bound detection
+    var scaleLines = [];
+    for (var di = 0; di < K; di++) {
+      var dv = vars[di];
+      var ingName = allMealData[dv.mi].ingredients[dv.ii].name;
+      var s = bestScales[di];
+      var bound = "";
+      if (dv.isBinderEgg) bound = " [LOCKED: binder egg]";
+      else if (Math.abs(s - 0.5) < 0.01) bound = " [AT MIN 0.5]";
+      else if (Math.abs(s - 3.0) < 0.01) bound = " [AT MAX 3.0]";
+      scaleLines.push("    " + ingName + ": " + s.toFixed(2) + "x (" + dv.grams0 + "g→" + Math.round(dv.grams0 * s) + "g)" + bound);
+    }
+    lines.push("  Scales:");
+    lines = lines.concat(scaleLines);
+
+    // Per-macro analysis for out-of-range macros
+    var oorLines = [];
+    for (var ok = 0; ok < 4; ok++) {
+      if (targets[ok] <= 0) continue;
+      var pct = bestMacros[ok] / targets[ok];
+      if (pct >= 0.95 && pct <= 1.05) continue;
+      var direction = pct < 0.95 ? "LOW" : "HIGH";
+      oorLines.push("  " + mLabels[ok] + " " + direction + " (" + Math.round(pct * 100) + "%):");
+      // For each adjustable ingredient, show what +0.1 scale change would do
+      for (var oi = 0; oi < K; oi++) {
+        var ov = vars[oi];
+        if (ov.isBinderEgg) continue;
+        var delta = direction === "LOW" ? 0.1 : -0.1;
+        var newScale = bestScales[oi] + delta;
+        if (newScale < 0.5 || newScale > 3.0) continue; // can't move further
+        var dMacros = [];
+        for (var om = 0; om < 4; om++) {
+          dMacros.push(Math.round(ov.A[om] * delta * 10) / 10);
+        }
+        var oIngName = allMealData[ov.mi].ingredients[ov.ii].name;
+        oorLines.push("    " + (delta > 0 ? "+" : "") + delta.toFixed(1) + " " + oIngName + ": " +
+          mLabels.map(function(l, m) { return l + (dMacros[m] >= 0 ? "+" : "") + dMacros[m].toFixed(1); }).join(" "));
+      }
+    }
+    if (oorLines.length > 0) {
+      lines.push("  Out-of-range analysis:");
+      lines = lines.concat(oorLines);
+    }
+
+    // Feasibility ranges (computed from solver's own data)
+    var fMinCal = baseline[0], fMaxCal = baseline[0];
+    var fMinPro = baseline[2], fMaxPro = baseline[2];
+    var fMinFat = baseline[3], fMaxFat = baseline[3];
+    var fMinCarbs = baseline[1], fMaxCarbs = baseline[1];
+    for (var fi = 0; fi < K; fi++) {
+      fMinCal += vars[fi].A[0] * 0.5;  fMaxCal += vars[fi].A[0] * 3.0;
+      fMinPro += vars[fi].A[2] * 0.5;  fMaxPro += vars[fi].A[2] * 3.0;
+      fMinFat += vars[fi].A[3] * 0.5;  fMaxFat += vars[fi].A[3] * 3.0;
+      fMinCarbs += vars[fi].A[1] * 0.5; fMaxCarbs += vars[fi].A[1] * 3.0;
+    }
+    lines.push("  Feasibility ranges (pre-filter passed this combo):");
+    lines.push("    cal:   [" + Math.round(fMinCal) + ", " + Math.round(fMaxCal) + "] target=" + targetCal +
+      (targetCal >= fMinCal * 0.95 && targetCal <= fMaxCal * 1.05 ? " ✓" : " ✗"));
+    lines.push("    pro:   [" + Math.round(fMinPro) + ", " + Math.round(fMaxPro) + "] target=" + targetProtein +
+      (targetProtein <= fMaxPro * 1.05 ? " ✓" : " ✗"));
+    lines.push("    fat:   [" + Math.round(fMinFat) + ", " + Math.round(fMaxFat) + "] target=" + targetFat +
+      (targetFat >= fMinFat * 0.95 && targetFat <= fMaxFat * 1.05 ? " ✓" : " ✗"));
+    lines.push("    carbs: [" + Math.round(fMinCarbs) + ", " + Math.round(fMaxCarbs) + "] target=" + targetCarbs +
+      (targetCarbs <= fMaxCarbs * 1.05 ? " ✓" : " ✗"));
+
+    // Cross-constraint: cheapest path to protein
+    var ccAdj = [];
+    for (var ci = 0; ci < K; ci++) ccAdj.push({ cal: vars[ci].A[0], pro: vars[ci].A[2], fat: vars[ci].A[3] });
+    ccAdj.sort(function(a, b) { return (b.pro / Math.max(b.cal, 1)) - (a.pro / Math.max(a.cal, 1)); });
+    var ccPro = baseline[2], ccCal = baseline[0], ccFat = baseline[3];
+    for (var cj = 0; cj < ccAdj.length; cj++) {
+      var cc = ccAdj[cj];
+      if (ccPro >= targetProtein) { ccCal += cc.cal * 0.5; ccFat += cc.fat * 0.5; }
+      else if (cc.pro > 0 && cc.pro * 3.0 <= targetProtein - ccPro) { ccCal += cc.cal * 3.0; ccPro += cc.pro * 3.0; ccFat += cc.fat * 3.0; }
+      else if (cc.pro > 0) { var sc = Math.max(0.5, Math.min(3.0, (targetProtein - ccPro) / cc.pro)); ccCal += cc.cal * sc; ccPro += cc.pro * sc; ccFat += cc.fat * sc; }
+      else { ccCal += cc.cal * 0.5; ccFat += cc.fat * 0.5; }
+    }
+    lines.push("    Cross-constraint (cheapest path to " + targetProtein + "g protein):");
+    lines.push("      min cal=" + Math.round(ccCal) + " (" + Math.round(ccCal / targetCal * 100) + "%)  fat=" + Math.round(ccFat) + " (" + Math.round(ccFat / targetFat * 100) + "%)");
+
+    console.warn(lines.join("\n"));
   }
 
   // ===== APPLY: write solved scales back to ingredient objects =====

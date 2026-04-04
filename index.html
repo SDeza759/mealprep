@@ -871,7 +871,7 @@ function applyIngredientOverrides(ingredients, overrides) {
 // Dead reference scan complete: macroNudge, BREAKFAST_RECIPES, MAIN_RECIPES, rescueTotals,
 // rescueProteinGap, boostTotals, boostProPct, bestRescueMi, boostMi — all confirmed absent.
 
-function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targetFat) {
+function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targetFat, suppressDiag) {
   var targets = [targetCal, targetCarbs, targetProtein, targetFat];
   var macroKeys = ["calories", "carbs", "protein", "fat"];
 
@@ -1044,14 +1044,14 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
   }
 
   // ===== DIAGNOSTIC: fires when any macro is outside [95%, 105%] =====
-  // Logs to console AND pushes structured data to _solverDiagnostics for JSON dump.
+  // Suppressed during intermediate solver-as-filter attempts (only log final result).
   var inZone = true;
   for (var zk = 0; zk < 4; zk++) {
     if (targets[zk] > 0 && (bestMacros[zk] < targets[zk] * 0.95 || bestMacros[zk] > targets[zk] * 1.05)) {
       inZone = false; break;
     }
   }
-  if (!inZone) {
+  if (!inZone && !suppressDiag) {
     var mLabels = ["cal", "carbs", "pro", "fat"];
     var rawPcts = rawMacros.map(function(v, k) { return Math.round(v / targets[k] * 100); });
     var finalPcts = bestMacros.map(function(v, k) { return Math.round(v / targets[k] * 100); });
@@ -1344,38 +1344,29 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
       return { reached: tot[macroIdx] >= targetMacro * 0.999, cal: tot[0], pro: tot[1], fat: tot[2], carbs: tot[3], scales: sc };
     }
 
-    // Cross-constraint thresholds: match the validation zone exactly (95-105%).
-    // All paths must produce secondary macros within this zone to pass.
-    var ccHi = zHi; // 1.05 + rp
-    var ccLo = zLo; // 0.95 - rp
-
     // ===== CHECK A: PATH TO PROTEIN — cheapest protein, check fat/cal =====
-    // Target the FULL protein value (not proLo) because the solver must reach
-    // close to 100%, not just 95%.
     var byProCal = adj.slice().sort(function(a, b) {
       return (b.pro / Math.max(b.cal, 1)) - (a.pro / Math.max(a.cal, 1));
     });
-    var cA = greedyPath(byProCal, targetProtein, 1);
+    var cA = greedyPath(byProCal, proLo, 1);
     if (!cA.reached) return -1;
-    if (cA.fat > targetFat * ccHi) return -1;    // protein path fat ≤ 105%
-    if (cA.fat < targetFat * ccLo) return -1;    // protein path fat ≥ 95% (catches minFatForProtein)
-    if (cA.cal > targetCal * ccHi) return -1;    // protein path calories ≤ 105%
-    // Also check: max fat achievable when protein is fixed at these scales
+    if (cA.fat > fatHi) return -1;
+    if (cA.cal > calHi * 1.10) return -1;
+    // Max fat achievable when protein is fixed at these scales
     var cAFatMax = fixFat;
     for (var l = 0; l < byProCal.length; l++) {
       cAFatMax += byProCal[l].fat * (cA.scales[l] > 0.51 ? cA.scales[l] : 3.0);
     }
     if (cAFatMax < fatLo) return -1;
 
-    // ===== CHECK B: PATH TO FAT — fattiest first, check pro/cal =====
+    // ===== CHECK B: PATH TO FAT FLOOR — fattiest first, check pro/cal =====
     var byFatCal = adj.slice().sort(function(a, b) {
       return (b.fat / Math.max(b.cal, 1)) - (a.fat / Math.max(a.cal, 1));
     });
-    var cB = greedyPath(byFatCal, targetFat, 2);
+    var cB = greedyPath(byFatCal, fatLo, 2);
     if (!cB.reached) return -1;
-    if (cB.pro > targetProtein * ccHi) return -1; // fat path protein ≤ 105%
-    if (cB.cal > targetCal * ccHi) return -1;     // fat path calories ≤ 105%
-    // Max protein when fat is fixed at these scales
+    if (cB.pro > proHi) return -1;
+    if (cB.cal > calHi * 1.10) return -1;
     var cBProMax = fixPro;
     for (var lb = 0; lb < byFatCal.length; lb++) {
       cBProMax += byFatCal[lb].pro * (cB.scales[lb] > 0.51 ? cB.scales[lb] : 3.0);
@@ -1389,15 +1380,14 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
       return rb - ra;
     });
     var cC = greedyPath(byCalFatEff, calLo, 0);
-    if (cC.reached && cC.fat > targetFat * ccHi) return -1;  // cal path fat ≤ 105%
-    if (cC.reached && cC.fat < targetFat * ccLo) return -1;  // cal path fat ≥ 95%
+    if (cC.reached && cC.fat > fatHi) return -1;
 
     // ===== CHECK D: PATH TO CARB TARGET — check calories =====
     var byCarbCal = adj.slice().sort(function(a, b) {
       return (b.carbs / Math.max(b.cal, 1)) - (a.carbs / Math.max(a.cal, 1));
     });
     var cD = greedyPath(byCarbCal, carbsLo, 3);
-    if (cD.reached && cD.cal > targetCal * ccHi) return -1;  // carb path calories ≤ 105%
+    if (cD.reached && cD.cal > calHi * 1.10) return -1;
 
     // ===== CHECK E: PROTEIN:FAT RATIO RANGE =====
     // Compute the achievable protein:fat ratio range for this combo.
@@ -1556,46 +1546,68 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
       }
     }
 
-    // Step 4: Weighted random draw with softmax (τ=0.3)
-    var minW = scored[0] ? scored[0].weight : 1;
-    scored.forEach(function(s) { if (s.weight < minW) minW = s.weight; });
-    var tau = 0.3;
-    var softWeights = scored.map(function(s) { return Math.exp((s.weight - minW) / tau); });
-    var totalSW = 0;
-    softWeights.forEach(function(w) { totalSW += w; });
-    var rndSW = Math.random() * totalSW, cumulSW = 0, selectedCombo = scored[0];
-    for (var swi = 0; swi < softWeights.length; swi++) {
-      cumulSW += softWeights[swi];
-      if (rndSW <= cumulSW) { selectedCombo = scored[swi]; break; }
+    // Step 4: Sort scored combos by weight descending for solver-as-filter.
+    scored.sort(function(a, b) { return b.weight - a.weight; });
+
+    // Step 5: SOLVER-AS-FILTER — try top combos, accept first that solves to [95%, 105%].
+    // Instead of picking one combo and accepting whatever the solver produces, we try
+    // multiple combos and use the solver itself as the definitive filter.
+    var MAX_SOLVE_ATTEMPTS = Math.min(10, scored.length);
+    var bestSolveResult = null; // {allMealData, dayTotals, dayMeals, dayPicks, maxDev}
+
+    function trySolveCombo(picks, suppress) {
+      var mealData = picks.map(function(recipe) {
+        var srcIngs = (recipe.selectedVariant ? recipe.selectedVariant.ingredients : recipe.ingredients);
+        var ings = srcIngs.map(function(ing) { return Object.assign({}, ing, { adjustment: null }); });
+        applyIngredientOverrides(ings, overrides);
+        return { recipe: recipe, ingredients: ings };
+      });
+      adjustDayMeals(mealData, targetCal, targetCarbs, targetProtein, targetFat, suppress);
+      var dt = { calories:0, carbs:0, protein:0, fat:0 };
+      var dm = [];
+      mealData.forEach(function(md) {
+        var mt = md.ingredients.filter(function(i){return !i.isSpice;}).reduce(function(a, i) { return { calories: a.calories+i.calories, carbs: a.carbs+i.carbs, protein: a.protein+i.protein, fat: a.fat+i.fat }; }, { calories:0, carbs:0, protein:0, fat:0 });
+        dt.calories += mt.calories; dt.carbs += mt.carbs; dt.protein += mt.protein; dt.fat += mt.fat;
+        dm.push({ originalName: md.recipe.name, name: md.recipe.name, cuisine: md.recipe.cuisine, isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1, ingredients: md.ingredients, totalMacros: mt, variantLabel: (md.recipe.selectedVariant ? md.recipe.selectedVariant.label : null) });
+      });
+      // Check if all macros are in [95%, 105%]
+      var maxDev = 0;
+      var targets4 = [targetCal, targetCarbs, targetProtein, targetFat];
+      var vals4 = [dt.calories, dt.carbs, dt.protein, dt.fat];
+      for (var tk = 0; tk < 4; tk++) {
+        if (targets4[tk] > 0) {
+          var dv = Math.abs(vals4[tk] - targets4[tk]) / targets4[tk];
+          if (dv > maxDev) maxDev = dv;
+        }
+      }
+      return { allMealData: mealData, dayTotals: dt, dayMeals: dm, dayPicks: picks, maxDev: maxDev, inZone: maxDev <= 0.05 };
     }
 
-    var dayPicks = selectedCombo.combo;
+    for (var attempt = 0; attempt < MAX_SOLVE_ATTEMPTS; attempt++) {
+      var solveResult = trySolveCombo(scored[attempt].combo, true); // suppress diagnostics
+      if (!bestSolveResult || solveResult.maxDev < bestSolveResult.maxDev) {
+        bestSolveResult = solveResult;
+      }
+      if (solveResult.inZone) break; // solved cleanly, accept
+    }
 
-    // Step 5: Update weekly trackers for the selected combo.
-    // Verified: uses r.name (base recipe name), not variant ID. Variants of the same recipe
-    // share rotation and weekly tracking, which is correct behavior.
+    // If the best result is out of zone, re-run it without suppression to log diagnostics
+    if (!bestSolveResult.inZone) {
+      bestSolveResult = trySolveCombo(bestSolveResult.dayPicks, false);
+    }
+
+    var dayPicks = bestSolveResult.dayPicks;
+    var allMealData = bestSolveResult.allMealData;
+    var dayTotals = bestSolveResult.dayTotals;
+    var dayMeals = bestSolveResult.dayMeals;
+
+    // Update weekly trackers for the selected combo
     dayPicks.forEach(function(r) {
       weekRecipeNames[r.name] = true;
     });
-
-    // Step 6: Post-selection macro adjustment
-    // If a variant was selected, clone variant.ingredients instead of recipe.ingredients.
-    var allMealData = dayPicks.map(function(recipe) {
-      var srcIngs = (recipe.selectedVariant ? recipe.selectedVariant.ingredients : recipe.ingredients);
-      var ings = srcIngs.map(function(ing) { return Object.assign({}, ing, { adjustment: null }); });
-      applyIngredientOverrides(ings, overrides);
-      return { recipe: recipe, ingredients: ings };
-    });
-
-    adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targetFat);
-
-    var dayTotals = { calories:0, carbs:0, protein:0, fat:0 }, dayMeals = [];
     allMealData.forEach(function(md) {
-      var mt = md.ingredients.filter(function(i){return !i.isSpice;}).reduce(function(a, i) { return { calories: a.calories+i.calories, carbs: a.carbs+i.carbs, protein: a.protein+i.protein, fat: a.fat+i.fat }; }, { calories:0, carbs:0, protein:0, fat:0 });
-      dayTotals.calories += mt.calories; dayTotals.carbs += mt.carbs; dayTotals.protein += mt.protein; dayTotals.fat += mt.fat;
       _recipeRotation.counts[md.recipe.name] = (_recipeRotation.counts[md.recipe.name] || 0) + 1;
       _recipeRotation.totalSlots++;
-      dayMeals.push({ originalName: md.recipe.name, name: md.recipe.name, cuisine: md.recipe.cuisine, isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1, ingredients: md.ingredients, totalMacros: mt, variantLabel: (md.recipe.selectedVariant ? md.recipe.selectedVariant.label : null) });
     });
 
     // Display-only sort: breakfast-appropriate recipes appear first in the day's meal list.

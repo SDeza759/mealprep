@@ -2087,6 +2087,7 @@ function App() {
   var [swapSearch, setSwapSearch] = React.useState("");
   var [swapScores, setSwapScores] = React.useState(null);
   var [swapShowIncompat, setSwapShowIncompat] = React.useState(false);
+  var [swapWarning, setSwapWarning] = React.useState(null);
   var [copyMsg, setCopyMsg] = React.useState("");
   var [saveName, setSaveName] = React.useState("");
   var [savedPlans, setSavedPlans] = React.useState(function() { try { return JSON.parse(localStorage.getItem("mealprep_plans") || "[]"); } catch(e) { return []; } });
@@ -2594,17 +2595,22 @@ function App() {
   function handleSwap(newRecipe) {
     if (!swapTarget || !plan) return;
     var di = swapTarget.dayIdx, mi = swapTarget.mealIdx;
+    // Use variant ingredients if scoring selected one
+    var scoreEntry = swapScores && swapScores[newRecipe.name];
+    var swapIngs = (scoreEntry && scoreEntry.variantIngs) ? scoreEntry.variantIngs : newRecipe.ingredients;
+    var swapVariantLabel = scoreEntry ? scoreEntry.variantLabel : null;
     var newPlan = plan.map(function(day, dayI) {
       if (dayI !== di) return day;
       var newMeals = day.meals.map(function(meal, mealI) {
         if (mealI !== mi) return { ...meal, ingredients: meal.ingredients.map(function(i) { return { ...i }; }) };
         return { originalName: newRecipe.name, name: newRecipe.name, cuisine: newRecipe.cuisine, isBreakfast: newRecipe.tags.indexOf("breakfast") !== -1,
-          ingredients: newRecipe.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); }), totalMacros: { ...newRecipe.totalMacros } };
+          variantLabel: swapVariantLabel,
+          ingredients: swapIngs.map(function(i) { return Object.assign({}, i, { adjustment: null }); }), totalMacros: { ...newRecipe.totalMacros } };
       });
       var mealData = newMeals.map(function(m) {
         var ings = m.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
         applyIngredientOverrides(ings, ingredientOverrides);
-        return { recipe: { name: m.name, tags: m.isBreakfast ? ["breakfast"] : [] }, ingredients: ings };
+        return { recipe: { name: m.name, tags: m.isBreakfast ? ["breakfast"] : [], selectedVariant: m.variantLabel ? { label: m.variantLabel } : null }, ingredients: ings };
       });
       adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams);
       var dayTotals = { calories:0, carbs:0, protein:0, fat:0 };
@@ -2612,10 +2618,22 @@ function App() {
         var mt = md.ingredients.filter(function(i){return !i.isSpice;}).reduce(function(a, i) { return { calories:a.calories+i.calories, carbs:a.carbs+i.carbs, protein:a.protein+i.protein, fat:a.fat+i.fat }; }, { calories:0, carbs:0, protein:0, fat:0 });
         dayTotals.calories += mt.calories; dayTotals.carbs += mt.carbs; dayTotals.protein += mt.protein; dayTotals.fat += mt.fat;
         return { originalName: idx === mi ? newRecipe.name : newMeals[idx].name, name: idx === mi ? newRecipe.name : newMeals[idx].name,
-          cuisine: idx === mi ? newRecipe.cuisine : newMeals[idx].cuisine, isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1, ingredients: md.ingredients, totalMacros: mt };
+          cuisine: idx === mi ? newRecipe.cuisine : newMeals[idx].cuisine, isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1,
+          variantLabel: idx === mi ? swapVariantLabel : (newMeals[idx].variantLabel || null),
+          ingredients: md.ingredients, totalMacros: mt };
       });
       return { ...day, meals: rebuilt, totals: { calories: round1(dayTotals.calories), carbs: round1(dayTotals.carbs), protein: round1(dayTotals.protein), fat: round1(dayTotals.fat) } };
     });
+    // Check if solver result is in zone
+    var newDay = newPlan[di];
+    if (newDay) {
+      var t = newDay.totals;
+      var cp = t.calories / calories * 100, bp = t.carbs / carbGrams * 100, pp = t.protein / proteinGrams * 100, fp = t.fat / fatGrams * 100;
+      if (cp < 95 || cp > 105 || bp < 95 || bp > 105 || pp < 95 || pp > 105 || fp < 95 || fp > 105) {
+        setSwapWarning("This day\u2019s macros are outside the 95\u2013105% target range. Consider swapping again or regenerating.");
+        setTimeout(function() { setSwapWarning(null); }, 5000);
+      }
+    }
     setPlan(newPlan); setSwapTarget(null);
   }
 
@@ -2635,10 +2653,27 @@ function App() {
       var batch = queue.splice(0, BATCH);
       if (batch.length === 0) { setSwapScores(Object.assign({}, results)); return; }
       batch.forEach(function(candidate) {
+        // Compute remaining budget from other meals for variant selection
+        var otherCal = 0, otherCarbs = 0, otherPro = 0, otherFat = 0;
+        day.meals.forEach(function(m, mealI) {
+          if (mealI === mi) return;
+          m.ingredients.forEach(function(i) { if (!i.isSpice) { otherCal += i.calories; otherCarbs += i.carbs; otherPro += i.protein; otherFat += i.fat; } });
+        });
+        var remCal = Math.max(1, calories - otherCal);
+        var remCarbs = Math.max(0.1, carbGrams - otherCarbs);
+        var remPro = Math.max(0.1, proteinGrams - otherPro);
+        var remFat = Math.max(0.1, fatGrams - otherFat);
+        // Select variant if available (use temp object to avoid mutating RECIPES)
+        var variantLabel = null, useIngs = candidate.ingredients;
+        if (candidate.variants && candidate.variants.length > 0) {
+          var temp = { variants: candidate.variants, selectedVariant: null };
+          selectVariant(temp, remCal, remCarbs, remPro, remFat);
+          if (temp.selectedVariant) { useIngs = temp.selectedVariant.ingredients; variantLabel = temp.selectedVariant.label; }
+        }
         var mealData = day.meals.map(function(m, mealI) {
           var ings;
           if (mealI === mi) {
-            ings = candidate.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
+            ings = useIngs.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
           } else {
             ings = m.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
           }
@@ -2657,7 +2692,7 @@ function App() {
         var pcts = { cal: calories > 0 ? totals.calories / calories * 100 : 100, carbs: carbGrams > 0 ? totals.carbs / carbGrams * 100 : 100, pro: proteinGrams > 0 ? totals.protein / proteinGrams * 100 : 100, fat: fatGrams > 0 ? totals.fat / fatGrams * 100 : 100 };
         var inZone = pcts.cal >= 95 && pcts.cal <= 105 && pcts.carbs >= 95 && pcts.carbs <= 105 && pcts.pro >= 95 && pcts.pro <= 105 && pcts.fat >= 95 && pcts.fat <= 105;
         var devSum = Math.pow((pcts.cal - 100) / 100, 2) + Math.pow((pcts.carbs - 100) / 100, 2) + Math.pow((pcts.pro - 100) / 100, 2) + Math.pow((pcts.fat - 100) / 100, 2);
-        results[candidate.name] = { totals: totals, pcts: pcts, inZone: inZone, score: devSum };
+        results[candidate.name] = { totals: totals, pcts: pcts, inZone: inZone, score: devSum, variantLabel: variantLabel, variantIngs: variantLabel ? useIngs : null };
       });
       setTimeout(runBatch, 0);
     }
@@ -2775,6 +2810,10 @@ function App() {
               <button className="btn btn-sm btn-primary" onClick={handleLogEaten} disabled={eatenCount === 0}>Log Eaten Meals to Stats</button>
             </div>
           </div>
+          {swapWarning && <div style={{background:'#fff3cd',color:'#856404',padding:'10px 16px',borderRadius:10,marginBottom:12,fontSize:'0.88rem',display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}>
+            <span>{swapWarning}</span>
+            <button onClick={function(){setSwapWarning(null);}} style={{background:'none',border:'none',color:'#856404',fontWeight:700,cursor:'pointer',fontSize:'1.1rem',lineHeight:1,padding:'0 4px'}}>{"\u00D7"}</button>
+          </div>}
           {(function() {
             var activeDays = plan.filter(function(day, di) { return day && excludedDays.indexOf(di) === -1; });
             var nDays = activeDays.length;
@@ -3228,7 +3267,7 @@ function App() {
               var s = swapScores[r.name];
               return (<div className="modal-recipe" key={r.name} onClick={function(){handleSwap(r);}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}>
-                  <span><span className="mr-name">{r.name}</span> <span className="mr-cuisine">— {r.cuisine}</span></span>
+                  <span><span className="mr-name">{r.name}</span>{s.variantLabel && <span className="variant-tag" style={{marginLeft:6}}>{s.variantLabel}</span>} <span className="mr-cuisine">— {r.cuisine}</span></span>
                   <span style={{color:'#2d6a4f',fontSize:'0.75rem',fontWeight:600,whiteSpace:'nowrap'}}>{"\u2713"} Fits</span>
                 </div>
                 <div className="mr-macros">Day totals: Cal: {round1(s.totals.calories)} ({Math.round(s.pcts.cal)}%) | C: {round1(s.totals.carbs)}g ({Math.round(s.pcts.carbs)}%) | P: {round1(s.totals.protein)}g ({Math.round(s.pcts.pro)}%) | F: {round1(s.totals.fat)}g ({Math.round(s.pcts.fat)}%)</div>
@@ -3242,7 +3281,7 @@ function App() {
                 var s = swapScores[r.name];
                 return (<div className="modal-recipe" key={r.name} style={{opacity:0.55,cursor:'pointer',marginTop:8}} onClick={function(){handleSwap(r);}}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}>
-                    <span><span className="mr-name">{r.name}</span> <span className="mr-cuisine">— {r.cuisine}</span></span>
+                    <span><span className="mr-name">{r.name}</span>{s && s.variantLabel && <span className="variant-tag" style={{marginLeft:6,opacity:0.7}}>{s.variantLabel}</span>} <span className="mr-cuisine">— {r.cuisine}</span></span>
                     <span style={{color:'#e67e22',fontSize:'0.72rem',fontWeight:600,whiteSpace:'nowrap'}}>May miss targets</span>
                   </div>
                   {s && <div className="mr-macros">Day totals: Cal: {round1(s.totals.calories)} ({Math.round(s.pcts.cal)}%) | C: {round1(s.totals.carbs)}g ({Math.round(s.pcts.carbs)}%) | P: {round1(s.totals.protein)}g ({Math.round(s.pcts.pro)}%) | F: {round1(s.totals.fat)}g ({Math.round(s.pcts.fat)}%)</div>}

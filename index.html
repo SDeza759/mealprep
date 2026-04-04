@@ -2646,7 +2646,7 @@ function App() {
     setSwapScores(null); setSwapShowIncompat(false);
     var results = {};
     var queue = RECIPES.slice();
-    var BATCH = 8;
+    var BATCH = 4;
     var cancelled = false;
     function runBatch() {
       if (cancelled) return;
@@ -2683,18 +2683,47 @@ function App() {
             var tags = mealI === mi ? candidate.tags : (m.isBreakfast ? ["breakfast"] : []);
             return { recipe: { name: mealI === mi ? candidate.name : m.name, tags: tags }, ingredients: ings };
           });
+          // Run solver twice — best of two attempts to reduce random-restart variance
           adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams, true);
-          var totals = { calories: 0, carbs: 0, protein: 0, fat: 0 };
+          var totals1 = { calories: 0, carbs: 0, protein: 0, fat: 0 };
           mealData.forEach(function(md) {
             md.ingredients.forEach(function(i) {
-              if (!i.isSpice) { totals.calories += i.calories; totals.carbs += i.carbs; totals.protein += i.protein; totals.fat += i.fat; }
+              if (!i.isSpice) { totals1.calories += i.calories; totals1.carbs += i.carbs; totals1.protein += i.protein; totals1.fat += i.fat; }
             });
           });
+          // Second attempt with fresh clones
+          var mealData2 = day.meals.map(function(m, mealI) {
+            var ings2;
+            if (mealI === mi) {
+              ings2 = useIngs.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
+            } else {
+              ings2 = m.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
+            }
+            applyIngredientOverrides(ings2, ingredientOverrides);
+            var tags2 = mealI === mi ? candidate.tags : (m.isBreakfast ? ["breakfast"] : []);
+            return { recipe: { name: mealI === mi ? candidate.name : m.name, tags: tags2 }, ingredients: ings2 };
+          });
+          adjustDayMeals(mealData2, calories, carbGrams, proteinGrams, fatGrams, true);
+          var totals2 = { calories: 0, carbs: 0, protein: 0, fat: 0 };
+          mealData2.forEach(function(md) {
+            md.ingredients.forEach(function(i) {
+              if (!i.isSpice) { totals2.calories += i.calories; totals2.carbs += i.carbs; totals2.protein += i.protein; totals2.fat += i.fat; }
+            });
+          });
+          // Pick best attempt (closest to targets)
+          var devOf = function(t) { return Math.pow((t.calories/calories-1),2) + Math.pow((t.carbs/carbGrams-1),2) + Math.pow((t.protein/proteinGrams-1),2) + Math.pow((t.fat/fatGrams-1),2); };
+          var totals = devOf(totals1) <= devOf(totals2) ? totals1 : totals2;
+          // Add protein shake if protein >10% below target (matches generatePlan safety net)
+          var proDeficit = proteinGrams - totals.protein;
+          if (proDeficit > proteinGrams * 0.10) {
+            totals = { calories: totals.calories + 120, carbs: totals.carbs + 3, protein: totals.protein + 25, fat: totals.fat + 1 };
+          }
           totals = { calories: round1(totals.calories), carbs: round1(totals.carbs), protein: round1(totals.protein), fat: round1(totals.fat) };
           var pcts = { cal: calories > 0 ? totals.calories / calories * 100 : 100, carbs: carbGrams > 0 ? totals.carbs / carbGrams * 100 : 100, pro: proteinGrams > 0 ? totals.protein / proteinGrams * 100 : 100, fat: fatGrams > 0 ? totals.fat / fatGrams * 100 : 100 };
           var inZone = pcts.cal >= 95 && pcts.cal <= 105 && pcts.carbs >= 95 && pcts.carbs <= 105 && pcts.pro >= 95 && pcts.pro <= 105 && pcts.fat >= 95 && pcts.fat <= 105;
           var devSum = Math.pow((pcts.cal - 100) / 100, 2) + Math.pow((pcts.carbs - 100) / 100, 2) + Math.pow((pcts.pro - 100) / 100, 2) + Math.pow((pcts.fat - 100) / 100, 2);
-          results[candidate.name] = { totals: totals, pcts: pcts, inZone: inZone, score: devSum, variantLabel: variantLabel, variantIngs: variantLabel ? useIngs : null };
+          var addedShake = proDeficit > proteinGrams * 0.10;
+          results[candidate.name] = { totals: totals, pcts: pcts, inZone: inZone, score: devSum, variantLabel: variantLabel, variantIngs: variantLabel ? useIngs : null, shake: addedShake };
         } catch(e) {
           results[candidate.name] = { totals: { calories: 0, carbs: 0, protein: 0, fat: 0 }, pcts: { cal: 0, carbs: 0, pro: 0, fat: 0 }, inZone: false, score: 99, variantLabel: null, variantIngs: null };
         }
@@ -3275,7 +3304,7 @@ function App() {
                   <span><span className="mr-name">{r.name}</span>{s.variantLabel && <span className="variant-tag" style={{marginLeft:6}}>{s.variantLabel}</span>} <span className="mr-cuisine">— {r.cuisine}</span></span>
                   <span style={{color:'#2d6a4f',fontSize:'0.75rem',fontWeight:600,whiteSpace:'nowrap'}}>{"\u2713"} Fits</span>
                 </div>
-                <div className="mr-macros">Day totals: Cal: {round1(s.totals.calories)} ({Math.round(s.pcts.cal)}%) | C: {round1(s.totals.carbs)}g ({Math.round(s.pcts.carbs)}%) | P: {round1(s.totals.protein)}g ({Math.round(s.pcts.pro)}%) | F: {round1(s.totals.fat)}g ({Math.round(s.pcts.fat)}%)</div>
+                <div className="mr-macros">Day totals: Cal: {round1(s.totals.calories)} ({Math.round(s.pcts.cal)}%) | C: {round1(s.totals.carbs)}g ({Math.round(s.pcts.carbs)}%) | P: {round1(s.totals.protein)}g ({Math.round(s.pcts.pro)}%) | F: {round1(s.totals.fat)}g ({Math.round(s.pcts.fat)}%){s.shake && <span style={{color:'#5b21b6',marginLeft:6}}>+ shake</span>}</div>
               </div>);
             })}
             {incompatible.length > 0 && <div style={{marginTop:12}}>

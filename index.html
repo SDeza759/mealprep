@@ -873,202 +873,203 @@ function applyIngredientOverrides(ingredients, overrides) {
 
 function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targetFat) {
   var targets = [targetCal, targetCarbs, targetProtein, targetFat];
-  var keys = ["calories", "carbs", "protein", "fat"];
+  var macroKeys = ["calories", "carbs", "protein", "fat"];
 
-  function computeTotals() {
-    var t = [0,0,0,0];
-    allMealData.forEach(function(meal) {
-      meal.ingredients.forEach(function(ing) {
-        if (!ing.isSpice) { t[0]+=ing.calories; t[1]+=ing.carbs; t[2]+=ing.protein; t[3]+=ing.fat; }
-      });
+  // ===== SETUP: classify ingredients, build linear system =====
+  // Partition all ingredients into fixed (non-adjustable) and adjustable.
+  // For adjustable ingredients, record their macro coefficients (macros at 1x scale)
+  // so the solver can find optimal scale factors s_i ∈ [0.5, 3.0].
+  var baseline = [0, 0, 0, 0]; // summed macros from non-adjustable ingredients
+  var vars = []; // adjustable: {mi, ii, grams0, A:[cal,carbs,pro,fat], perGram:[...], isEgg, isBinderEgg}
+
+  allMealData.forEach(function(meal, mi) {
+    meal.ingredients.forEach(function(ing, ii) {
+      var cal = ing.calories || 0, carbs = ing.carbs || 0;
+      var pro = ing.protein || 0, fat = ing.fat || 0;
+
+      // canAdjust eligibility (same rules as before)
+      if (ing.isSpice || ing.name === "Soy Sauce" ||
+          (ing.name !== "Egg" && isUnitBased(ing.name)) || cal < 50) {
+        baseline[0] += cal; baseline[1] += carbs;
+        baseline[2] += pro; baseline[3] += fat;
+        return;
+      }
+
+      // Egg binder detection: if egg is NOT the top protein source in its meal,
+      // it's a binder (Katsu Curry, Pork Milanese, etc.) and must stay at original grams.
+      var isEgg = ing.name === "Egg";
+      var isBinderEgg = false;
+      if (isEgg) {
+        var isTopPro = true;
+        meal.ingredients.forEach(function(other) {
+          if (other.name !== "Egg" && !other.isSpice && (other.protein || 0) > pro) isTopPro = false;
+        });
+        isBinderEgg = !isTopPro;
+      }
+
+      var g0 = ing.grams;
+      // A[k] = macro contribution of this ingredient at scale 1.0
+      // At scale s, contribution = A[k] * s
+      var A = [cal, carbs, pro, fat];
+      var perGram = [cal / g0, carbs / g0, pro / g0, fat / g0];
+
+      vars.push({ mi: mi, ii: ii, grams0: g0, A: A, perGram: perGram,
+                   isEgg: isEgg, isBinderEgg: isBinderEgg });
     });
-    return t;
+  });
+
+  var K = vars.length;
+  if (K === 0) return allMealData;
+
+  // Objective weights: 1/target^2 normalizes to percentage-scale errors
+  var w = [];
+  for (var wk = 0; wk < 4; wk++) {
+    w.push(targets[wk] > 0 ? 1.0 / (targets[wk] * targets[wk]) : 0);
   }
 
-  // Ingredient eligibility: must not be a spice, Soy Sauce, or unit-based (except Egg).
-  // Must contribute >=50 calories to prevent garnish ingredients from being scaled to absurd amounts.
-  // Eggs are adjustable in whole-egg increments (50g each) when they are the primary protein source.
-  function canAdjust(ing) {
-    if (ing.isSpice || ing.name === "Soy Sauce") return false;
-    if (ing.name !== "Egg" && isUnitBased(ing.name)) return false;
-    if (ing.calories < 50) return false;
+  // Compute total macros from baseline + Σ A_i * s_i
+  function computeMacros(scales) {
+    var m = [baseline[0], baseline[1], baseline[2], baseline[3]];
+    for (var i = 0; i < K; i++) {
+      for (var k = 0; k < 4; k++) m[k] += vars[i].A[k] * scales[i];
+    }
+    return m;
+  }
+
+  // Check if all macros are within pct of target
+  function converged(macros, pct) {
+    for (var k = 0; k < 4; k++) {
+      if (targets[k] > 0 && Math.abs(macros[k] - targets[k]) / targets[k] > pct) return false;
+    }
     return true;
   }
 
-  // Olive Oil audit: at 8-15g (typical recipe amount), calories = 70-133, passes the 50-cal threshold.
-  // At 3-5g (lean recipe garnish), calories = 26-44, excluded by threshold — correct behavior.
-  // Olive Oil IS eligible for downward scaling when fat is over target on standard recipe amounts.
-
-  // Multi-objective adjustment loop: each iteration evaluates every adjustable ingredient
-  // across 13 scale factors, scoring by net improvement across ALL four macros simultaneously
-  // (calories, carbs, protein, fat). Prevents ping-ponging between competing macro targets.
-
-  // Track last adjustment direction per ingredient to penalize reversals (anti-ping-pong)
-  var lastDirection = {}; // key: "mi:ii", value: "up" or "down"
-
-  for (var iter = 0; iter < 50; iter++) {
-    var t = computeTotals();
-
-    // Check ALL four macros including calories
-    var maxDev = 0;
+  // Weighted sum of squared errors (percentage-normalized)
+  function loss(macros) {
+    var L = 0;
     for (var k = 0; k < 4; k++) {
-      if (targets[k] <= 0) continue;
-      var dev = Math.abs(t[k] - targets[k]) / targets[k];
-      if (dev > maxDev) maxDev = dev;
+      var d = macros[k] - targets[k];
+      L += w[k] * d * d;
     }
-    if (maxDev <= 0.03) break; // All macros within 3%
+    return L;
+  }
 
-    // Compute per-macro deviations and gaps
-    var gaps = [];
-    var devs = [];
-    for (var k2 = 0; k2 < 4; k2++) {
-      gaps.push(targets[k2] - t[k2]); // positive = need more, negative = have too much
-      devs.push(targets[k2] > 0 ? Math.abs(t[k2] - targets[k2]) / targets[k2] : 0);
-    }
-
-    // Score each adjustable ingredient by net improvement across all macros.
-    // Per-meal protein/fat totals computed for primary contributor preference.
-    var mealProTotals = allMealData.map(function(meal) {
-      var pro = 0, fat = 0;
-      meal.ingredients.forEach(function(ing) { if (!ing.isSpice) { pro += ing.protein; fat += ing.fat; } });
-      return { protein: pro, fat: fat };
-    });
-    var bestMi = -1, bestIi = -1, bestScore = -Infinity, bestNewG = 0;
-
-    allMealData.forEach(function(meal, mi) {
-      meal.ingredients.forEach(function(ing, ii) {
-        if (!canAdjust(ing) || ing.grams <= 0) return;
-        var ingKey = mi + ":" + ii;
-
-        // Scale factors: simplified from 13 to 9 factors after combo-first rewrite.
-        // Removed: 0 (ingredient removal), 0.2, 0.4 (extreme down-scaling), 5.0, 8.0 (extreme up-scaling).
-        // These extremes were needed for structurally incompatible combos; combo pre-validation
-        // now ensures the day starts within viable macro range, so only moderate scaling is needed.
-        var scales = [0.5, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5, 2.0, 3.0];
-        for (var si3 = 0; si3 < scales.length; si3++) {
-          var tryScale = scales[si3];
-          var tryNewG = Math.round(ing.grams * tryScale);
-          // Egg role-based scaling: if egg is NOT the top protein source in this meal,
-          // it's a binder/coating (Protein Pancakes, Katsu Curry, Pork Tonkatsu, Pork Milanese,
-          // Okonomiyaki) and must be capped at original grams. If egg IS the top protein
-          // source (Tamagoyaki, Shakshuka, Scrambled Eggs, Tortilla Espanola), scale freely.
-          if (ing.name === "Egg") {
-            tryNewG = Math.round(tryNewG / 50) * 50;
-            var isTopPro = true;
-            meal.ingredients.forEach(function(other) { if (other.name !== "Egg" && !other.isSpice && other.protein > ing.protein) isTopPro = false; });
-            if (!isTopPro && tryNewG !== ing.grams) continue; // binder egg: no scaling
-          }
-          if (tryNewG === ing.grams) continue;
-
-          // Compute macro deltas if this ingredient were scaled
-          var actualScale = tryNewG > 0 ? tryNewG / ing.grams : 0;
-          var deltaCalories = ing.calories * (actualScale - 1);
-          var deltaCarbs = ing.carbs * (actualScale - 1);
-          var deltaProtein = ing.protein * (actualScale - 1);
-          var deltaFat = ing.fat * (actualScale - 1);
-          var deltas = [deltaCalories, deltaCarbs, deltaProtein, deltaFat];
-
-          // Carb floor: skip any adjustment that would bring day carbs below threshold.
-          // FIX 3: Relax floor to 80% when protein is the binding constraint (below 92%
-          // of target) AND carbs are above 100% of target — trades excess carbs for protein.
-          var carbFloor = 0.88;
-          if (targets[2] > 0 && t[2] < targets[2] * 0.92 && t[1] > targets[1]) {
-            carbFloor = 0.80;
-          }
-          if (targets[1] > 0 && (t[1] + deltaCarbs) < targets[1] * carbFloor) continue;
-
-          // Score: sum of deviation reductions across all 4 macros, weighted by deviation severity
-          var score = 0;
-          for (var k3 = 0; k3 < 4; k3++) {
-            if (targets[k3] <= 0) continue;
-            var currentDev = devs[k3];
-            var newVal = t[k3] + deltas[k3];
-            var newDev = Math.abs(newVal - targets[k3]) / targets[k3];
-            // Improvement = reduction in deviation (positive = better)
-            var improvement = currentDev - newDev;
-            // Weight by how bad this macro currently is (fix worst macros first)
-            score += improvement * (1 + currentDev);
-          }
-
-          // Anti-ping-pong: penalize if this reverses the last adjustment direction
-          var direction = tryScale > 1 ? "up" : "down";
-          if (lastDirection[ingKey] && lastDirection[ingKey] !== direction) {
-            score *= 0.3; // Heavy penalty for reversal
-          }
-
-          // Primary macro contributor preference: ingredients contributing >30% of their meal's
-          // protein or fat get a 2x score boost. Ensures the loop scales the actual driver.
-          var mealPro = mealProTotals[mi].protein;
-          var mealFat = mealProTotals[mi].fat;
-          if (mealPro > 0 && ing.protein > mealPro * 0.3 && gaps[2] > 0) score *= 2.0; // protein up-scaling
-          if (mealFat > 0 && ing.fat > mealFat * 0.3 && gaps[3] < 0) score *= 2.0; // fat down-scaling
-
-          // FIX 6: Protein-priority scaling mode. When protein is below 94% of target
-          // and fat is at/above target, lean protein ingredients (P:F ratio > 3:1) get a
-          // 3x score boost for upscaling. Breaks the equilibrium where multi-objective
-          // scoring refuses to improve protein because it marginally hurts another macro.
-          if (targets[2] > 0 && t[2] < targets[2] * 0.94 && t[3] >= targets[3]) {
-            var pfRatio = ing.fat > 0 ? ing.protein / ing.fat : 999;
-            if (pfRatio > 3 && tryScale > 1 && deltaFat <= deltaProtein * 0.2) {
-              score *= 3.0;
-            }
-          }
-
-          // FIX 7: Calorie-over downscale preference. When calories exceed 106% of target,
-          // boost score for downscaling calorie-dense ingredients.
-          if (targets[0] > 0 && t[0] > targets[0] * 1.06 && tryScale < 1 && ing.calories > 80) {
-            score *= 1.5;
-          }
-
-          if (score > bestScore) {
-            bestScore = score; bestMi = mi; bestIi = ii; bestNewG = tryNewG;
-          }
-        }
-      });
-    });
-
-    // Exit if no candidate found, or if score is non-positive and all macros within 8%
-    if (bestMi < 0) break;
-    if (bestScore <= 0 && maxDev <= 0.08) break;
-
-    var ing = allMealData[bestMi].ingredients[bestIi];
-    var oldG = ing.grams;
-    var ingKey2 = bestMi + ":" + bestIi;
-    lastDirection[ingKey2] = bestNewG > oldG ? "up" : "down";
-
-    // Save state for potential revert
-    var savedIng = { calories: ing.calories, carbs: ing.carbs, protein: ing.protein, fat: ing.fat, grams: ing.grams, adjustment: ing.adjustment };
-    if (bestNewG <= 0) {
-      ing.adjustment = "removed (was " + oldG + "g) to improve macro balance";
-      ing.calories = 0; ing.carbs = 0; ing.protein = 0; ing.fat = 0; ing.grams = 0;
-    } else {
-      var actualScale2 = bestNewG / oldG;
-      ing.adjustment = "adjusted from " + oldG + "g to " + bestNewG + "g for macro balance";
-      ing.calories = round1(ing.calories * actualScale2);
-      ing.carbs = round1(ing.carbs * actualScale2);
-      ing.protein = round1(ing.protein * actualScale2);
-      ing.fat = round1(ing.fat * actualScale2);
-      ing.grams = bestNewG;
-    }
-    // Post-application carb floor check: revert if day carbs dropped below 88% of target.
-    // This catches cumulative collapse that the pre-check misses.
-    var postT = computeTotals();
-    if (targets[1] > 0 && postT[1] < targets[1] * 0.88) {
-      ing.calories = savedIng.calories; ing.carbs = savedIng.carbs;
-      ing.protein = savedIng.protein; ing.fat = savedIng.fat;
-      ing.grams = savedIng.grams; ing.adjustment = savedIng.adjustment;
+  // Clamp scales to [0.5, 3.0], enforce egg discretization
+  function clamp(scales) {
+    for (var i = 0; i < K; i++) {
+      var v = vars[i];
+      if (v.isBinderEgg) { scales[i] = 1.0; continue; }
+      scales[i] = Math.max(0.5, Math.min(3.0, scales[i]));
+      if (v.isEgg) {
+        // Snap to 50g increments within [0.5x, 3.0x] bounds
+        var newG = Math.round(v.grams0 * scales[i] / 50) * 50;
+        var minG = Math.ceil(v.grams0 * 0.5 / 50) * 50;
+        var maxG = Math.floor(v.grams0 * 3.0 / 50) * 50;
+        newG = Math.max(minG > 0 ? minG : 50, Math.min(maxG, newG));
+        scales[i] = newG / v.grams0;
+      }
     }
   }
 
-  // Protein rescue phase: REMOVED. Combo-first selection pre-validates all combos to have
-  // >=65% of protein target before adjustment. The 50-iteration adjustment loop plus the
-  // protein shake (added in generatePlan after adjustDayMeals) handle the remaining gap.
-  // The rescue phase previously caused carb blowouts by scaling carb-heavy ingredients
-  // and protein overshoots by stacking with the secondary boost.
+  // ===== PROJECTED GRADIENT DESCENT SOLVER =====
+  // Solves: minimize Σ w_k (actual_k - target_k)^2 subject to s_i ∈ [0.5, 3.0]
+  // Uses exact step size for quadratic objectives + projection (clamping).
+  // Carb floor enforced as a dynamic constraint (Fix 3).
+  function solve(initScales) {
+    var scales = initScales.slice();
+    clamp(scales);
 
-  // Secondary protein boost: REMOVED for the same reason. Combo pre-validation ensures
-  // the day starts with adequate protein. The adjustment loop's multi-objective scoring
-  // handles fine-tuning, and the protein shake covers any remaining deficit >10%.
+    for (var iter = 0; iter < 100; iter++) {
+      var macros = computeMacros(scales);
+      if (converged(macros, 0.03)) break;
+
+      // Carb floor constraint (Fix 3): when protein < 92% and carbs > target,
+      // relax floor to 80%; otherwise 88%. Enforced by increasing carb weight
+      // when below floor, steering the solver away from carb-depleting solutions.
+      var carbFloor = 0.88;
+      if (targets[2] > 0 && macros[2] < targets[2] * 0.92 && macros[1] > targets[1]) {
+        carbFloor = 0.80;
+      }
+      var carbFloorVal = targets[1] * carbFloor;
+
+      // Compute errors and effective weights (carb floor enforcement)
+      var errors = [0, 0, 0, 0];
+      var wEff = [w[0], w[1], w[2], w[3]];
+      for (var k = 0; k < 4; k++) errors[k] = macros[k] - targets[k];
+      if (macros[1] < carbFloorVal) {
+        errors[1] = macros[1] - carbFloorVal; // target the floor instead
+        wEff[1] = w[1] * 4; // 4x penalty below floor
+      }
+
+      // Gradient: g_i = 2 * Σ_k wEff_k * error_k * A_ki
+      var grad = new Array(K);
+      var gradNormSq = 0;
+      for (var i = 0; i < K; i++) {
+        if (vars[i].isBinderEgg) { grad[i] = 0; continue; }
+        var g = 0;
+        for (var k2 = 0; k2 < 4; k2++) g += wEff[k2] * errors[k2] * vars[i].A[k2];
+        grad[i] = 2 * g;
+        gradNormSq += grad[i] * grad[i];
+      }
+      if (gradNormSq < 1e-15) break;
+
+      // Exact step size for quadratic: α = ||g||² / (g^T H g)
+      // where H = 2 * A^T W_eff A, so g^T H g = 2 * Σ_k wEff_k * (Σ_i g_i * A_ki)²
+      var Ag = [0, 0, 0, 0];
+      for (var k3 = 0; k3 < 4; k3++) {
+        for (var j = 0; j < K; j++) Ag[k3] += grad[j] * vars[j].A[k3];
+      }
+      var gHg = 0;
+      for (var k4 = 0; k4 < 4; k4++) gHg += 2 * wEff[k4] * Ag[k4] * Ag[k4];
+      var alpha = gHg > 1e-15 ? gradNormSq / gHg : 0.01;
+      alpha = Math.min(alpha, 2.0); // cap to prevent rare numerical blowups
+
+      // Update ALL scales simultaneously
+      for (var i2 = 0; i2 < K; i2++) {
+        if (!vars[i2].isBinderEgg) scales[i2] -= alpha * grad[i2];
+      }
+      clamp(scales);
+    }
+    return scales;
+  }
+
+  // ===== RUN: solve from current proportions, random restarts if needed =====
+  var init = [];
+  for (var si = 0; si < K; si++) init.push(1.0);
+  var bestScales = solve(init);
+  var bestMacros = computeMacros(bestScales);
+  var bestLoss = loss(bestMacros);
+
+  // Random restarts if not converged within 5% on all macros
+  if (!converged(bestMacros, 0.05)) {
+    for (var restart = 0; restart < 5; restart++) {
+      var rand = [];
+      for (var ri = 0; ri < K; ri++) rand.push(0.5 + Math.random() * 2.5);
+      var tryS = solve(rand);
+      var tryM = computeMacros(tryS);
+      var tryL = loss(tryM);
+      if (tryL < bestLoss) { bestLoss = tryL; bestScales = tryS; bestMacros = tryM; }
+      if (converged(tryM, 0.05)) break;
+    }
+  }
+
+  // ===== APPLY: write solved scales back to ingredient objects =====
+  for (var ai = 0; ai < K; ai++) {
+    var v = vars[ai];
+    var ing = allMealData[v.mi].ingredients[v.ii];
+    var newG = Math.round(v.grams0 * bestScales[ai]);
+    if (v.isEgg) {
+      newG = Math.round(newG / 50) * 50;
+      if (newG <= 0) newG = 50;
+    }
+    if (newG !== v.grams0) {
+      ing.adjustment = "adjusted from " + v.grams0 + "g to " + newG + "g for macro balance";
+    }
+    ing.grams = newG;
+    for (var mk = 0; mk < 4; mk++) {
+      ing[macroKeys[mk]] = round1(v.perGram[mk] * newG);
+    }
+  }
 
   return allMealData;
 }

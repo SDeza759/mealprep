@@ -1268,21 +1268,18 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
   }
 
   // ===== PER-COMBO FEASIBILITY ANALYSIS =====
-  // Replaces fixed hard-reject thresholds (FIX 1/4/5/7/8) with dynamic analysis.
-  // Computes achievable macro ranges from each combo's actual ingredient scaling
-  // constraints, then checks whether daily targets fall within those ranges.
-  // Also detects cross-constraint conflicts (e.g. reaching protein forces calories over).
+  // Computes achievable macro ranges, then runs multi-directional cross-constraint
+  // checks to catch combos that are individually feasible per-macro but jointly
+  // infeasible (e.g. reaching protein target forces fat over target).
   function comboFeasible(combo, relaxPct) {
     var rp = relaxPct || 0;
-    // Partition ingredients into fixed and adjustable, accumulate macro profiles
     var fixCal = 0, fixPro = 0, fixFat = 0, fixCarbs = 0;
-    var adj = []; // {cal, pro, fat, carbs} at current (1x) scale
+    var adj = [];
     combo.forEach(function(recipe) {
       var ings = recipe.selectedVariant ? recipe.selectedVariant.ingredients : recipe.ingredients;
       ings.forEach(function(ing) {
         var cal = ing.calories || 0, pro = ing.protein || 0;
         var fat = ing.fat || 0, carbs = ing.carbs || 0;
-        // Replicate canAdjust eligibility
         if (ing.isSpice || ing.name === "Soy Sauce" ||
             (ing.name !== "Egg" && isUnitBased(ing.name)) || cal < 50) {
           fixCal += cal; fixPro += pro; fixFat += fat; fixCarbs += carbs;
@@ -1292,12 +1289,9 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
       });
     });
 
-    // Compute achievable min/max for each macro independently
-    // Min = all adjustable at 0.5x, Max = all adjustable at 3.0x
-    var minCal = fixCal, maxCal = fixCal;
-    var minPro = fixPro, maxPro = fixPro;
-    var minFat = fixFat, maxFat = fixFat;
-    var minCarbs = fixCarbs, maxCarbs = fixCarbs;
+    // Independent min/max ranges
+    var minCal = fixCal, maxCal = fixCal, minPro = fixPro, maxPro = fixPro;
+    var minFat = fixFat, maxFat = fixFat, minCarbs = fixCarbs, maxCarbs = fixCarbs;
     for (var i = 0; i < adj.length; i++) {
       var a = adj[i];
       minCal += a.cal * 0.5;  maxCal += a.cal * 3.0;
@@ -1306,57 +1300,112 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
       minCarbs += a.carbs * 0.5; maxCarbs += a.carbs * 3.0;
     }
 
-    // Margins widen with relaxPct to account for approximation error
-    var hi = 1.05 + rp; // upper: more permissive when relaxed
-    var lo = 0.95 - rp; // lower: more permissive when relaxed
+    var hi = 1.05 + rp, lo = 0.95 - rp;
 
-    // Range checks: do targets fall within achievable ranges?
+    // Basic range checks
     if (targetCal > maxCal * hi || targetCal < minCal * lo) return false;
     if (targetProtein > maxPro * hi) return false;
     if (targetFat > maxFat * hi || targetFat < minFat * lo) return false;
     if (targetCarbs > maxCarbs * hi) return false;
 
-    // Cross-constraint: can we reach target protein without blowing calories or fat?
-    // Greedy strategy: scale ingredients by protein-per-calorie efficiency (best first),
-    // minimize everything else. Computes the cheapest (lowest cal/fat) path to target protein.
-    var sorted = adj.slice().sort(function(a, b) {
-      return (b.pro / Math.max(b.cal, 1)) - (a.pro / Math.max(a.cal, 1));
+    // Target zones (with relaxation)
+    var proLo = targetProtein * lo, proHi = targetProtein * hi;
+    var fatLo = targetFat * lo, fatHi = targetFat * hi;
+    var calLo = targetCal * lo, calHi = targetCal * hi;
+
+    // === CHECK 1: PROTEIN vs FAT (min fat when reaching protein) ===
+    // Sort by protein:fat ratio descending — leanest proteins first.
+    // Greedily scale to reach proLo with minimum fat.
+    var byProFat = adj.slice().sort(function(a, b) {
+      var ra = a.fat > 0 ? a.pro / a.fat : 9999;
+      var rb = b.fat > 0 ? b.pro / b.fat : 9999;
+      return rb - ra;
     });
-    var cumPro = fixPro, cumCal = fixCal, cumFat = fixFat;
-    for (var j = 0; j < sorted.length; j++) {
-      var s = sorted[j];
-      if (cumPro >= targetProtein) {
-        // Already hit protein — minimize calories and fat on remaining ingredients
-        cumCal += s.cal * 0.5;
-        cumFat += s.fat * 0.5;
+    var proScales = []; // track scales for CHECK 4
+    var c1Pro = fixPro, c1Fat = fixFat, c1Cal = fixCal;
+    for (var j = 0; j < byProFat.length; j++) {
+      var s1 = byProFat[j], sc1;
+      if (c1Pro >= proLo) {
+        sc1 = 0.5;
+      } else if (s1.pro > 0) {
+        var need1 = proLo - c1Pro;
+        sc1 = (s1.pro * 3.0 <= need1) ? 3.0 : Math.max(0.5, Math.min(3.0, need1 / s1.pro));
       } else {
-        var proNeeded = targetProtein - cumPro;
-        if (s.pro > 0 && s.pro * 3.0 <= proNeeded) {
-          // Max out this ingredient
-          cumCal += s.cal * 3.0; cumPro += s.pro * 3.0; cumFat += s.fat * 3.0;
-        } else if (s.pro > 0) {
-          // Partial scale to exactly hit target
-          var scale = Math.max(0.5, Math.min(3.0, proNeeded / s.pro));
-          cumCal += s.cal * scale; cumPro += s.pro * scale; cumFat += s.fat * scale;
-        } else {
-          cumCal += s.cal * 0.5; cumFat += s.fat * 0.5;
-        }
+        sc1 = 0.5;
+      }
+      c1Pro += s1.pro * sc1; c1Fat += s1.fat * sc1; c1Cal += s1.cal * sc1;
+      proScales.push(sc1);
+    }
+    if (c1Pro < proLo) return false; // protein unreachable
+    if (c1Fat > fatHi) {
+      console.log("[Feasibility:NEW] Rejected — protein path min fat " + Math.round(c1Fat) + "g > fat ceiling " + Math.round(fatHi) + "g");
+      return false;
+    }
+    if (c1Cal > calHi * 1.10) return false; // protein path blows calories
+
+    // === CHECK 4: PROTEIN vs FAT (fat range when protein is fixed) ===
+    // With protein-achieving scales fixed, compute max achievable fat.
+    // If fat range [c1Fat, c4Fat] doesn't overlap [fatLo, fatHi], reject.
+    var c4Fat = fixFat;
+    for (var l = 0; l < byProFat.length; l++) {
+      // Protein-contributing ingredients: keep their scales from CHECK 1
+      // Non-contributing (at 0.5x): maximize fat (scale to 3.0x)
+      c4Fat += byProFat[l].fat * (proScales[l] > 0.51 ? proScales[l] : 3.0);
+    }
+    if (c4Fat < fatLo) {
+      console.log("[Feasibility:NEW] Rejected — fat range [" + Math.round(c1Fat) + "," + Math.round(c4Fat) + "] below fat floor " + Math.round(fatLo) + "g");
+      return false;
+    }
+
+    // === CHECK 2: FAT FLOOR — min calories to reach fatLo ===
+    // Sort by fat:calorie ratio (most fat-efficient first).
+    var byFatCal = adj.slice().sort(function(a, b) {
+      return (b.fat / Math.max(b.cal, 1)) - (a.fat / Math.max(a.cal, 1));
+    });
+    var c2Fat = fixFat, c2Cal = fixCal;
+    for (var m = 0; m < byFatCal.length; m++) {
+      var s2 = byFatCal[m];
+      if (c2Fat >= fatLo) {
+        c2Cal += s2.cal * 0.5;
+      } else if (s2.fat > 0) {
+        var need2 = fatLo - c2Fat;
+        var sc2 = (s2.fat * 3.0 <= need2) ? 3.0 : Math.max(0.5, Math.min(3.0, need2 / s2.fat));
+        c2Cal += s2.cal * sc2; c2Fat += s2.fat * sc2;
+      } else {
+        c2Cal += s2.cal * 0.5;
       }
     }
-    // Reject if protein is unreachable
-    if (cumPro < targetProtein * lo) return false;
-    // Reject if cheapest path to protein blows calories (15% margin + relaxation)
-    if (cumCal > targetCal * (1.15 + rp)) return false;
-    // Reject if cheapest path to protein blows fat (30% margin + relaxation)
-    if (cumFat > targetFat * (1.30 + rp)) return false;
+    if (c2Fat < fatLo) return false; // fat floor unreachable
+    if (c2Cal > calHi * 1.10) {
+      console.log("[Feasibility:NEW] Rejected — fat floor requires " + Math.round(c2Cal) + " cal > " + Math.round(calHi * 1.10) + " ceiling");
+      return false;
+    }
 
-    // Cross-constraint: does the fat floor force calories over target?
-    // If minimum achievable fat is high, the calories locked into fat-heavy
-    // ingredients may leave no room for other macros.
-    if (minFat > targetFat * 0.90) {
-      // Compute min calories when fat is at its floor — every ingredient at 0.5x
-      // If even at min scale, calories are well above target, combo is too dense
-      if (minCal > targetCal * (1.10 + rp)) return false;
+    // === CHECK 3: PROTEIN CEILING — min protein when reaching calLo ===
+    // Sort by cal:protein ratio descending (most calories per protein first).
+    // Greedily scale calorie-efficient/low-protein ingredients to reach calLo.
+    // If even minimizing protein this way exceeds proHi, reject.
+    var byCalPro = adj.slice().sort(function(a, b) {
+      var ra = a.pro > 0 ? a.cal / a.pro : 9999;
+      var rb = b.pro > 0 ? b.cal / b.pro : 9999;
+      return rb - ra;
+    });
+    var c3Cal = fixCal, c3Pro = fixPro;
+    for (var n = 0; n < byCalPro.length; n++) {
+      var s3 = byCalPro[n];
+      if (c3Cal >= calLo) {
+        c3Pro += s3.pro * 0.5; c3Cal += s3.cal * 0.5;
+      } else if (s3.cal > 0) {
+        var need3 = calLo - c3Cal;
+        var sc3 = (s3.cal * 3.0 <= need3) ? 3.0 : Math.max(0.5, Math.min(3.0, need3 / s3.cal));
+        c3Cal += s3.cal * sc3; c3Pro += s3.pro * sc3;
+      } else {
+        c3Pro += s3.pro * 0.5; c3Cal += s3.cal * 0.5;
+      }
+    }
+    if (c3Pro > proHi) {
+      console.log("[Feasibility:NEW] Rejected — min protein when reaching calories = " + Math.round(c3Pro) + "g > ceiling " + Math.round(proHi) + "g");
+      return false;
     }
 
     return true;

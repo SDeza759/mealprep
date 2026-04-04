@@ -1317,102 +1317,115 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     var proLo = targetProtein * zLo, proHi = targetProtein * zHi;
     var fatLo = targetFat * zLo, fatHi = targetFat * zHi;
     var calLo = targetCal * zLo, calHi = targetCal * zHi;
-    var carbsLo = targetCarbs * zLo;
+    var carbsLo = targetCarbs * zLo, carbsHi = targetCarbs * zHi;
 
-    // Helper: greedy path — scale ingredients to reach a target macro value,
-    // sorted by efficiency. Returns {reached, macros:[cal,pro,fat,carbs], scales[]}.
-    function greedyPath(sorted, targetMacro, macroIdx) {
-      var cum = [fixCal, fixCarbs, fixPro, fixFat]; // [cal,carbs,pro,fat]
-      var map = [0, 3, 2, 1]; // macroIdx 0=cal,1=carbs,2=pro,3=fat → cum index [0,1,2,3]
-      // Remap: adj stores {cal,pro,fat,carbs} and cum is [fixCal,fixCarbs,fixPro,fixFat]
-      // Let's use a cleaner approach: accumulate all 4 macros
+    // Helper: greedy path — scale sorted ingredients to reach a target macro value.
+    // macroIdx: 0=cal, 1=pro, 2=fat, 3=carbs (maps to adj.{cal,pro,fat,carbs}).
+    // minRest: if true, scale non-contributing ingredients to 0.5x; if false, to 3.0x.
+    function greedyPath(sorted, targetMacro, macroIdx, minRest) {
+      var mnr = minRest !== false; // default true
       var sc = [];
-      var tot = [fixCal, fixPro, fixFat, fixCarbs]; // [cal, pro, fat, carbs]
+      var tot = [fixCal, fixPro, fixFat, fixCarbs];
       for (var i2 = 0; i2 < sorted.length; i2++) {
-        var s = sorted[i2], macroVal;
-        if (macroIdx === 0) macroVal = s.cal;
-        else if (macroIdx === 1) macroVal = s.pro;
-        else if (macroIdx === 2) macroVal = s.fat;
-        else macroVal = s.carbs;
+        var s = sorted[i2];
+        var macroVal = macroIdx === 0 ? s.cal : macroIdx === 1 ? s.pro : macroIdx === 2 ? s.fat : s.carbs;
         var sv;
         if (tot[macroIdx] >= targetMacro) {
-          sv = 0.5;
+          sv = mnr ? 0.5 : 3.0;
         } else if (macroVal > 0) {
           var need = targetMacro - tot[macroIdx];
           sv = (macroVal * 3.0 <= need) ? 3.0 : Math.max(0.5, Math.min(3.0, need / macroVal));
         } else {
-          sv = 0.5;
+          sv = mnr ? 0.5 : 3.0;
         }
         tot[0] += s.cal * sv; tot[1] += s.pro * sv; tot[2] += s.fat * sv; tot[3] += s.carbs * sv;
         sc.push(sv);
       }
-      return { reached: tot[macroIdx] >= targetMacro, cal: tot[0], pro: tot[1], fat: tot[2], carbs: tot[3], scales: sc };
+      return { reached: tot[macroIdx] >= targetMacro * 0.999, cal: tot[0], pro: tot[1], fat: tot[2], carbs: tot[3], scales: sc };
     }
 
-    // === CHECK 1: PROTEIN vs CALORIES/FAT (cheapest protein path) ===
-    // Sort by protein per calorie (not protein per fat) to prioritize actual protein
-    // sources over carb sources with trace fat (Rice, Sweet Potato) that have
-    // artificially high pro:fat ratios but contribute negligible protein.
-    var byProFat = adj.slice().sort(function(a, b) {
+    // ===== CHECK A: PATH TO PROTEIN — cheapest protein, check fat/cal =====
+    var byProCal = adj.slice().sort(function(a, b) {
       return (b.pro / Math.max(b.cal, 1)) - (a.pro / Math.max(a.cal, 1));
     });
-    var c1 = greedyPath(byProFat, proLo, 1); // target protein index=1 (pro)
-    if (!c1.reached) return -1;
-    if (c1.fat > fatHi) return -1;
-    if (c1.cal > calHi * 1.10) return -1;
-
-    // === CHECK 1b: Fat range when protein is fixed ===
-    var c1bFatMax = fixFat;
-    for (var l = 0; l < byProFat.length; l++) {
-      c1bFatMax += byProFat[l].fat * (c1.scales[l] > 0.51 ? c1.scales[l] : 3.0);
+    var cA = greedyPath(byProCal, proLo, 1);
+    if (!cA.reached) return -1;
+    if (cA.fat > fatHi) return -1;
+    if (cA.cal > calHi * 1.10) return -1;
+    // Also check: max fat achievable when protein is fixed at these scales
+    var cAFatMax = fixFat;
+    for (var l = 0; l < byProCal.length; l++) {
+      cAFatMax += byProCal[l].fat * (cA.scales[l] > 0.51 ? cA.scales[l] : 3.0);
     }
-    if (c1bFatMax < fatLo) return -1;
+    if (cAFatMax < fatLo) return -1;
 
-    // === CHECK B2: FAT path → protein range (NEW) ===
-    // Sort by pro/fat ascending (least protein per fat — pure fat sources first).
-    // Greedily scale to reach fatLo, then check resulting protein range.
-    var byFatPro = adj.slice().sort(function(a, b) {
-      var ra = a.fat > 0 ? a.pro / a.fat : 9999;
-      var rb = b.fat > 0 ? b.pro / b.fat : 9999;
-      return ra - rb; // ascending: least protein per fat first
-    });
-    var c5 = greedyPath(byFatPro, fatLo, 2); // target fat index=2 (fat)
-    if (c5.reached) {
-      // Min protein when achieving fat (remaining at 0.5x) — already computed by greedyPath
-      if (c5.pro > proHi) return -1; // fat path overshoots protein
-      // Max protein: keep fat-achieving scales, maximize protein on rest
-      var c5ProMax = fixPro;
-      for (var p = 0; p < byFatPro.length; p++) {
-        c5ProMax += byFatPro[p].pro * (c5.scales[p] > 0.51 ? c5.scales[p] : 3.0);
-      }
-      if (c5ProMax < proLo) return -1; // can't reach protein AND fat
-    }
-
-    // === CHECK 2: FAT FLOOR — min calories to reach fatLo ===
+    // ===== CHECK B: PATH TO FAT FLOOR — fattiest first, check pro/cal =====
     var byFatCal = adj.slice().sort(function(a, b) {
       return (b.fat / Math.max(b.cal, 1)) - (a.fat / Math.max(a.cal, 1));
     });
-    var c2 = greedyPath(byFatCal, fatLo, 2);
-    if (!c2.reached) return -1;
-    if (c2.cal > calHi * 1.10) return -1;
+    var cB = greedyPath(byFatCal, fatLo, 2);
+    if (!cB.reached) return -1;
+    if (cB.pro > proHi) return -1;
+    if (cB.cal > calHi * 1.10) return -1;
+    // Max protein when fat is fixed at these scales
+    var cBProMax = fixPro;
+    for (var lb = 0; lb < byFatCal.length; lb++) {
+      cBProMax += byFatCal[lb].pro * (cB.scales[lb] > 0.51 ? cB.scales[lb] : 3.0);
+    }
+    if (cBProMax < proLo) return -1;
 
-    // === CHECK 3: PROTEIN CEILING — min protein when reaching calLo ===
-    var byCalPro = adj.slice().sort(function(a, b) {
-      var ra = a.pro > 0 ? a.cal / a.pro : 9999;
-      var rb = b.pro > 0 ? b.cal / b.pro : 9999;
+    // ===== CHECK C: PATH TO CALORIE TARGET — min fat check =====
+    // Sort by cal/fat ratio descending (most calories per fat first = lowest fat path to calories).
+    // If even the lowest-fat path to calLo exceeds fatHi, reject.
+    // (Protein ceiling handled separately by CHECK G below.)
+    var byCalFatEff = adj.slice().sort(function(a, b) {
+      var ra = a.fat > 0 ? a.cal / a.fat : 9999;
+      var rb = b.fat > 0 ? b.cal / b.fat : 9999;
       return rb - ra;
     });
-    var c3 = greedyPath(byCalPro, calLo, 0); // target cal index=0
-    if (c3.pro > proHi) return -1;
+    var cC = greedyPath(byCalFatEff, calLo, 0);
+    if (cC.reached && cC.fat > fatHi) return -1;
 
-    // === CHECK B3: CARBS path → calorie range (NEW) ===
-    // Sort by carbs:cal ratio descending (most carbs per calorie first).
-    // Greedily scale to reach carbsLo, check if resulting calories are in range.
-    var byCarbsCal = adj.slice().sort(function(a, b) {
+    // ===== CHECK D: PATH TO CARB TARGET — check calories =====
+    var byCarbCal = adj.slice().sort(function(a, b) {
       return (b.carbs / Math.max(b.cal, 1)) - (a.carbs / Math.max(a.cal, 1));
     });
-    var c6 = greedyPath(byCarbsCal, carbsLo, 3); // target carbs index=3
-    if (c6.reached && c6.cal > calHi * 1.10) return -1;
+    var cD = greedyPath(byCarbCal, carbsLo, 3);
+    if (cD.reached && cD.cal > calHi * 1.10) return -1;
+
+    // ===== CHECK E: PROTEIN:FAT RATIO RANGE =====
+    // Compute the achievable protein:fat ratio range for this combo.
+    // minRatio: maximize fat, minimize protein → all fatty at 3x, all lean at 0.5x
+    // maxRatio: maximize protein, minimize fat → all lean at 3x, all fatty at 0.5x
+    // Target ratio must fall within [minRatio, maxRatio].
+    if (targetFat > 0) {
+      var targetRatio = targetProtein / targetFat;
+      // For max ratio: each ingredient at scale that maximizes pro/fat contribution
+      // Scale up high pro:fat ingredients (lean), scale down low pro:fat (fatty)
+      var maxRPro = fixPro, maxRFat = fixFat, minRPro = fixPro, minRFat = fixFat;
+      for (var re = 0; re < adj.length; re++) {
+        var ra = adj[re];
+        var ingRatio = ra.fat > 0 ? ra.pro / ra.fat : 9999;
+        // For max ratio: scale up if ingredient is leaner than target, down if fattier
+        maxRPro += ra.pro * (ingRatio >= targetRatio ? 3.0 : 0.5);
+        maxRFat += ra.fat * (ingRatio >= targetRatio ? 3.0 : 0.5);
+        // For min ratio: opposite
+        minRPro += ra.pro * (ingRatio < targetRatio ? 3.0 : 0.5);
+        minRFat += ra.fat * (ingRatio < targetRatio ? 3.0 : 0.5);
+      }
+      var maxRatio = maxRFat > 0 ? maxRPro / maxRFat : 9999;
+      var minRatio = minRFat > 0 ? minRPro / minRFat : 0;
+      if (targetRatio > maxRatio * (1.0 + rp * 2) || targetRatio < minRatio * (1.0 - rp * 2)) return -1;
+    }
+
+    // ===== CHECK G: PROTEIN CEILING FROM BELOW =====
+    // If min achievable protein (all protein sources at 0.5x, others at 3.0x for cal) > proHi
+    // Sort by pro/cal ascending (least protein per calorie first). Reach calLo.
+    var byLeastPro = adj.slice().sort(function(a, b) {
+      return (a.pro / Math.max(a.cal, 1)) - (b.pro / Math.max(b.cal, 1));
+    });
+    var cG = greedyPath(byLeastPro, calLo, 0);
+    if (cG.reached && cG.pro > proHi) return -1;
 
     // Compute tightest margin for FIX C scoring bonus
     var margins = [];

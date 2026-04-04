@@ -2630,7 +2630,7 @@ function App() {
       var t = newDay.totals;
       var cp = t.calories / calories * 100, bp = t.carbs / carbGrams * 100, pp = t.protein / proteinGrams * 100, fp = t.fat / fatGrams * 100;
       if (cp < 95 || cp > 105 || bp < 95 || bp > 105 || pp < 95 || pp > 105 || fp < 95 || fp > 105) {
-        setSwapWarning("This day\u2019s macros are outside the 95\u2013105% target range. Consider swapping again or regenerating.");
+        setSwapWarning("This day's macros are outside the 95-105% target range. Consider swapping again or regenerating.");
         setTimeout(function() { setSwapWarning(null); }, 5000);
       }
     }
@@ -2652,48 +2652,53 @@ function App() {
       if (cancelled) return;
       var batch = queue.splice(0, BATCH);
       if (batch.length === 0) { setSwapScores(Object.assign({}, results)); return; }
-      batch.forEach(function(candidate) {
-        // Compute remaining budget from other meals for variant selection
-        var otherCal = 0, otherCarbs = 0, otherPro = 0, otherFat = 0;
-        day.meals.forEach(function(m, mealI) {
-          if (mealI === mi) return;
-          m.ingredients.forEach(function(i) { if (!i.isSpice) { otherCal += i.calories; otherCarbs += i.carbs; otherPro += i.protein; otherFat += i.fat; } });
-        });
-        var remCal = Math.max(1, calories - otherCal);
-        var remCarbs = Math.max(0.1, carbGrams - otherCarbs);
-        var remPro = Math.max(0.1, proteinGrams - otherPro);
-        var remFat = Math.max(0.1, fatGrams - otherFat);
-        // Select variant if available (use temp object to avoid mutating RECIPES)
-        var variantLabel = null, useIngs = candidate.ingredients;
-        if (candidate.variants && candidate.variants.length > 0) {
-          var temp = { variants: candidate.variants, selectedVariant: null };
-          selectVariant(temp, remCal, remCarbs, remPro, remFat);
-          if (temp.selectedVariant) { useIngs = temp.selectedVariant.ingredients; variantLabel = temp.selectedVariant.label; }
-        }
-        var mealData = day.meals.map(function(m, mealI) {
-          var ings;
-          if (mealI === mi) {
-            ings = useIngs.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
-          } else {
-            ings = m.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
-          }
-          applyIngredientOverrides(ings, ingredientOverrides);
-          var tags = mealI === mi ? candidate.tags : (m.isBreakfast ? ["breakfast"] : []);
-          return { recipe: { name: mealI === mi ? candidate.name : m.name, tags: tags }, ingredients: ings };
-        });
-        adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams, true);
-        var totals = { calories: 0, carbs: 0, protein: 0, fat: 0 };
-        mealData.forEach(function(md) {
-          md.ingredients.forEach(function(i) {
-            if (!i.isSpice) { totals.calories += i.calories; totals.carbs += i.carbs; totals.protein += i.protein; totals.fat += i.fat; }
-          });
-        });
-        totals = { calories: round1(totals.calories), carbs: round1(totals.carbs), protein: round1(totals.protein), fat: round1(totals.fat) };
-        var pcts = { cal: calories > 0 ? totals.calories / calories * 100 : 100, carbs: carbGrams > 0 ? totals.carbs / carbGrams * 100 : 100, pro: proteinGrams > 0 ? totals.protein / proteinGrams * 100 : 100, fat: fatGrams > 0 ? totals.fat / fatGrams * 100 : 100 };
-        var inZone = pcts.cal >= 95 && pcts.cal <= 105 && pcts.carbs >= 95 && pcts.carbs <= 105 && pcts.pro >= 95 && pcts.pro <= 105 && pcts.fat >= 95 && pcts.fat <= 105;
-        var devSum = Math.pow((pcts.cal - 100) / 100, 2) + Math.pow((pcts.carbs - 100) / 100, 2) + Math.pow((pcts.pro - 100) / 100, 2) + Math.pow((pcts.fat - 100) / 100, 2);
-        results[candidate.name] = { totals: totals, pcts: pcts, inZone: inZone, score: devSum, variantLabel: variantLabel, variantIngs: variantLabel ? useIngs : null };
+      // Compute remaining budget once per batch (same for all candidates)
+      var otherCal = 0, otherCarbs = 0, otherPro = 0, otherFat = 0;
+      day.meals.forEach(function(m, mealI) {
+        if (mealI === mi) return;
+        m.ingredients.forEach(function(i) { if (!i.isSpice) { otherCal += i.calories; otherCarbs += i.carbs; otherPro += i.protein; otherFat += i.fat; } });
       });
+      var remCal = Math.max(1, calories - otherCal);
+      var remCarbs = Math.max(0.1, carbGrams - otherCarbs);
+      var remPro = Math.max(0.1, proteinGrams - otherPro);
+      var remFat = Math.max(0.1, fatGrams - otherFat);
+      for (var bi = 0; bi < batch.length; bi++) {
+        var candidate = batch[bi];
+        try {
+          // Select variant if available (use temp object to avoid mutating RECIPES)
+          var variantLabel = null, useIngs = candidate.ingredients;
+          if (candidate.variants && candidate.variants.length > 0) {
+            var temp = { variants: candidate.variants, selectedVariant: null };
+            selectVariant(temp, remCal, remCarbs, remPro, remFat);
+            if (temp.selectedVariant) { useIngs = temp.selectedVariant.ingredients; variantLabel = temp.selectedVariant.label; }
+          }
+          var mealData = day.meals.map(function(m, mealI) {
+            var ings;
+            if (mealI === mi) {
+              ings = useIngs.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
+            } else {
+              ings = m.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
+            }
+            applyIngredientOverrides(ings, ingredientOverrides);
+            var tags = mealI === mi ? candidate.tags : (m.isBreakfast ? ["breakfast"] : []);
+            return { recipe: { name: mealI === mi ? candidate.name : m.name, tags: tags }, ingredients: ings };
+          });
+          adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams, true);
+          var totals = { calories: 0, carbs: 0, protein: 0, fat: 0 };
+          mealData.forEach(function(md) {
+            md.ingredients.forEach(function(i) {
+              if (!i.isSpice) { totals.calories += i.calories; totals.carbs += i.carbs; totals.protein += i.protein; totals.fat += i.fat; }
+            });
+          });
+          totals = { calories: round1(totals.calories), carbs: round1(totals.carbs), protein: round1(totals.protein), fat: round1(totals.fat) };
+          var pcts = { cal: calories > 0 ? totals.calories / calories * 100 : 100, carbs: carbGrams > 0 ? totals.carbs / carbGrams * 100 : 100, pro: proteinGrams > 0 ? totals.protein / proteinGrams * 100 : 100, fat: fatGrams > 0 ? totals.fat / fatGrams * 100 : 100 };
+          var inZone = pcts.cal >= 95 && pcts.cal <= 105 && pcts.carbs >= 95 && pcts.carbs <= 105 && pcts.pro >= 95 && pcts.pro <= 105 && pcts.fat >= 95 && pcts.fat <= 105;
+          var devSum = Math.pow((pcts.cal - 100) / 100, 2) + Math.pow((pcts.carbs - 100) / 100, 2) + Math.pow((pcts.pro - 100) / 100, 2) + Math.pow((pcts.fat - 100) / 100, 2);
+          results[candidate.name] = { totals: totals, pcts: pcts, inZone: inZone, score: devSum, variantLabel: variantLabel, variantIngs: variantLabel ? useIngs : null };
+        } catch(e) {
+          results[candidate.name] = { totals: { calories: 0, carbs: 0, protein: 0, fat: 0 }, pcts: { cal: 0, carbs: 0, pro: 0, fat: 0 }, inZone: false, score: 99, variantLabel: null, variantIngs: null };
+        }
+      }
       setTimeout(runBatch, 0);
     }
     setTimeout(runBatch, 0);
@@ -3259,9 +3264,9 @@ function App() {
         return (<div className="modal-overlay" onClick={function(e){if(e.target===e.currentTarget)setSwapTarget(null);}}>
         <div className="modal">
           <h3>Swap Recipe — {DAYS_NAMES[swapTarget.dayIdx]}, Meal {swapTarget.mealIdx+1}</h3>
-          <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:8}}>{swapScores ? "Ranked by macro fit. Solved macros show the full day\u2019s totals after swapping." : "Ranking recipes by macro fit\u2026"}</p>
+          <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:8}}>{swapScores ? "Ranked by macro fit. Solved macros show the full day's totals after swapping." : "Ranking recipes by macro fit..."}</p>
           <input className="modal-search" placeholder="Search recipes..." value={swapSearch} onChange={function(e){setSwapSearch(e.target.value);}} autoFocus />
-          {!swapScores && <div style={{textAlign:'center',padding:'24px 0',color:'#6b7f7a',fontSize:'0.9rem'}}>Scoring {RECIPES.length} recipes against day targets\u2026</div>}
+          {!swapScores && <div style={{textAlign:'center',padding:'24px 0',color:'#6b7f7a',fontSize:'0.9rem'}}>Scoring {RECIPES.length} recipes against day targets...</div>}
           {swapScores && <div style={{maxHeight:'50vh',overflowY:'auto'}}>
             {compatible.map(function(r, i) {
               var s = swapScores[r.name];

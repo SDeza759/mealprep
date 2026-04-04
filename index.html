@@ -1043,7 +1043,8 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
     }
   }
 
-  // ===== DIAGNOSTIC LOGGING: fires when any macro is outside [95%, 105%] =====
+  // ===== DIAGNOSTIC: fires when any macro is outside [95%, 105%] =====
+  // Logs to console AND pushes structured data to _solverDiagnostics for JSON dump.
   var inZone = true;
   for (var zk = 0; zk < 4; zk++) {
     if (targets[zk] > 0 && (bestMacros[zk] < targets[zk] * 0.95 || bestMacros[zk] > targets[zk] * 1.05)) {
@@ -1051,83 +1052,51 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
     }
   }
   if (!inZone) {
-    var comboNames = allMealData.map(function(md) { return md.recipe.name; }).join(" + ");
     var mLabels = ["cal", "carbs", "pro", "fat"];
     var rawPcts = rawMacros.map(function(v, k) { return Math.round(v / targets[k] * 100); });
     var finalPcts = bestMacros.map(function(v, k) { return Math.round(v / targets[k] * 100); });
 
-    var lines = [];
-    lines.push("[Solver Diag] FAILED: " + comboNames);
-    lines.push("  Raw macros:   " + mLabels.map(function(l, k) { return l + "=" + Math.round(rawMacros[k]) + " (" + rawPcts[k] + "%)"; }).join("  "));
-    lines.push("  Final macros: " + mLabels.map(function(l, k) { return l + "=" + Math.round(bestMacros[k]) + " (" + finalPcts[k] + "%)"; }).join("  "));
-    lines.push("  Objective: " + bestLoss.toFixed(6) + "  Converged(3%): " + solverConverged);
-
-    // Scale factors with bound detection
-    var scaleLines = [];
+    // Build structured diagnostic
+    var scaleData = [];
     for (var di = 0; di < K; di++) {
       var dv = vars[di];
       var ingName = allMealData[dv.mi].ingredients[dv.ii].name;
       var s = bestScales[di];
-      var bound = "";
-      if (dv.isBinderEgg) bound = " [LOCKED: binder egg]";
-      else if (Math.abs(s - 0.5) < 0.01) bound = " [AT MIN 0.5]";
-      else if (Math.abs(s - 3.0) < 0.01) bound = " [AT MAX 3.0]";
-      scaleLines.push("    " + ingName + ": " + s.toFixed(2) + "x (" + dv.grams0 + "g→" + Math.round(dv.grams0 * s) + "g)" + bound);
+      var bound = null;
+      if (dv.isBinderEgg) bound = "locked";
+      else if (Math.abs(s - 0.5) < 0.01) bound = "min";
+      else if (Math.abs(s - 3.0) < 0.01) bound = "max";
+      scaleData.push({ name: ingName, scale: round1(s * 100) / 100, from: dv.grams0, to: Math.round(dv.grams0 * s), bound: bound });
     }
-    lines.push("  Scales:");
-    lines = lines.concat(scaleLines);
 
-    // Per-macro analysis for out-of-range macros
-    var oorLines = [];
+    // Out-of-range analysis
+    var oorData = [];
     for (var ok = 0; ok < 4; ok++) {
       if (targets[ok] <= 0) continue;
       var pct = bestMacros[ok] / targets[ok];
       if (pct >= 0.95 && pct <= 1.05) continue;
-      var direction = pct < 0.95 ? "LOW" : "HIGH";
-      oorLines.push("  " + mLabels[ok] + " " + direction + " (" + Math.round(pct * 100) + "%):");
-      // For each adjustable ingredient, show what +0.1 scale change would do
+      var direction = pct < 0.95 ? "low" : "high";
+      var moves = [];
       for (var oi = 0; oi < K; oi++) {
         var ov = vars[oi];
         if (ov.isBinderEgg) continue;
-        var delta = direction === "LOW" ? 0.1 : -0.1;
-        var newScale = bestScales[oi] + delta;
-        if (newScale < 0.5 || newScale > 3.0) continue; // can't move further
-        var dMacros = [];
-        for (var om = 0; om < 4; om++) {
-          dMacros.push(Math.round(ov.A[om] * delta * 10) / 10);
-        }
-        var oIngName = allMealData[ov.mi].ingredients[ov.ii].name;
-        oorLines.push("    " + (delta > 0 ? "+" : "") + delta.toFixed(1) + " " + oIngName + ": " +
-          mLabels.map(function(l, m) { return l + (dMacros[m] >= 0 ? "+" : "") + dMacros[m].toFixed(1); }).join(" "));
+        var delta = direction === "low" ? 0.1 : -0.1;
+        if (bestScales[oi] + delta < 0.5 || bestScales[oi] + delta > 3.0) continue;
+        var dM = {};
+        for (var om = 0; om < 4; om++) dM[mLabels[om]] = round1(ov.A[om] * delta * 10) / 10;
+        moves.push({ ingredient: allMealData[ov.mi].ingredients[ov.ii].name, delta: delta, impact: dM });
       }
-    }
-    if (oorLines.length > 0) {
-      lines.push("  Out-of-range analysis:");
-      lines = lines.concat(oorLines);
+      oorData.push({ macro: mLabels[ok], direction: direction, pct: Math.round(pct * 100), moves: moves });
     }
 
-    // Feasibility ranges (computed from solver's own data)
-    var fMinCal = baseline[0], fMaxCal = baseline[0];
-    var fMinPro = baseline[2], fMaxPro = baseline[2];
-    var fMinFat = baseline[3], fMaxFat = baseline[3];
-    var fMinCarbs = baseline[1], fMaxCarbs = baseline[1];
+    // Feasibility ranges
+    var fMin = [baseline[0], baseline[1], baseline[2], baseline[3]];
+    var fMax = [baseline[0], baseline[1], baseline[2], baseline[3]];
     for (var fi = 0; fi < K; fi++) {
-      fMinCal += vars[fi].A[0] * 0.5;  fMaxCal += vars[fi].A[0] * 3.0;
-      fMinPro += vars[fi].A[2] * 0.5;  fMaxPro += vars[fi].A[2] * 3.0;
-      fMinFat += vars[fi].A[3] * 0.5;  fMaxFat += vars[fi].A[3] * 3.0;
-      fMinCarbs += vars[fi].A[1] * 0.5; fMaxCarbs += vars[fi].A[1] * 3.0;
+      for (var fk = 0; fk < 4; fk++) { fMin[fk] += vars[fi].A[fk] * 0.5; fMax[fk] += vars[fi].A[fk] * 3.0; }
     }
-    lines.push("  Feasibility ranges (pre-filter passed this combo):");
-    lines.push("    cal:   [" + Math.round(fMinCal) + ", " + Math.round(fMaxCal) + "] target=" + targetCal +
-      (targetCal >= fMinCal * 0.95 && targetCal <= fMaxCal * 1.05 ? " ✓" : " ✗"));
-    lines.push("    pro:   [" + Math.round(fMinPro) + ", " + Math.round(fMaxPro) + "] target=" + targetProtein +
-      (targetProtein <= fMaxPro * 1.05 ? " ✓" : " ✗"));
-    lines.push("    fat:   [" + Math.round(fMinFat) + ", " + Math.round(fMaxFat) + "] target=" + targetFat +
-      (targetFat >= fMinFat * 0.95 && targetFat <= fMaxFat * 1.05 ? " ✓" : " ✗"));
-    lines.push("    carbs: [" + Math.round(fMinCarbs) + ", " + Math.round(fMaxCarbs) + "] target=" + targetCarbs +
-      (targetCarbs <= fMaxCarbs * 1.05 ? " ✓" : " ✗"));
 
-    // Cross-constraint: cheapest path to protein
+    // Cross-constraint
     var ccAdj = [];
     for (var ci = 0; ci < K; ci++) ccAdj.push({ cal: vars[ci].A[0], pro: vars[ci].A[2], fat: vars[ci].A[3] });
     ccAdj.sort(function(a, b) { return (b.pro / Math.max(b.cal, 1)) - (a.pro / Math.max(a.cal, 1)); });
@@ -1139,10 +1108,33 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
       else if (cc.pro > 0) { var sc = Math.max(0.5, Math.min(3.0, (targetProtein - ccPro) / cc.pro)); ccCal += cc.cal * sc; ccPro += cc.pro * sc; ccFat += cc.fat * sc; }
       else { ccCal += cc.cal * 0.5; ccFat += cc.fat * 0.5; }
     }
-    lines.push("    Cross-constraint (cheapest path to " + targetProtein + "g protein):");
-    lines.push("      min cal=" + Math.round(ccCal) + " (" + Math.round(ccCal / targetCal * 100) + "%)  fat=" + Math.round(ccFat) + " (" + Math.round(ccFat / targetFat * 100) + "%)");
 
-    console.warn(lines.join("\n"));
+    var diagEntry = {
+      recipes: allMealData.map(function(md) { return md.recipe.name; }),
+      targets: { cal: targetCal, carbs: targetCarbs, pro: targetProtein, fat: targetFat },
+      rawMacros: { cal: Math.round(rawMacros[0]), carbs: Math.round(rawMacros[1]), pro: Math.round(rawMacros[2]), fat: Math.round(rawMacros[3]) },
+      rawPcts: { cal: rawPcts[0], carbs: rawPcts[1], pro: rawPcts[2], fat: rawPcts[3] },
+      finalMacros: { cal: Math.round(bestMacros[0]), carbs: Math.round(bestMacros[1]), pro: Math.round(bestMacros[2]), fat: Math.round(bestMacros[3]) },
+      finalPcts: { cal: finalPcts[0], carbs: finalPcts[1], pro: finalPcts[2], fat: finalPcts[3] },
+      objective: round1(bestLoss * 1000000) / 1000000,
+      converged: solverConverged,
+      scales: scaleData,
+      outOfRange: oorData,
+      feasibilityRanges: {
+        cal: { min: Math.round(fMin[0]), max: Math.round(fMax[0]) },
+        carbs: { min: Math.round(fMin[1]), max: Math.round(fMax[1]) },
+        pro: { min: Math.round(fMin[2]), max: Math.round(fMax[2]) },
+        fat: { min: Math.round(fMin[3]), max: Math.round(fMax[3]) }
+      },
+      crossConstraint: { minCalForProtein: Math.round(ccCal), minFatForProtein: Math.round(ccFat) }
+    };
+    _solverDiagnostics.push(diagEntry);
+
+    // Console log (abbreviated)
+    console.warn("[Solver Diag] FAILED: " + diagEntry.recipes.join(" + ") +
+      " | raw: " + rawPcts.join("/") + "% | final: " + finalPcts.join("/") + "%" +
+      " | converged: " + solverConverged +
+      " | bounds: " + scaleData.filter(function(s) { return s.bound; }).map(function(s) { return s.name + "=" + s.bound; }).join(","));
   }
 
   // ===== APPLY: write solved scales back to ingredient objects =====
@@ -1165,6 +1157,10 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
 
   return allMealData;
 }
+
+// Solver diagnostic collector: stores structured data for failed days.
+// Reset before validation runs. Read by validator for JSON dump.
+var _solverDiagnostics = [];
 
 // Session rotation tracker: counts how many times each recipe has been selected across
 // all generatePlan calls since page load. Resets on reload. Never persisted to localStorage.
@@ -1997,6 +1993,7 @@ function App() {
   function runValidation() {
     var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
     _recipeRotation = { counts: {}, totalSlots: 0 };
+    _solverDiagnostics = []; // Reset diagnostic collector for this validation run
     var vCal = pctValid ? calories : 2000;
     var vCarbs = pctValid ? carbGrams : round1((2000*0.35)/4);
     var vPro = pctValid ? proteinGrams : 200;
@@ -2080,6 +2077,7 @@ function App() {
         flagCounts: flagCounts, worst: worst, worstDay: worstDay,
         flagged: flagged,
         targets: { calories: vCal, carbs: vCarbs, protein: vPro, fat: vFat },
+        solverDiagnostics: _solverDiagnostics.slice(),
         timestamp: new Date().toISOString()
       });
       setValidationProgress(null);
@@ -2128,10 +2126,10 @@ function App() {
     var simProG = proteinGrams;
     var simFatG = fatGrams;
     if (!pctValid) {
-      simCal = 2500;
-      simCarbG = round1((2500 * 0.4) / 4);
-      simProG = round1((2500 * 0.3) / 4);
-      simFatG = round1((2500 * 0.3) / 9);
+      simCal = 2000;
+      simCarbG = round1((2000 * 0.35) / 4);
+      simProG = 200;
+      simFatG = round1((2000 * 0.25) / 9);
     }
     var freq = {};
     RECIPES.forEach(function(r) { freq[r.name] = 0; });
@@ -2837,7 +2835,7 @@ function App() {
               {validationResults.flagged.length > 50 && <div style={{color:'#a6adc8',fontSize:'0.82rem'}}>...and {validationResults.flagged.length - 50} more flagged days</div>}
             </>)}
 
-            <div style={{marginTop:20}}><button className="btn btn-debug" onClick={function() {
+            <div style={{marginTop:20,display:"flex",gap:8,flexWrap:"wrap"}}><button className="btn btn-debug" onClick={function() {
               var blob = new Blob([JSON.stringify({
                 timestamp: validationResults.timestamp,
                 targets: validationResults.targets,
@@ -2852,7 +2850,19 @@ function App() {
               var url = URL.createObjectURL(blob);
               var a = document.createElement("a"); a.href = url; a.download = "meal-plan-validation-report.json"; a.click();
               URL.revokeObjectURL(url);
-            }}>Download Validation Report</button></div>
+            }}>Download Validation Report</button>
+            {validationResults.solverDiagnostics && validationResults.solverDiagnostics.length > 0 && <button className="btn btn-debug" onClick={function() {
+              var blob = new Blob([JSON.stringify({
+                timestamp: validationResults.timestamp,
+                targets: validationResults.targets,
+                totalFailures: validationResults.solverDiagnostics.length,
+                failures: validationResults.solverDiagnostics
+              }, null, 2)], { type: "application/json" });
+              var url = URL.createObjectURL(blob);
+              var a = document.createElement("a"); a.href = url; a.download = "solver-diagnostics.json"; a.click();
+              URL.revokeObjectURL(url);
+            }}>Download Solver Diagnostics ({validationResults.solverDiagnostics.length})</button>}
+            </div>
           </>)}
         </div>
       </div>)}
@@ -2885,7 +2895,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   var SIM_TOTAL = 1000, SIM_BATCH = 50;
   var freq = {}, totalSlots = 0, done = 0;
   RECIPES.forEach(function(r) { freq[r.name] = 0; });
-  var simCal = 2500, simCarbG = round1((2500*0.4)/4), simProG = round1((2500*0.3)/4), simFatG = round1((2500*0.3)/9);
+  var simCal = 2000, simCarbG = round1((2000*0.35)/4), simProG = 200, simFatG = round1((2000*0.25)/9);
   _recipeRotation = { counts: {}, totalSlots: 0 };
   function batch() {
     var end = Math.min(done + SIM_BATCH, SIM_TOTAL);
@@ -2929,7 +2939,7 @@ setTimeout(function() {
   console.log("\n========================================");
   console.log("[FINAL ARCHITECTURE VALIDATION]");
   console.log("========================================");
-  var testCal = 2000, testCarbs = 175, testPro = 200, testFat = 55;
+  var testCal = 2000, testCarbs = 175, testPro = 200, testFat = 55.6;
   var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
   _recipeRotation = { counts: {}, totalSlots: 0 };
 

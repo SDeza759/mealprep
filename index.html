@@ -41,8 +41,16 @@
   .day-card { border-left: 4px solid #2d6a4f; }
   .day-label { font-size: 1.1rem; font-weight: 700; color: #2d6a4f; margin-bottom: 8px; }
   .meal-card { background: #f7faf8; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
-  .meal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+  .meal-header { margin-bottom: 4px; }
+  .meal-row1 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .meal-row2 { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .meal-row2-macros { font-size: 0.8rem; color: #3a5a50; font-weight: 500; display: flex; gap: 8px; flex-wrap: wrap; }
+  .meal-row2-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .meal-name { font-weight: 600; font-size: 1rem; }
+  .variant-tag { background: #dbeafe; color: #1e40af; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .shake-card { background: #ede9fe; border-radius: 8px; padding: 8px 12px; margin-top: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .shake-card .shake-label { font-weight: 600; font-size: 0.85rem; color: #5b21b6; }
+  .shake-card .shake-macros { font-size: 0.8rem; color: #6b21a8; display: flex; gap: 8px; }
   .cuisine-tag { background: #d8f3dc; color: #2d6a4f; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
   .breakfast-tag { background: #fff3cd; color: #856404; }
   .swap-btn { background: none; border: 1px solid #c8d6d0; border-radius: 6px; padding: 3px 10px; font-size: 0.78rem; color: #6b7f7a; cursor: pointer; transition: all 0.2s; }
@@ -234,6 +242,7 @@
     h1 { font-size: 1.4rem; }
     .recipe-grid { grid-template-columns: 1fr; }
     .stats-bar-label { min-width: 100px; }
+    .meal-row2 { flex-direction: column; align-items: flex-start; }
   }
 </style>
 </head>
@@ -2740,7 +2749,7 @@ function App() {
                 <div className="day-meals-list">{day.meals.map(function(m){return m.name;}).join(" \u2022 ")}</div>
               </div>
               <div className="day-totals" style={{borderTop:'none',paddingTop:4,marginTop:4}}><span>Cal: {day.totals.calories}</span><span>C: {day.totals.carbs}g</span><span>P: {day.totals.protein}g</span><span>F: {day.totals.fat}g</span></div>
-              {day.proteinShake && <div style={{fontSize:'0.75rem',color:'#6b7f7a',fontStyle:'italic',marginTop:2}}>+ Protein Shake: {day.proteinShake.scoops} scoop, {day.proteinShake.protein}g protein, {day.proteinShake.carbs}g carbs, {day.proteinShake.fat}g fat, {day.proteinShake.calories} cal</div>}
+              {day.proteinShake && <div className="shake-card"><span className="shake-label">{"\uD83E\uDD64"} Protein Shake ({day.proteinShake.scoops} scoop)</span><div className="shake-macros"><span>{day.proteinShake.protein}g P</span><span>{day.proteinShake.carbs}g C</span><span>{day.proteinShake.fat}g F</span><span>{day.proteinShake.calories} cal</span></div></div>}
               <div className="progress-row">
                 <div className="progress-item"><div className="plabel"><span>Carbs</span><span>{Math.round(day.totals.carbs/carbGrams*100)}%</span></div><ProgressBar value={day.totals.carbs} target={carbGrams} className="fill-carb" /></div>
                 <div className="progress-item"><div className="plabel"><span>Protein</span><span>{Math.round(day.totals.protein/proteinGrams*100)}%</span></div><ProgressBar value={day.totals.protein} target={proteinGrams} className="fill-pro" /></div>
@@ -2755,20 +2764,29 @@ function App() {
               return (<div className={"meal-card" + (isEaten ? " eaten" : "")} key={mi}>
                 <div className="meal-card-header" onClick={function(e){if(e.target.tagName!=='BUTTON')toggleMeal(di,mi);}}>
                   <div className="meal-header">
-                    <span className="meal-name">{isMealExpanded ? "\u25BC" : "\u25B6"} {meal.name}</span>
-                    <span style={{display:'flex',gap:6,alignItems:'center',flexWrap:'wrap'}}>
-                      {meal.isBreakfast && <span className="cuisine-tag breakfast-tag">Breakfast</span>}
+                    <div className="meal-row1">
+                      <span className="meal-name">{isMealExpanded ? "\u25BC" : "\u25B6"} {meal.name}</span>
                       <span className="cuisine-tag">{meal.cuisine}</span>
-                      {meal.variantLabel && <span style={{fontSize:'0.7rem',color:'#9aa8a3',fontWeight:400}}>{meal.variantLabel}</span>}
-                      <span style={{fontSize:'0.78rem',color:'#3a5a50'}}>Cal: {round1(meal.totalMacros.calories)} | C: {round1(meal.totalMacros.carbs)}g | P: {round1(meal.totalMacros.protein)}g | F: {round1(meal.totalMacros.fat)}g</span>
-                      <span className="servings-ctrl">
-                        <button onClick={function(e){e.stopPropagation();var k=di+"-"+mi;var cur=mealServings[k]||1;if(cur>1){var n=Object.assign({},mealServings);n[k]=cur-1;if(n[k]===1)delete n[k];setMealServings(n);}}}>−</button>
-                        <span className="sv-val">{mealServings[di+"-"+mi]||1}</span>
-                        <button onClick={function(e){e.stopPropagation();var k=di+"-"+mi;var n=Object.assign({},mealServings);n[k]=(mealServings[k]||1)+1;setMealServings(n);}}>+</button>
-                      </span>
-                      <button className="swap-btn" onClick={function(e){e.stopPropagation();setSwapTarget({dayIdx:di,mealIdx:mi});setSwapSearch("");}}>Swap</button>
-                      <button className={"eaten-btn" + (isEaten ? " active" : "")} onClick={function(e){e.stopPropagation();toggleEaten(di,mi);}}>{isEaten ? "\u2713 Eaten" : "\u2713"}</button>
-                    </span>
+                      {meal.isBreakfast && <span className="cuisine-tag breakfast-tag">Breakfast</span>}
+                      {meal.variantLabel && <span className="variant-tag">{meal.variantLabel}</span>}
+                    </div>
+                    <div className="meal-row2">
+                      <div className="meal-row2-macros">
+                        <span>Cal: {round1(meal.totalMacros.calories)}</span>
+                        <span>C: {round1(meal.totalMacros.carbs)}g</span>
+                        <span>P: {round1(meal.totalMacros.protein)}g</span>
+                        <span>F: {round1(meal.totalMacros.fat)}g</span>
+                      </div>
+                      <div className="meal-row2-actions">
+                        <span className="servings-ctrl">
+                          <button onClick={function(e){e.stopPropagation();var k=di+"-"+mi;var cur=mealServings[k]||1;if(cur>1){var n=Object.assign({},mealServings);n[k]=cur-1;if(n[k]===1)delete n[k];setMealServings(n);}}}>−</button>
+                          <span className="sv-val">{mealServings[di+"-"+mi]||1}</span>
+                          <button onClick={function(e){e.stopPropagation();var k=di+"-"+mi;var n=Object.assign({},mealServings);n[k]=(mealServings[k]||1)+1;setMealServings(n);}}>+</button>
+                        </span>
+                        <button className="swap-btn" onClick={function(e){e.stopPropagation();setSwapTarget({dayIdx:di,mealIdx:mi});setSwapSearch("");}}>Swap</button>
+                        <button className={"eaten-btn" + (isEaten ? " active" : "")} onClick={function(e){e.stopPropagation();toggleEaten(di,mi);}}>{isEaten ? "\u2713 Eaten" : "\u2713"}</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 {isMealExpanded && (function() {

@@ -2773,8 +2773,9 @@ function App() {
             </div>);
           })()}
         </div>)}
+      </>)}
 
-        {view === "recipes" && (<div className="card">
+      {view === "recipes" && (<div className="card">
           <h2>Recipe Database ({RECIPES.length} recipes)</h2>
           <div className="recipe-filter-row">
             <input placeholder="Search recipes or ingredients..." value={recipeSearch} onChange={function(e){setRecipeSearch(e.target.value);}} style={{flex:1,minWidth:180}} />
@@ -2823,8 +2824,7 @@ function App() {
           </div>);
         })()}
 
-        {view === "stats" && <StatsView statsData={statsData} onUpdate={function(d){setStatsData(d);}} savedPlans={savedPlans} onSavedPlansUpdate={function(sp){setSavedPlans(sp);localStorage.setItem("mealprep_plans",JSON.stringify(sp));}} />}
-      </>)}
+      {view === "stats" && <StatsView statsData={statsData} onUpdate={function(d){setStatsData(d);}} savedPlans={savedPlans} onSavedPlansUpdate={function(sp){setSavedPlans(sp);localStorage.setItem("mealprep_plans",JSON.stringify(sp));}} />}
 
       {view === "debug" && debugVisible && (<div className="debug-panel">
         <h2>Debug Panel — Recipe Distribution Simulator</h2>

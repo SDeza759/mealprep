@@ -83,9 +83,24 @@
   .modal-search { width: 100%; padding: 8px 12px; border: 1.5px solid #c8d6d0; border-radius: 8px; font-size: 0.95rem; margin-bottom: 12px; outline: none; }
   .modal-search:focus { border-color: #2d6a4f; }
   .recipe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
-  .recipe-browser-card { background: #f7faf8; border-radius: 10px; padding: 14px; border: 1px solid #e0e8e4; }
+  .recipe-browser-card { background: #f7faf8; border-radius: 10px; padding: 14px; border: 1px solid #e0e8e4; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+  .recipe-browser-card:hover { border-color: #b8c8c0; }
+  .recipe-browser-card.rb-expanded { background: #eef4f0; border-color: #9bb8a8; }
   .recipe-browser-card .rb-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
   .recipe-browser-card .rb-name { font-weight: 600; font-size: 0.95rem; }
+  .recipe-browser-card .rb-chevron { display: inline-block; font-size: 0.7rem; color: #9bb8a8; margin-left: 6px; transition: transform 0.25s ease; }
+  .recipe-browser-card.rb-expanded .rb-chevron { transform: rotate(90deg); }
+  .recipe-browser-card .rb-detail { overflow: hidden; max-height: 0; opacity: 0; transition: max-height 0.35s ease, opacity 0.25s ease, margin 0.25s ease; margin-top: 0; }
+  .recipe-browser-card.rb-expanded .rb-detail { max-height: 600px; opacity: 1; margin-top: 10px; }
+  .recipe-browser-card .rb-divider { height: 1px; background: #d0ddd6; margin-bottom: 10px; }
+  .recipe-browser-card .rb-detail-ings { font-size: 0.8rem; color: #3a5a50; margin-bottom: 8px; }
+  .recipe-browser-card .rb-detail-ings li { margin-bottom: 2px; }
+  .recipe-browser-card .rb-detail-steps { font-size: 0.78rem; color: #4a6a5e; max-height: 200px; overflow-y: auto; padding-right: 6px; margin-bottom: 8px; }
+  .recipe-browser-card .rb-detail-steps ol { margin: 0; padding-left: 18px; }
+  .recipe-browser-card .rb-detail-steps li { margin-bottom: 4px; line-height: 1.4; }
+  .recipe-browser-card .rb-detail-time { font-size: 0.75rem; color: #6b7f7a; margin-bottom: 6px; }
+  .recipe-browser-card .rb-detail-variants { font-size: 0.78rem; color: #6b7f7a; margin-top: 6px; padding-top: 6px; border-top: 1px solid #d0ddd6; }
+  .recipe-browser-card .rb-detail-variants span { font-weight: 600; color: #3a5a50; }
   .recipe-browser-card .rb-macros { font-size: 0.82rem; color: #3a5a50; margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
   .recipe-browser-card .rb-ings { font-size: 0.78rem; color: #6b7f7a; margin-top: 4px; }
   .recipe-browser-card .rb-spices { font-size: 0.72rem; color: #9b8b6e; font-style: italic; margin-top: 2px; }
@@ -2055,6 +2070,7 @@ function App() {
   var [savedPlans, setSavedPlans] = React.useState(function() { try { return JSON.parse(localStorage.getItem("mealprep_plans") || "[]"); } catch(e) { return []; } });
   var [recipeSearch, setRecipeSearch] = React.useState("");
   var [recipeCuisine, setRecipeCuisine] = React.useState("All");
+  var [expandedRecipe, setExpandedRecipe] = React.useState(null);
   var [ingredientOverrides, setIngredientOverrides] = React.useState(function() { try { return JSON.parse(localStorage.getItem("mealprep_overrides") || "{}"); } catch(e) { return {}; } });
   var [ingSearch, setIngSearch] = React.useState("");
   var [statsData, setStatsData] = React.useState(loadStats);
@@ -2786,12 +2802,32 @@ function App() {
             {filteredRecipes.map(function(r, i) {
               var mainIngs = r.ingredients.filter(function(x){return !x.isSpice;});
               var spiceIngs = r.ingredients.filter(function(x){return x.isSpice;});
-              return (<div className="recipe-browser-card" key={i}>
-                <div className="rb-header"><span className="rb-name">{r.name}</span><span className="cuisine-tag">{r.cuisine}</span></div>
+              var isExp = expandedRecipe === r.name;
+              var cookData = COOKING_INSTRUCTIONS[r.name] || RECIPE_COOKING_DATA[r.name];
+              return (<div className={"recipe-browser-card" + (isExp ? " rb-expanded" : "")} key={i} onClick={function(){setExpandedRecipe(isExp ? null : r.name);}}>
+                <div className="rb-header"><span className="rb-name">{r.name}<span className="rb-chevron">{"\u25B6"}</span></span><span className="cuisine-tag">{r.cuisine}</span></div>
                 <div className="rb-ings">{mainIngs.map(function(ing){return ing.name;}).join(", ")}</div>
                 {spiceIngs.length > 0 && <div className="rb-spices">Spices: {spiceIngs.map(function(s){return s.name;}).join(", ")}</div>}
                 <div className="rb-macros"><span>Cal: {round1(r.totalMacros.calories)}</span><span>C: {round1(r.totalMacros.carbs)}g</span><span>P: {round1(r.totalMacros.protein)}g</span><span>F: {round1(r.totalMacros.fat)}g</span></div>
                 <div style={{marginTop:4}}>{r.tags.map(function(t){return <span className="tag-pill" key={t} style={{marginRight:4}}>{t}</span>;})}</div>
+                <div className="rb-detail">
+                  <div className="rb-divider"></div>
+                  <div className="rb-detail-ings"><strong>Ingredients:</strong>
+                    <ul style={{margin:'4px 0 0 0',paddingLeft:18}}>{r.ingredients.map(function(ing, j) {
+                      var label = ing.isSpice ? ing.name + " (spice)" : ing.name + " — " + round1(ing.grams) + "g";
+                      return <li key={j}>{label}</li>;
+                    })}</ul>
+                  </div>
+                  {cookData && <div className="rb-detail-time">Prep: {cookData.prepTime} | Cook: {cookData.cookTime}</div>}
+                  {cookData && cookData.steps && <div className="rb-detail-steps"><strong>Instructions:</strong>
+                    <ol style={{marginTop:4}}>{cookData.steps.map(function(s, si) {
+                      var text = s.replace(/^\d+\.\s*/, "");
+                      return <li key={si}>{text}</li>;
+                    })}</ol>
+                  </div>}
+                  {!cookData && <div style={{fontSize:'0.78rem',color:'#9b8b6e',fontStyle:'italic'}}>No cooking instructions available.</div>}
+                  {r.variants && r.variants.length > 0 && <div className="rb-detail-variants"><span>Variants:</span> {r.variants.map(function(v){return v.label;}).join(", ")}</div>}
+                </div>
               </div>);
             })}
           </div>

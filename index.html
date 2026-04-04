@@ -54,6 +54,15 @@
   .adj-note { color: #e67e22; font-size: 0.78rem; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
   .meal-totals { display: flex; gap: 12px; margin-top: 8px; font-size: 0.82rem; font-weight: 600; color: #3a5a50; flex-wrap: wrap; }
   .day-totals { display: flex; gap: 16px; padding: 10px 0; border-top: 2px solid #d8f3dc; margin-top: 8px; font-weight: 700; font-size: 0.9rem; color: #2d6a4f; flex-wrap: wrap; }
+  .weekly-summary { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+  .ws-total { text-align: center; padding: 8px 16px; background: #e8f5e9; border-radius: 10px; min-width: 120px; }
+  .ws-total .ws-val { font-size: 1.2rem; font-weight: 700; color: #2d6a4f; }
+  .ws-total .ws-lbl { font-size: 0.72rem; color: #5a7a6f; }
+  .ws-avgs { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; min-width: 280px; }
+  .ws-avg { text-align: center; }
+  .ws-avg .ws-val { font-size: 1.05rem; font-weight: 700; color: #2d6a4f; }
+  .ws-avg .ws-pct { font-size: 0.75rem; color: #6b7f7a; }
+  .ws-avg .progress-bar { margin-top: 4px; }
   .progress-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
   .progress-item { flex: 1; min-width: 100px; }
   .progress-item .plabel { font-size: 0.72rem; color: #6b7f7a; margin-bottom: 2px; display: flex; justify-content: space-between; }
@@ -2512,7 +2521,9 @@ function App() {
     setView("plan");
     setEatenMeals({});
     setMealServings({});
-    setExpandedDays({});
+    var ed = {};
+    p.forEach(function(day, di) { if (day && excludedDays.indexOf(di) === -1) ed[di] = true; });
+    setExpandedDays(ed);
     setExpandedMeals({});
   }
 
@@ -2542,7 +2553,12 @@ function App() {
     setSavedPlans(updated); localStorage.setItem("mealprep_plans", JSON.stringify(updated)); setSaveName("");
     setCopyMsg("Plan saved!"); setTimeout(function() { setCopyMsg(""); }, 2000);
   }
-  function handleLoad(entry) { setCalories(entry.calories); setCarbPct(entry.carbPct); setProteinPct(entry.proteinPct); setFatPct(entry.fatPct); setPlan(entry.plan); setView("plan"); }
+  function handleLoad(entry) {
+    setCalories(entry.calories); setCarbPct(entry.carbPct); setProteinPct(entry.proteinPct); setFatPct(entry.fatPct); setPlan(entry.plan); setView("plan");
+    var ed = {};
+    entry.plan.forEach(function(day, di) { if (day) ed[di] = true; });
+    setExpandedDays(ed); setExpandedMeals({});
+  }
   function handleDeleteSaved(name) { var u = savedPlans.filter(function(p) { return p.name !== name; }); setSavedPlans(u); localStorage.setItem("mealprep_plans", JSON.stringify(u)); }
 
   function handleCopyGrocery() {
@@ -2694,6 +2710,26 @@ function App() {
               <button className="btn btn-sm btn-primary" onClick={handleLogEaten} disabled={eatenCount === 0}>Log Eaten Meals to Stats</button>
             </div>
           </div>
+          {(function() {
+            var activeDays = plan.filter(function(day, di) { return day && excludedDays.indexOf(di) === -1; });
+            var nDays = activeDays.length;
+            if (nDays === 0) return null;
+            var sum = { cal: 0, carbs: 0, pro: 0, fat: 0 };
+            activeDays.forEach(function(d) { sum.cal += d.totals.calories; sum.carbs += d.totals.carbs; sum.pro += d.totals.protein; sum.fat += d.totals.fat; });
+            var avg = { cal: round1(sum.cal / nDays), carbs: round1(sum.carbs / nDays), pro: round1(sum.pro / nDays), fat: round1(sum.fat / nDays) };
+            return (<div className="card" style={{marginBottom:16}}>
+              <h2 style={{marginBottom:10}}>Weekly Summary</h2>
+              <div className="weekly-summary">
+                <div className="ws-total"><div className="ws-val">{Math.round(sum.cal).toLocaleString()}</div><div className="ws-lbl">Total Calories ({nDays} days)</div></div>
+                <div className="ws-avgs">
+                  <div className="ws-avg"><div className="ws-val">{Math.round(avg.cal).toLocaleString()}</div><div className="ws-pct">Avg Cal ({Math.round(avg.cal / calories * 100)}%)</div><div className="progress-bar"><div className={"progress-fill fill-cal"} style={{width: Math.min(avg.cal / calories * 100, 100) + "%"}}></div></div></div>
+                  <div className="ws-avg"><div className="ws-val">{Math.round(avg.carbs)}g</div><div className="ws-pct">Avg Carbs ({Math.round(avg.carbs / carbGrams * 100)}%)</div><div className="progress-bar"><div className={"progress-fill fill-carb"} style={{width: Math.min(avg.carbs / carbGrams * 100, 100) + "%"}}></div></div></div>
+                  <div className="ws-avg"><div className="ws-val">{Math.round(avg.pro)}g</div><div className="ws-pct">Avg Protein ({Math.round(avg.pro / proteinGrams * 100)}%)</div><div className="progress-bar"><div className={"progress-fill fill-pro"} style={{width: Math.min(avg.pro / proteinGrams * 100, 100) + "%"}}></div></div></div>
+                  <div className="ws-avg"><div className="ws-val">{Math.round(avg.fat)}g</div><div className="ws-pct">Avg Fat ({Math.round(avg.fat / fatGrams * 100)}%)</div><div className="progress-bar"><div className={"progress-fill fill-fat"} style={{width: Math.min(avg.fat / fatGrams * 100, 100) + "%"}}></div></div></div>
+                </div>
+              </div>
+            </div>);
+          })()}
           {plan.map(function(day, di) {
           if (!day || excludedDays.indexOf(di) !== -1) return null;
           var isDayExpanded = !!expandedDays[di];

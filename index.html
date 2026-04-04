@@ -2742,10 +2742,12 @@ function App() {
           {plan.map(function(day, di) {
           if (!day || excludedDays.indexOf(di) !== -1) return null;
           var isDayExpanded = !!expandedDays[di];
-          return (<div className="card day-card" key={di}>
+          var dgi = findDayGroup(di);
+          var dgc = dgi !== -1 ? getGroupColor(dgi) : null;
+          return (<div className="card day-card" key={di} style={dgc ? {borderLeftColor: dgc.border} : undefined}>
             <div className="day-summary" onClick={function(){toggleDay(di);}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:6}}>
-                <div className="day-label" style={{marginBottom:0}}>{isDayExpanded ? "\u25BC" : "\u25B6"} {DAYS_NAMES[di]}</div>
+                <div className="day-label" style={{marginBottom:0}}>{isDayExpanded ? "\u25BC" : "\u25B6"} {DAYS_NAMES[di]}{dgc && <span style={{background:dgc.bg,color:dgc.text,border:'1px solid '+dgc.border,padding:'1px 8px',borderRadius:12,fontSize:'0.7rem',fontWeight:600,marginLeft:8,verticalAlign:'middle'}}>G{dgi+1}</span>}</div>
                 <div className="day-meals-list">{day.meals.map(function(m){return m.name;}).join(" \u2022 ")}</div>
               </div>
               <div className="day-totals" style={{borderTop:'none',paddingTop:4,marginTop:4}}><span>Cal: {day.totals.calories}</span><span>C: {day.totals.carbs}g</span><span>P: {day.totals.protein}g</span><span>F: {day.totals.fat}g</span></div>

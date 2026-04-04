@@ -2087,16 +2087,64 @@ function App() {
     return function() { window.removeEventListener("keydown", onKey); };
   }, []);
 
+  // Autotest: URL parameter-driven validation
+  var [autotestStatus, setAutotestStatus] = React.useState(null);
+  var autotestTargets = React.useRef(null);
+
+  React.useEffect(function() {
+    var params = new URLSearchParams(window.location.search);
+    var at = params.get("autotest");
+    if (!at) return;
+    var parts = at.split("-").map(Number);
+    if (parts.length !== 4 || parts.some(function(n) { return isNaN(n) || n <= 0; })) return;
+    var targets = { calories: parts[0], carbs: parts[1], protein: parts[2], fat: parts[3] };
+    autotestTargets.current = targets;
+    setAutotestStatus("Running 100-week validation with targets: " + targets.calories + " cal / " + targets.carbs + "g carbs / " + targets.protein + "g protein / " + targets.fat + "g fat...");
+    setTimeout(function() { runValidation(targets); }, 100);
+  }, []);
+
+  React.useEffect(function() {
+    if (!autotestTargets.current || !validationResults) return;
+    var t = autotestTargets.current;
+    var filename = "autotest-" + t.calories + "-" + t.carbs + "-" + t.protein + "-" + t.fat + ".json";
+    var report = {
+      autotest: true,
+      targets: validationResults.targets,
+      thresholds: "95-105% for all macros",
+      totalDays: validationResults.totalDays,
+      passedDays: validationResults.passedDays,
+      passPct: validationResults.passPct,
+      flagCounts: validationResults.flagCounts,
+      worstValues: validationResults.worst,
+      worstDay: validationResults.worstDay,
+      flaggedDays: validationResults.flagged,
+      solverDiagnostics: validationResults.solverDiagnostics,
+      timestamp: validationResults.timestamp
+    };
+    var blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a"); a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+    setAutotestStatus("Done! " + validationResults.passPct + "% pass rate (" + validationResults.passedDays + "/" + validationResults.totalDays + " days). File downloaded: " + filename);
+    autotestTargets.current = null;
+  }, [validationResults]);
+
   // Validator is variant-safe: it reads day.meals[].ingredients and day.totals which are
   // computed from the cloned variant ingredients (Section 4). No changes needed.
-  function runValidation() {
+  function runValidation(overrideTargets) {
     var savedRot = { counts: Object.assign({}, _recipeRotation.counts), totalSlots: _recipeRotation.totalSlots };
     _recipeRotation = { counts: {}, totalSlots: 0 };
     _solverDiagnostics = []; // Reset diagnostic collector for this validation run
-    var vCal = pctValid ? calories : 2000;
-    var vCarbs = pctValid ? carbGrams : round1((2000*0.35)/4);
-    var vPro = pctValid ? proteinGrams : 200;
-    var vFat = pctValid ? fatGrams : round1((2000*0.25)/9);
+    var vCal, vCarbs, vPro, vFat;
+    if (overrideTargets) {
+      vCal = overrideTargets.calories; vCarbs = overrideTargets.carbs;
+      vPro = overrideTargets.protein; vFat = overrideTargets.fat;
+    } else {
+      vCal = pctValid ? calories : 2000;
+      vCarbs = pctValid ? carbGrams : round1((2000*0.35)/4);
+      vPro = pctValid ? proteinGrams : 200;
+      vFat = pctValid ? fatGrams : round1((2000*0.25)/9);
+    }
     var TOTAL = 100, BATCH = 10, done = 0;
     var flagged = [], totalDays = 0, passedDays = 0;
     // Tight 95-105% thresholds for all macro checks
@@ -2520,6 +2568,13 @@ function App() {
 
   return (
     <div className="app">
+      {autotestStatus && <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.85)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <div style={{background:'#1a1a2e',border:'1px solid #444',borderRadius:12,padding:'40px 48px',maxWidth:600,textAlign:'center',color:'#e0e0e0',fontFamily:'monospace'}}>
+          <div style={{fontSize:18,fontWeight:'bold',marginBottom:16}}>Autotest Mode</div>
+          <div style={{fontSize:14,lineHeight:1.6}}>{autotestStatus}</div>
+          {validationProgress && !validationResults && <div style={{marginTop:16,fontSize:13,color:'#888'}}>Progress: {validationProgress.done}/{validationProgress.total} weeks</div>}
+        </div>
+      </div>}
       <h1>Meal Prep Optimizer</h1>
       <p className="subtitle">Generate personalized weekly meal plans with smart grocery lists</p>
 

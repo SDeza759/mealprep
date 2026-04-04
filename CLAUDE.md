@@ -1,12 +1,12 @@
 # CLAUDE.md — Project Context
 
 ## Last Updated
-2026-04-03 — Session 2. Built shared ingredient registry, USDA macro audit, expanded variants to 28, removed duplicate recipe.
+2026-04-04 — Session 3. Added 8 variants + 1 base recipe, replaced greedy adjustment loop with gradient descent solver, implemented solver-as-filter architecture. 100-week validation: 700/700 (100%).
 
 ---
 
 ## Project Overview
-Single-file HTML meal prep optimizer. Generates weekly meal plans against macro targets (2000 cal, 175g carbs, 200g protein, 55.6g fat). React 18 + Babel via CDN, no build step, no server. 136 recipes, 14 cuisines, combo-first selection algorithm. File: `/Users/sebas/Desktop/MealPrep/index.html` (~2812 lines).
+Single-file HTML meal prep optimizer. Generates weekly meal plans against macro targets (2000 cal, 175g carbs, 200g protein, 55.6g fat). React 18 + Babel via CDN, no build step, no server. 136 recipes, 14 cuisines, solver-driven selection algorithm. File: `/Users/sebas/Desktop/MealPrep/index.html`.
 
 ---
 
@@ -14,16 +14,17 @@ Single-file HTML meal prep optimizer. Generates weekly meal plans against macro 
 
 Single-file React SPA. Key sections (line numbers approximate — search by name):
 
-- `UNIT_INGREDIENTS` (~220) — Unit-based display items (eggs, tortillas, etc.)
-- `INGREDIENT_REGISTRY` (~258) — 85 entries, USDA per-100g raw macros. Single source of truth.
-- `RECIPES[]` (~570) — 136 recipes, grams-only ingredients. Macros computed at startup from registry.
-- `_enrichFromRegistry()` (~787) — Startup: computes ingredient macros, totalMacros, injects spices & cooking data.
-- `adjustDayMeals()` (~865) — 50-iteration scaling loop (carb floor 88%, egg rules, canAdjust eligibility).
-- `generatePlan()` — Combo-first: samples 100 combos/day, hard-rejects bad ones, softmax draw (τ=0.3), then adjusts.
+- `UNIT_INGREDIENTS` — Unit-based display items (eggs, tortillas, etc.)
+- `INGREDIENT_REGISTRY` — 85 entries, USDA per-100g raw macros. Single source of truth.
+- `RECIPES[]` — 136 recipes, grams-only ingredients. Macros computed at startup from registry.
+- `_enrichFromRegistry()` — Startup: computes ingredient macros, totalMacros, injects spices & cooking data.
+- `comboFeasible()` — Pre-filter: range checks + multi-direction cross-constraint analysis. Rejects combos that are mathematically infeasible.
+- `adjustDayMeals()` — Projected gradient descent solver. Finds scale factors for all adjustable ingredients simultaneously to hit macro targets.
+- `generatePlan()` — Combo-first with solver-as-filter: samples combos, pre-filters, ranks by softmax, then tries top combos through the solver until one hits [95%, 105%] on all macros.
 - `selectVariant()` — Picks best variant per recipe based on remaining macro budget during combo sampling.
 - Debug panel (type "debug") — 100-week validator, 1000-week simulator, ingredient frequency analyzer.
 
-**Data flow**: Set targets → Generate → sample 100 combos/day → hard-reject → softmax select → adjust ingredients → add protein shake if needed → render.
+**Data flow**: Set targets → Generate → sample 100 combos/day → feasibility pre-filter → softmax rank → solver-as-filter (try top 10 combos until one solves to zone) → add protein shake if needed → render.
 
 ---
 
@@ -31,7 +32,13 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 
 **Single HTML file**: No splitting, no build step, no npm. Absolute constraint.
 
-**Combo-first selection**: Evaluates full day combos, not sequential meal picks. Prevents structural incompatibility (e.g. three ultra-lean meals with no fat recovery). Hard rejection thresholds: fat 70-135%, protein ≥65%, calories 72-140% of target.
+**Combo-first selection**: Evaluates full day combos, not sequential meal picks. Prevents structural incompatibility (e.g. three ultra-lean meals with no fat recovery).
+
+**Solver-as-filter architecture**: The gradient descent solver IS the definitive feasibility check. Combos are tried through the solver; if a combo can't solve to [95%, 105%] on all 4 macros, it's rejected and the next-best combo is tried (up to 10 attempts per day). This eliminates the need for perfect pre-filter thresholds — the pre-filter only needs to catch obviously bad combos quickly.
+
+**Gradient descent solver (not greedy)**: The adjustment phase uses projected gradient descent with exact quadratic step sizes to find scale factors for ALL adjustable ingredients simultaneously. This replaces the original greedy 50-iteration loop that tweaked one ingredient at a time and got stuck in local optima (e.g., couldn't close a 6% protein gap because each move worsened fat). The solver treats this as a constrained linear optimization problem with 4 macro targets and K scale factors in [0.5, 3.0].
+
+**Dynamic feasibility (no hardcoded thresholds)**: The feasibility pre-filter and solver derive all thresholds from user-configured target values. The only fixed threshold is the validation zone [95%, 105%]. The algorithm self-corrects for any calorie target, macro split, or recipe pool — no tuning required when adding/removing recipes or changing targets.
 
 **INGREDIENT_REGISTRY**: All macros come from one central lookup. Recipe ingredients are `{ name, grams }` only. Never add inline macros. Always use USDA raw/uncooked values.
 
@@ -39,7 +46,7 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 
 **Variant system**: 36 recipes have `variants` arrays (chicken-breast↔thigh, beef 90%↔80% lean, salmon→cod, pork-shoulder→loin, no-rice). Each variant has a complete ingredient list. `selectVariant()` picks per combo budget. Rotation tracker uses base recipe name across variants.
 
-**Macro targets are extreme**: 200g protein / 55.6g fat is very high-protein low-fat. Many algorithm decisions exist specifically for this ratio.
+**Macro targets are extreme**: 200g protein / 55.6g fat is very high-protein low-fat. The solver handles this automatically but it's worth knowing when diagnosing edge cases.
 
 **All macros use raw USDA data**: Audit in Session 2 found cooked values for ground beef, pork loin, and rice. All corrected. Always use raw values when adding ingredients.
 
@@ -47,13 +54,15 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 
 ## What to Do Next
 
-1. ~~**Add 8 remaining variants**~~ — DONE (Session 3). Added 2 salmon→cod (Teriyaki Salmon Bowl, Sushi Bowl Chirashi) + 6 chicken breast→thigh (Thai Basil Chicken, Dakgalbi, Chicken Yakitori Bowl, Tandoori Chicken, Jerk Chicken Rice Bowl, Arroz con Pollo). Total: 36 recipes with variants.
+1. **Diagnose variant selection regression** — `selectVariant` may cause all combo picks to lean same direction (all lean or all fatty). Budget tracking doesn't account for early picks skewing later ones. Validate first, fix if still an issue.
 
-2. **Run in-browser validation** — USDA corrections changed many recipe profiles. Run 100-week validator + 1000-week simulator. Target: pass rate ≥97%, protein shakes ≤2%. Share JSON reports.
+2. **Run 1000-week simulator** — 100-week validator passes at 100%. Run the longer simulator to check for edge cases at scale.
 
-3. **Diagnose variant selection regression** — `selectVariant` may cause all combo picks to lean same direction (all lean or all fatty). Budget tracking doesn't account for early picks skewing later ones. Validate first, fix if still an issue.
+3. **Test with different macro targets** — The algorithm is designed to be dynamic. Validate with different calorie/macro configurations (e.g., 1800 cal, 2500 cal, higher fat ratio) to confirm it adapts correctly.
 
-4. ~~**Cod frequency**~~ — DONE (Session 3). Added "Baked Cod with Lemon & Herbs" base recipe. Cod now at 5 recipes (1 base + 4 variants). Meets ≥5 threshold.
+4. **Clean up solver diagnostic logging** — Diagnostic logging was added during Session 3 debugging. Decide whether to keep it (useful for future debugging) or remove it (cleaner console output). If keeping, gate it behind a debug flag.
+
+5. **Review combo variety** — The solver-as-filter rejects more combos than before. Verify that meal variety hasn't decreased (check ingredient frequency analyzer in debug panel).
 
 ---
 
@@ -65,17 +74,25 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 
 **selectedVariant is transient**: Overwritten on every `sampleCombo` call. Don't rely on it persisting.
 
-**Combo fallback is required**: If all 200 combos are rejected, algorithm uses least-bad. Removing fallback → infinite loop.
+**Combo fallback + 3-meal retry**: If all 200 combos are rejected, algorithm uses least-bad. If that fallback is below quality floor (65% cal or 55% protein) on a 2-meal day, it forces a 3-meal retry. Removing either path → possible infinite loop or catastrophic failures.
 
-**Carb floor at 88%**: Prevents carb collapse during adjustment. Has pre-check and post-check revert. Don't remove.
+**Solver-as-filter retry loop**: The solver tries up to 10 combos per day. If this limit is reduced, hard days may accept bad results. If increased significantly, generation time grows on hard days.
 
-**Egg scaling**: 50g increments only. Binder eggs (not top protein source) capped at original grams.
+**Solver scale bounds [0.5, 3.0]**: Ingredients scale between 0.5x and 3.0x original grams. These bounds affect feasibility analysis — changing them requires updating both the solver and `comboFeasible()`.
+
+**Carb floor relaxation**: Carb weight is boosted 4x in the solver when carbs fall below 88% of target (relaxes to 80% when protein is the binding constraint). This prevents carb collapse. Don't remove without understanding the interaction with protein-heavy combos.
+
+**Egg scaling**: 50g increments only. Binder eggs (not top protein source) capped at original grams. Eggs are snapped to valid increments after each solver step.
 
 **isBreakfast set after adjustment**: Don't use meal index for breakfast detection inside `adjustDayMeals`. Use `tags.indexOf("breakfast")`.
 
 **Two RECIPE_COOKING_DATA objects**: Verbose and compact formats. Check both if a recipe's instructions are missing.
 
 **Validation is browser-only**: Debug tools are client-side. Code can't run them. Must test in browser and share JSON reports.
+
+**Feasibility pre-filter is intentionally loose**: The cross-constraint checks in `comboFeasible()` use slightly relaxed thresholds (e.g., 110% calorie ceiling on protein path). This is deliberate — the solver-as-filter is the real gate. Making the pre-filter too strict (e.g., 105%) caused a regression from 99.1% to 91.9% in Session 3. If adjusting thresholds, run the full 100-week validator before committing.
+
+**Validator/simulator fallback targets**: When macro percentages are invalid, the 100-week validator, 1000-week simulator, and background validator all use hardcoded fallback targets (2000cal, 175g carbs, 200g protein, 55.6g fat). A Session 3 bug had the simulator using 2500cal — if adding new validation tools, verify they use the correct fallback.
 
 ---
 
@@ -85,13 +102,15 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 
 **New variant**: Add `variants` array with `id`, `label`, complete `ingredients` (grams-only). Use separate registry entries for different proteins.
 
+**New recipe**: Add to `RECIPES[]`. Verify all ingredient names match registry keys. Run 100-week validator after adding. Ingredient must appear in ≥5 recipes.
+
 **canAdjust rules**: ≥50 cal, not spice, not soy sauce. Eggs in 50g steps (binder = capped). Unit items (bread, tortillas, lime, lemon, banana) not adjustable.
 
-**Scoring**: `worstDev * 0.6 + avgDev * 0.4`. Scale factors: `[0.5, 0.7, 0.8, 0.9, 1.1, 1.2, 1.5, 2.0, 3.0]`.
-
-**Cuisine limit**: Max 2 per week. **Ingredient threshold**: Must appear in ≥5 recipes. **Protein shake**: Auto-added if protein >10% below target. Max 1/day, 25P/3C/1F/120cal.
+**Cuisine limit**: Max 2 per week. **Protein shake**: Auto-added if protein >10% below target. Max 1/day, 25P/3C/1F/120cal.
 
 **localStorage keys**: `mealprep_daygroups`, `mealprep_plans`, `mealprep_overrides`, `mealprep_stats`, `mealprep_stats_last_view`.
+
+**Working with Claude Code**: Claude (Opus) acts as project manager, generates prompts for Code to execute. Code reads CLAUDE.md at the start of each session. Prompts should be copy/paste ready for CLI. No need to instruct Code to re-read CLAUDE.md mid-session. Split large changes into diagnostic-first, then fix prompts.
 
 ---
 
@@ -100,3 +119,5 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 - **Session 1 (2026-03-29 to 04-03)**: Built full app from scratch. 136 recipes, combo-first algorithm (pass rate 84.6%→97.6%), debug tools, day grouping, stats, variant system (22 recipes). Six major algorithm iterations.
 
 - **Session 2 (2026-04-03)**: Data integrity overhaul. Built INGREDIENT_REGISTRY (85 entries). Comprehensive USDA audit: fixed Ground Beef (6 recipes, cooked→raw), Pork Loin (14 occurrences, wrong cut), White Rice in Egg Fried Rice (200g cooked→55g raw). Added 7 ground beef 80/90% variants. Cleaned 7 dead INGREDIENT_CATEGORIES entries. Removed duplicate Hearty Beef Tacos. Final: 135 recipes, 28 variants, 106 categories.
+
+- **Session 3 (2026-04-04)**: Algorithm overhaul + recipe expansion. Added 8 variants (2 salmon→cod, 6 chicken→thigh) + 1 new base recipe (Baked Cod with Lemon & Herbs). Fixed critical bug: 1000-week simulator and background validator used 2500cal/187.5pro fallback instead of correct 2000cal/200pro — all previous simulator results were against wrong targets. Replaced greedy 50-iteration adjustment loop with projected gradient descent solver (exact quadratic step, random restarts). Added dynamic feasibility pre-filter with 7 cross-constraint directions. Implemented solver-as-filter architecture: tries top 10 combos through solver until one hits [95%, 105%] zone. Added solver diagnostic JSON dump (downloadable from debug panel). Final: 136 recipes, 36 variants, 100-week validation 700/700 (100%).

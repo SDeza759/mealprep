@@ -1344,23 +1344,22 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
       return { reached: tot[macroIdx] >= targetMacro * 0.999, cal: tot[0], pro: tot[1], fat: tot[2], carbs: tot[3], scales: sc };
     }
 
-    // Cross-constraint ceilings: tighter than the validation zone to catch combos
-    // where the cheapest path to one macro barely overshoots another.
-    // 108% = 3% tighter than the 5% validation zone on each side.
-    var ccCalHi = targetCal * (1.08 + rp);
-    var ccProHi = targetProtein * (1.08 + rp);
-    var ccFatHi = targetFat * (1.10 + rp);
+    // Cross-constraint thresholds: match the validation zone exactly (95-105%).
+    // All paths must produce secondary macros within this zone to pass.
+    var ccHi = zHi; // 1.05 + rp
+    var ccLo = zLo; // 0.95 - rp
 
     // ===== CHECK A: PATH TO PROTEIN — cheapest protein, check fat/cal =====
     // Target the FULL protein value (not proLo) because the solver must reach
-    // close to 100%, not just 95%. Cross-constraints at 95% are too lenient.
+    // close to 100%, not just 95%.
     var byProCal = adj.slice().sort(function(a, b) {
       return (b.pro / Math.max(b.cal, 1)) - (a.pro / Math.max(a.cal, 1));
     });
     var cA = greedyPath(byProCal, targetProtein, 1);
     if (!cA.reached) return -1;
-    if (cA.fat > ccFatHi) return -1;   // protein path fat within 110% of target
-    if (cA.cal > ccCalHi) return -1;    // protein path calories within 108% of target
+    if (cA.fat > targetFat * ccHi) return -1;    // protein path fat ≤ 105%
+    if (cA.fat < targetFat * ccLo) return -1;    // protein path fat ≥ 95% (catches minFatForProtein)
+    if (cA.cal > targetCal * ccHi) return -1;    // protein path calories ≤ 105%
     // Also check: max fat achievable when protein is fixed at these scales
     var cAFatMax = fixFat;
     for (var l = 0; l < byProCal.length; l++) {
@@ -1368,14 +1367,14 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     }
     if (cAFatMax < fatLo) return -1;
 
-    // ===== CHECK B: PATH TO FAT FLOOR — fattiest first, check pro/cal =====
+    // ===== CHECK B: PATH TO FAT — fattiest first, check pro/cal =====
     var byFatCal = adj.slice().sort(function(a, b) {
       return (b.fat / Math.max(b.cal, 1)) - (a.fat / Math.max(a.cal, 1));
     });
     var cB = greedyPath(byFatCal, targetFat, 2);
     if (!cB.reached) return -1;
-    if (cB.pro > ccProHi) return -1;    // fat path protein within 108% of target
-    if (cB.cal > ccCalHi) return -1;    // fat path calories within 108% of target
+    if (cB.pro > targetProtein * ccHi) return -1; // fat path protein ≤ 105%
+    if (cB.cal > targetCal * ccHi) return -1;     // fat path calories ≤ 105%
     // Max protein when fat is fixed at these scales
     var cBProMax = fixPro;
     for (var lb = 0; lb < byFatCal.length; lb++) {
@@ -1384,23 +1383,21 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     if (cBProMax < proLo) return -1;
 
     // ===== CHECK C: PATH TO CALORIE TARGET — min fat check =====
-    // Sort by cal/fat ratio descending (most calories per fat first = lowest fat path to calories).
-    // If even the lowest-fat path to calLo exceeds fatHi, reject.
-    // (Protein ceiling handled separately by CHECK G below.)
     var byCalFatEff = adj.slice().sort(function(a, b) {
       var ra = a.fat > 0 ? a.cal / a.fat : 9999;
       var rb = b.fat > 0 ? b.cal / b.fat : 9999;
       return rb - ra;
     });
     var cC = greedyPath(byCalFatEff, calLo, 0);
-    if (cC.reached && cC.fat > fatHi) return -1;
+    if (cC.reached && cC.fat > targetFat * ccHi) return -1;  // cal path fat ≤ 105%
+    if (cC.reached && cC.fat < targetFat * ccLo) return -1;  // cal path fat ≥ 95%
 
     // ===== CHECK D: PATH TO CARB TARGET — check calories =====
     var byCarbCal = adj.slice().sort(function(a, b) {
       return (b.carbs / Math.max(b.cal, 1)) - (a.carbs / Math.max(a.cal, 1));
     });
     var cD = greedyPath(byCarbCal, carbsLo, 3);
-    if (cD.reached && cD.cal > ccCalHi) return -1;
+    if (cD.reached && cD.cal > targetCal * ccHi) return -1;  // carb path calories ≤ 105%
 
     // ===== CHECK E: PROTEIN:FAT RATIO RANGE =====
     // Compute the achievable protein:fat ratio range for this combo.

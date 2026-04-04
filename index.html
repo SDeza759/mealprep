@@ -2081,6 +2081,7 @@ function App() {
   var [proteinPct, setProteinPct] = React.useState(40);
   var [fatPct, setFatPct] = React.useState(25);
   var [plan, setPlan] = React.useState(null);
+  var [planGroups, setPlanGroups] = React.useState(null);
   var [view, setView] = React.useState("plan");
   var [swapTarget, setSwapTarget] = React.useState(null);
   var [swapSearch, setSwapSearch] = React.useState("");
@@ -2526,7 +2527,13 @@ function App() {
   function handleGenerate() {
     if (!pctValid || allDaysExcluded) return;
     var p = generatePlan(calories, carbGrams, proteinGrams, fatGrams, ingredientOverrides, dayGroups, excludedDays);
+    var gs = {};
+    for (var gdi = 0; gdi < 7; gdi++) {
+      var gi = findDayGroup(gdi);
+      if (gi !== -1) gs[gdi] = { groupIndex: gi, color: getGroupColor(gi) };
+    }
     setPlan(p);
+    setPlanGroups(gs);
     setView("plan");
     setEatenMeals({});
     setMealServings({});
@@ -2557,13 +2564,14 @@ function App() {
 
   function handleSave() {
     if (!plan || !saveName.trim()) return;
-    var entry = { name: saveName.trim(), date: new Date().toLocaleDateString(), calories: calories, carbPct: carbPct, proteinPct: proteinPct, fatPct: fatPct, plan: plan };
+    var entry = { name: saveName.trim(), date: new Date().toLocaleDateString(), calories: calories, carbPct: carbPct, proteinPct: proteinPct, fatPct: fatPct, plan: plan, planGroups: planGroups };
     var updated = [entry, ...savedPlans.filter(function(p) { return p.name !== saveName.trim(); })];
     setSavedPlans(updated); localStorage.setItem("mealprep_plans", JSON.stringify(updated)); setSaveName("");
     setCopyMsg("Plan saved!"); setTimeout(function() { setCopyMsg(""); }, 2000);
   }
   function handleLoad(entry) {
     setCalories(entry.calories); setCarbPct(entry.carbPct); setProteinPct(entry.proteinPct); setFatPct(entry.fatPct); setPlan(entry.plan); setView("plan");
+    setPlanGroups(entry.planGroups || null);
     var ed = {};
     entry.plan.forEach(function(day, di) { if (day) ed[di] = true; });
     setExpandedDays(ed); setExpandedMeals({});
@@ -2742,8 +2750,9 @@ function App() {
           {plan.map(function(day, di) {
           if (!day || excludedDays.indexOf(di) !== -1) return null;
           var isDayExpanded = !!expandedDays[di];
-          var dgi = findDayGroup(di);
-          var dgc = dgi !== -1 ? getGroupColor(dgi) : null;
+          var pgEntry = planGroups && planGroups[di];
+          var dgc = pgEntry ? pgEntry.color : null;
+          var dgi = pgEntry ? pgEntry.groupIndex : -1;
           return (<div className="card day-card" key={di} style={dgc ? {borderLeftColor: dgc.border} : undefined}>
             <div className="day-summary" onClick={function(){toggleDay(di);}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:6}}>

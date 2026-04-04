@@ -1178,11 +1178,105 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     return combo;
   }
 
+  // ===== PER-COMBO FEASIBILITY ANALYSIS =====
+  // Replaces fixed hard-reject thresholds (FIX 1/4/5/7/8) with dynamic analysis.
+  // Computes achievable macro ranges from each combo's actual ingredient scaling
+  // constraints, then checks whether daily targets fall within those ranges.
+  // Also detects cross-constraint conflicts (e.g. reaching protein forces calories over).
+  function comboFeasible(combo, relaxPct) {
+    var rp = relaxPct || 0;
+    // Partition ingredients into fixed and adjustable, accumulate macro profiles
+    var fixCal = 0, fixPro = 0, fixFat = 0, fixCarbs = 0;
+    var adj = []; // {cal, pro, fat, carbs} at current (1x) scale
+    combo.forEach(function(recipe) {
+      var ings = recipe.selectedVariant ? recipe.selectedVariant.ingredients : recipe.ingredients;
+      ings.forEach(function(ing) {
+        var cal = ing.calories || 0, pro = ing.protein || 0;
+        var fat = ing.fat || 0, carbs = ing.carbs || 0;
+        // Replicate canAdjust eligibility
+        if (ing.isSpice || ing.name === "Soy Sauce" ||
+            (ing.name !== "Egg" && isUnitBased(ing.name)) || cal < 50) {
+          fixCal += cal; fixPro += pro; fixFat += fat; fixCarbs += carbs;
+          return;
+        }
+        adj.push({ cal: cal, pro: pro, fat: fat, carbs: carbs });
+      });
+    });
+
+    // Compute achievable min/max for each macro independently
+    // Min = all adjustable at 0.5x, Max = all adjustable at 3.0x
+    var minCal = fixCal, maxCal = fixCal;
+    var minPro = fixPro, maxPro = fixPro;
+    var minFat = fixFat, maxFat = fixFat;
+    var minCarbs = fixCarbs, maxCarbs = fixCarbs;
+    for (var i = 0; i < adj.length; i++) {
+      var a = adj[i];
+      minCal += a.cal * 0.5;  maxCal += a.cal * 3.0;
+      minPro += a.pro * 0.5;  maxPro += a.pro * 3.0;
+      minFat += a.fat * 0.5;  maxFat += a.fat * 3.0;
+      minCarbs += a.carbs * 0.5; maxCarbs += a.carbs * 3.0;
+    }
+
+    // Margins widen with relaxPct to account for approximation error
+    var hi = 1.05 + rp; // upper: more permissive when relaxed
+    var lo = 0.95 - rp; // lower: more permissive when relaxed
+
+    // Range checks: do targets fall within achievable ranges?
+    if (targetCal > maxCal * hi || targetCal < minCal * lo) return false;
+    if (targetProtein > maxPro * hi) return false;
+    if (targetFat > maxFat * hi || targetFat < minFat * lo) return false;
+    if (targetCarbs > maxCarbs * hi) return false;
+
+    // Cross-constraint: can we reach target protein without blowing calories or fat?
+    // Greedy strategy: scale ingredients by protein-per-calorie efficiency (best first),
+    // minimize everything else. Computes the cheapest (lowest cal/fat) path to target protein.
+    var sorted = adj.slice().sort(function(a, b) {
+      return (b.pro / Math.max(b.cal, 1)) - (a.pro / Math.max(a.cal, 1));
+    });
+    var cumPro = fixPro, cumCal = fixCal, cumFat = fixFat;
+    for (var j = 0; j < sorted.length; j++) {
+      var s = sorted[j];
+      if (cumPro >= targetProtein) {
+        // Already hit protein — minimize calories and fat on remaining ingredients
+        cumCal += s.cal * 0.5;
+        cumFat += s.fat * 0.5;
+      } else {
+        var proNeeded = targetProtein - cumPro;
+        if (s.pro > 0 && s.pro * 3.0 <= proNeeded) {
+          // Max out this ingredient
+          cumCal += s.cal * 3.0; cumPro += s.pro * 3.0; cumFat += s.fat * 3.0;
+        } else if (s.pro > 0) {
+          // Partial scale to exactly hit target
+          var scale = Math.max(0.5, Math.min(3.0, proNeeded / s.pro));
+          cumCal += s.cal * scale; cumPro += s.pro * scale; cumFat += s.fat * scale;
+        } else {
+          cumCal += s.cal * 0.5; cumFat += s.fat * 0.5;
+        }
+      }
+    }
+    // Reject if protein is unreachable
+    if (cumPro < targetProtein * lo) return false;
+    // Reject if cheapest path to protein blows calories (15% margin + relaxation)
+    if (cumCal > targetCal * (1.15 + rp)) return false;
+    // Reject if cheapest path to protein blows fat (30% margin + relaxation)
+    if (cumFat > targetFat * (1.30 + rp)) return false;
+
+    // Cross-constraint: does the fat floor force calories over target?
+    // If minimum achievable fat is high, the calories locked into fat-heavy
+    // ingredients may leave no room for other macros.
+    if (minFat > targetFat * 0.90) {
+      // Compute min calories when fat is at its floor — every ingredient at 0.5x
+      // If even at min scale, calories are well above target, combo is too dense
+      if (minCal > targetCal * (1.10 + rp)) return false;
+    }
+
+    return true;
+  }
+
   // Score a combo against daily targets. Returns { weight, macros, rejected }.
   // Uses selectedVariant.totalMacros if a variant was chosen, else recipe.totalMacros.
-  // mealsPerDay controls meal-count-aware hard-reject thresholds (FIX 1) and
-  // caloric density penalty for 2-meal combos (FIX 4).
-  function scoreCombo(combo, relaxPct, mealsPerDay) {
+  // Rejection is now based on dynamic feasibility analysis, not fixed thresholds.
+  function scoreCombo(combo, relaxPct) {
     var rp = relaxPct || 0;
     var cal = 0, carbs = 0, pro = 0, fat = 0;
     combo.forEach(function(r) {
@@ -1191,21 +1285,8 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     });
     var macros = { calories: cal, carbs: carbs, protein: pro, fat: fat };
 
-    // Hard rejection thresholds (relaxed by rp percentage points if retrying)
-    // FIX 1/8: Meal-count-aware floors. 2-meal days tighter (less scaler headroom).
-    // FIX 5: Fat ceiling tightened and meal-count-aware (was flat 1.35).
-    // FIX 7: Calorie ceiling tightened to 1.30 (was 1.40).
-    var baseCalLo = mealsPerDay === 2 ? 0.82 : 0.78;
-    var baseProLo = mealsPerDay === 2 ? 0.72 : 0.70;
-    var baseFatHi = mealsPerDay === 2 ? 1.25 : 1.30;
-    var fatLo = 0.70 - rp, fatHi = baseFatHi + rp;
-    var proLo = baseProLo - rp, calLo = baseCalLo - rp, calHi = 1.30 + rp;
-    var rejected = false;
-    if (targetFat > 0 && fat < targetFat * fatLo) rejected = true;
-    if (targetFat > 0 && fat > targetFat * fatHi) rejected = true;
-    if (targetProtein > 0 && pro < targetProtein * proLo) rejected = true;
-    if (targetCal > 0 && cal < targetCal * calLo) rejected = true;
-    if (targetCal > 0 && cal > targetCal * calHi) rejected = true;
+    // Dynamic feasibility rejection (replaces fixed thresholds from FIX 1/4/5/7/8)
+    var rejected = !comboFeasible(combo, rp);
 
     // Macro deviation scoring (against DAILY targets, not per-meal)
     var devCal = targetCal > 0 ? Math.abs(cal - targetCal) / targetCal : 0;
@@ -1215,13 +1296,6 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     var worstDev = Math.max(devCal, devCarbs, devPro, devFat);
     var avgDev = (devCal + devCarbs + devPro + devFat) / 4;
     var macroDevScore = worstDev * 0.6 + avgDev * 0.4;
-
-    // FIX 4: Caloric density penalty for 2-meal combos below 78% of target calories.
-    // Makes softmax prefer combos closer to target before adjustment.
-    if (mealsPerDay === 2 && targetCal > 0 && cal < targetCal * 0.78) {
-      macroDevScore += 0.15;
-    }
-
     var macroFitWeight = Math.max(0.1, Math.min(2.0, 2.0 - macroDevScore * 1.9));
 
     // Rotation: average of individual recipe rotation multipliers
@@ -1249,7 +1323,7 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     var scored = [];
     var bestFallback = null;
     for (var sci = 0; sci < combos.length; sci++) {
-      var result = scoreCombo(combos[sci], 0, mealsPerDay);
+      var result = scoreCombo(combos[sci], 0);
       result.combo = combos[sci];
       if (!bestFallback || result.totalDev < bestFallback.totalDev) bestFallback = result;
       if (!result.rejected) scored.push(result);
@@ -1263,7 +1337,7 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
         combos.push(sampleCombo(mealsPerDay));
       }
       for (var sci2 = firstRoundLen; sci2 < combos.length; sci2++) {
-        var result2 = scoreCombo(combos[sci2], 0.10, mealsPerDay);
+        var result2 = scoreCombo(combos[sci2], 0.10);
         result2.combo = combos[sci2];
         if (!bestFallback || result2.totalDev < bestFallback.totalDev) bestFallback = result2;
         if (!result2.rejected) scored.push(result2);
@@ -1284,7 +1358,7 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
         scored = [];
         bestFallback = null;
         for (var sci3 = 0; sci3 < combos.length; sci3++) {
-          var result3 = scoreCombo(combos[sci3], 0, 3);
+          var result3 = scoreCombo(combos[sci3], 0);
           result3.combo = combos[sci3];
           if (!bestFallback || result3.totalDev < bestFallback.totalDev) bestFallback = result3;
           if (!result3.rejected) scored.push(result3);
@@ -1292,7 +1366,7 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
         if (scored.length === 0) {
           for (var ci4 = 0; ci4 < COMBO_COUNT; ci4++) { combos.push(sampleCombo(3)); }
           for (var sci4 = combos.length - COMBO_COUNT; sci4 < combos.length; sci4++) {
-            var result4 = scoreCombo(combos[sci4], 0.10, 3);
+            var result4 = scoreCombo(combos[sci4], 0.10);
             result4.combo = combos[sci4];
             if (!bestFallback || result4.totalDev < bestFallback.totalDev) bestFallback = result4;
             if (!result4.rejected) scored.push(result4);

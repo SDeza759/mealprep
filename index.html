@@ -2895,11 +2895,8 @@ function App() {
 
       {plan && (<>
         {view === "plan" && (<>
-          <div className="log-eaten-bar">
-            <span className="le-info">{eatenCount > 0 ? eatenCount + " meal" + (eatenCount > 1 ? "s" : "") + " checked" : "Check meals as you eat them"}</span>
-            <div className="expand-collapse-bar">
-              <button className="btn btn-sm btn-primary" onClick={handleLogEaten} disabled={eatenCount === 0}>Log Eaten Meals to Stats</button>
-            </div>
+          <div className="btn-row" style={{justifyContent:'flex-end',marginBottom:12}}>
+            <button className="btn btn-sm btn-primary" onClick={handleLogEaten} disabled={eatenCount === 0}>Log Meals</button>
           </div>
           {swapWarning && <div style={{background:'#fff3cd',color:'#856404',padding:'10px 16px',borderRadius:10,marginBottom:12,fontSize:'0.88rem',display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}>
             <span>{swapWarning}</span>

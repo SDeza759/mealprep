@@ -1838,8 +1838,7 @@ function groceryQtyText(item) {
   var cat = getCategory(item.name);
   if (cat === "Proteins") return g + "g (" + formatImperial(g) + ")";
   if (item.name.indexOf("Oil") !== -1 || item.name.indexOf("Sauce") !== -1 || item.name === "Coconut Milk" || item.name === "Maple Syrup" || item.name === "Honey") {
-    var tbsp = round1(g / 15);
-    return g + "g (~" + (tbsp >= 1 ? round1(tbsp) + " tbsp" : round1(g / 5) + " tsp") + ")";
+    return g + "g (" + round1(g / 28.35) + " oz)";
   }
   return g + "g (" + formatImperial(g) + ")";
 }

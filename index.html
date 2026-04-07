@@ -73,7 +73,7 @@
   .wk-shake-cell .wk-meal-macros { color: #6b21a8; }
   .wk-shake-cell .cuisine-tag { background: #ede9fe; color: #5b21b6; }
   .md-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.35); z-index: 1100; display: flex; align-items: center; justify-content: center; padding: 16px; }
-  .md-modal { background: #fff; border-radius: 14px; max-width: 480px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 30px rgba(0,0,0,0.18); }
+  .md-modal { background: #fff; border-radius: 14px; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 30px rgba(0,0,0,0.18); }
   .md-header { padding: 16px 20px 10px; }
   .md-header-top { display: flex; justify-content: space-between; align-items: flex-start; }
   .md-header-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -86,11 +86,14 @@
   .md-macrobar-cal { font-weight: 500; color: #1a2e2a; font-size: 0.92rem; }
   .md-macrobar-detail { font-size: 0.8rem; color: #5a7a6f; }
   .md-body { padding: 0 20px 16px; }
-  .md-ing-table { width: 100%; font-size: 0.82rem; border-collapse: collapse; margin-top: 10px; }
+  .md-ing-table { width: 100%; font-size: 14px; border-collapse: collapse; margin-top: 10px; }
   .md-ing-table th { text-align: left; color: #6b7f7a; font-weight: 600; padding: 4px 0; border-bottom: 1px solid #e0e8e4; font-size: 0.75rem; }
-  .md-ing-table th:not(:first-child) { text-align: right; }
+  .md-ing-table th:not(:first-child) { text-align: right; padding-left: 8px; }
+  .md-ing-table th:nth-child(2) { min-width: 55px; }
+  .md-ing-table th:nth-child(3) { min-width: 50px; }
+  .md-ing-table th:nth-child(4), .md-ing-table th:nth-child(5), .md-ing-table th:nth-child(6) { min-width: 40px; }
   .md-ing-table td { padding: 5px 0; border-bottom: 1px solid #f5f5f5; }
-  .md-ing-table td:not(:first-child) { text-align: right; color: #5a7a6f; }
+  .md-ing-table td:not(:first-child) { text-align: right; color: #5a7a6f; font-size: 13px; padding-left: 8px; }
   .md-spice-row { font-style: italic; color: #9b8b6e; }
   .md-adj-note { color: #e67e22; font-size: 0.72rem; padding: 1px 0 3px; }
   .md-instr-toggle { background: none; border: none; color: #2d6a4f; cursor: pointer; font-size: 0.85rem; font-weight: 600; padding: 8px 0 4px; }

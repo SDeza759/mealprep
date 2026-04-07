@@ -2190,7 +2190,6 @@ function App() {
   var [swapWarning, setSwapWarning] = React.useState(null);
   var [copyMsg, setCopyMsg] = React.useState("");
   var [saveName, setSaveName] = React.useState("");
-  var [settingsOpen, setSettingsOpen] = React.useState(false);
   var [savedPlans, setSavedPlans] = React.useState(function() { try { return JSON.parse(localStorage.getItem("mealprep_plans") || "[]"); } catch(e) { return []; } });
   var [recipeSearch, setRecipeSearch] = React.useState("");
   var [recipeCuisine, setRecipeCuisine] = React.useState("All");
@@ -2863,20 +2862,9 @@ function App() {
           {validationProgress && !validationResults && <div style={{marginTop:16,fontSize:13,color:'#888'}}>Progress: {validationProgress.done}/{validationProgress.total} weeks</div>}
         </div>
       </div>}
-      <div className="app-header">
-        <h1>Actual Size Optimizer</h1>
-        <div className="header-right">
-          <div className="header-pills">
-            <span className="header-pill header-pill-cal">{calories} cal</span>
-            <span className="header-pill header-pill-carb">{carbGrams}g C</span>
-            <span className="header-pill header-pill-pro">{proteinGrams}g P</span>
-            <span className="header-pill header-pill-fat">{fatGrams}g F</span>
-          </div>
-          <button className="settings-toggle" onClick={function(){setSettingsOpen(!settingsOpen);}}>{settingsOpen ? "\u25B2 Settings" : "\u25BC Settings"}</button>
-        </div>
-      </div>
+      <h1>Actual Size Optimizer</h1>
 
-      <div className={"settings-drawer " + (settingsOpen ? "expanded" : "collapsed")}>
+      <div>
         <div className="card" style={{paddingBottom:12}}>
           <div className="sd-row1">
             <div>

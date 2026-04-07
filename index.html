@@ -72,6 +72,37 @@
   .wk-shake-cell .wk-meal-name { color: #5b21b6; }
   .wk-shake-cell .wk-meal-macros { color: #6b21a8; }
   .wk-shake-cell .cuisine-tag { background: #ede9fe; color: #5b21b6; }
+  .md-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.35); z-index: 1100; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .md-modal { background: #fff; border-radius: 14px; max-width: 480px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 30px rgba(0,0,0,0.18); }
+  .md-header { padding: 16px 20px 10px; }
+  .md-header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .md-header-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .md-title { font-size: 17px; font-weight: 500; color: #1a2e2a; }
+  .md-close { background: none; border: none; font-size: 20px; color: #6b7f7a; cursor: pointer; padding: 0 4px; line-height: 1; }
+  .md-close:hover { color: #1a2e2a; }
+  .md-context { font-size: 0.75rem; color: #9aa8a3; margin-top: 2px; }
+  .md-macrobar { display: flex; justify-content: space-between; align-items: center; padding: 8px 20px; background: #f7faf8; border-top: 1px solid #f0f4f3; border-bottom: 1px solid #f0f4f3; flex-wrap: wrap; gap: 8px; }
+  .md-macrobar-left { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .md-macrobar-cal { font-weight: 500; color: #1a2e2a; font-size: 0.92rem; }
+  .md-macrobar-detail { font-size: 0.8rem; color: #5a7a6f; }
+  .md-body { padding: 0 20px 16px; }
+  .md-ing-table { width: 100%; font-size: 0.82rem; border-collapse: collapse; margin-top: 10px; }
+  .md-ing-table th { text-align: left; color: #6b7f7a; font-weight: 600; padding: 4px 0; border-bottom: 1px solid #e0e8e4; font-size: 0.75rem; }
+  .md-ing-table th:nth-child(2), .md-ing-table th:nth-child(3) { text-align: right; }
+  .md-ing-table td { padding: 5px 0; border-bottom: 1px solid #f5f5f5; }
+  .md-ing-table td:nth-child(2), .md-ing-table td:nth-child(3) { text-align: right; color: #5a7a6f; }
+  .md-spice-row { font-style: italic; color: #9b8b6e; }
+  .md-adj-note { color: #e67e22; font-size: 0.72rem; padding: 1px 0 3px; }
+  .md-instr-toggle { background: none; border: none; color: #2d6a4f; cursor: pointer; font-size: 0.85rem; font-weight: 600; padding: 8px 0 4px; }
+  .md-instr-toggle:hover { text-decoration: underline; }
+  .md-instr-list { background: #f7faf8; border-radius: 8px; padding: 10px 14px; margin-top: 4px; }
+  .md-instr-list ol { padding-left: 18px; margin: 0; font-size: 0.82rem; line-height: 1.6; color: #3a5a50; }
+  .md-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 20px 16px; }
+  .md-btn-swap { padding: 10px; border: none; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; background: #2d6a4f; color: #fff; transition: background 0.15s; }
+  .md-btn-swap:hover { background: #1b4332; }
+  .md-btn-eaten { padding: 10px; border: 1.5px solid #c8d6d0; border-radius: 8px; font-size: 0.88rem; font-weight: 600; cursor: pointer; background: #fff; color: #2d6a4f; transition: all 0.15s; }
+  .md-btn-eaten:hover { border-color: #2d6a4f; background: #f0faf4; }
+  .md-btn-eaten.active { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
   .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
   .card h2 { color: #2d6a4f; font-size: 1.15rem; margin-bottom: 12px; }
   .macro-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
@@ -2151,6 +2182,8 @@ function App() {
   var [planGroups, setPlanGroups] = React.useState(null);
   var [view, setView] = React.useState("plan");
   var [swapTarget, setSwapTarget] = React.useState(null);
+  var [detailModal, setDetailModal] = React.useState(null); // { dayIdx, mealIdx }
+  var [detailInstrOpen, setDetailInstrOpen] = React.useState(false);
   var [swapSearch, setSwapSearch] = React.useState("");
   var [swapScores, setSwapScores] = React.useState(null);
   var [swapShowIncompat, setSwapShowIncompat] = React.useState(false);
@@ -2207,6 +2240,12 @@ function App() {
     window.addEventListener("keydown", onKey);
     return function() { window.removeEventListener("keydown", onKey); };
   }, []);
+
+  React.useEffect(function() {
+    function onEsc(e) { if (e.key === "Escape" && detailModal) { setDetailModal(null); setDetailInstrOpen(false); } }
+    window.addEventListener("keydown", onEsc);
+    return function() { window.removeEventListener("keydown", onEsc); };
+  }, [detailModal]);
 
   // Autotest: URL parameter-driven validation
   var [autotestStatus, setAutotestStatus] = React.useState(null);
@@ -2965,8 +3004,8 @@ function App() {
                       }
                       var mealKey = di + "-" + si;
                       var isEaten = !!eatenMeals[mealKey];
-                      return (<td className="wk-meal-cell" key={si}>
-                        <div className="wk-stepper">
+                      return (<td className="wk-meal-cell" key={si} onClick={function(){setDetailModal({dayIdx:di,mealIdx:si});setDetailInstrOpen(false);}}>
+                        <div className="wk-stepper" onClick={function(e){e.stopPropagation();}}>
                           <button onClick={function(){var k=di+"-"+si;var cur=mealServings[k]||1;if(cur>1){var n=Object.assign({},mealServings);n[k]=cur-1;if(n[k]===1)delete n[k];setMealServings(n);}}}>−</button>
                           <span className="wk-sv">{mealServings[mealKey] || 1}</span>
                           <button onClick={function(){var k=di+"-"+si;var n=Object.assign({},mealServings);n[k]=(mealServings[k]||1)+1;setMealServings(n);}}>+</button>
@@ -3305,6 +3344,71 @@ function App() {
           </>)}
         </div>
       </div>)}
+
+      {detailModal && plan && plan[detailModal.dayIdx] && (function() {
+        var di = detailModal.dayIdx, mi = detailModal.mealIdx;
+        var day = plan[di];
+        var meal = day.meals[mi];
+        if (!meal) return null;
+        var mealKey = di + "-" + mi;
+        var isEaten = !!eatenMeals[mealKey];
+        var servings = mealServings[mealKey] || 1;
+        var recipeData = RECIPES.find(function(r) { return r.name === meal.originalName; });
+        var cookData = COOKING_INSTRUCTIONS[meal.originalName] || RECIPE_COOKING_DATA[meal.originalName];
+        var mainIngs = meal.ingredients.filter(function(x) { return !x.isSpice; });
+        var spiceIngs = meal.ingredients.filter(function(x) { return x.isSpice; });
+        return (<div className="md-overlay" onClick={function(e){if(e.target===e.currentTarget){setDetailModal(null);setDetailInstrOpen(false);}}}>
+          <div className="md-modal">
+            <div className="md-header">
+              <div className="md-header-top">
+                <div className="md-header-left">
+                  <span className="md-title">{meal.name}</span>
+                  <span className="cuisine-tag">{meal.cuisine}</span>
+                </div>
+                <button className="md-close" onClick={function(){setDetailModal(null);setDetailInstrOpen(false);}}>{"\u2715"}</button>
+              </div>
+              <div className="md-context">{DAYS_NAMES[di]} {"\u00B7"} Meal {mi + 1}</div>
+            </div>
+            <div className="md-macrobar">
+              <div className="md-macrobar-left">
+                <span className="md-macrobar-cal">{Math.round(meal.totalMacros.calories)} cal</span>
+                <span className="md-macrobar-detail">C: {Math.round(meal.totalMacros.carbs)}g {"  "} P: {Math.round(meal.totalMacros.protein)}g {"  "} F: {Math.round(meal.totalMacros.fat)}g</span>
+              </div>
+              <span className="servings-ctrl">
+                <button onClick={function(){var k=di+"-"+mi;var cur=mealServings[k]||1;if(cur>1){var n=Object.assign({},mealServings);n[k]=cur-1;if(n[k]===1)delete n[k];setMealServings(n);}}}>−</button>
+                <span className="sv-val">{servings}</span>
+                <button onClick={function(){var k=di+"-"+mi;var n=Object.assign({},mealServings);n[k]=(mealServings[k]||1)+1;setMealServings(n);}}>+</button>
+              </span>
+            </div>
+            <div className="md-body">
+              <table className="md-ing-table">
+                <thead><tr><th>Ingredient</th><th>Qty</th><th>Cal</th></tr></thead>
+                <tbody>
+                  {mainIngs.map(function(ing, ii) {
+                    return (<React.Fragment key={ii}>
+                      <tr>
+                        <td>{ing.name}</td>
+                        <td>{ingQtyDisplay(ing)}</td>
+                        <td>{round1(ing.calories)}</td>
+                      </tr>
+                      {ing.adjustment && <tr><td colSpan={3}><div className="md-adj-note">{"\u26A0\uFE0F"} {ing.adjustment}</div></td></tr>}
+                    </React.Fragment>);
+                  })}
+                  {spiceIngs.length > 0 && <tr className="md-spice-row"><td>{spiceIngs.map(function(s){return s.name;}).join(", ")}</td><td>{"\u2014"}</td><td>{"\u2014"}</td></tr>}
+                </tbody>
+              </table>
+              {cookData && cookData.steps && (<>
+                <button className="md-instr-toggle" onClick={function(){setDetailInstrOpen(!detailInstrOpen);}}>{detailInstrOpen ? "\u25BC" : "\u25B6"} Cooking instructions</button>
+                {detailInstrOpen && <div className="md-instr-list"><ol>{cookData.steps.map(function(step, si) { return <li key={si}>{step}</li>; })}</ol></div>}
+              </>)}
+            </div>
+            <div className="md-actions">
+              <button className="md-btn-swap" onClick={function(){setDetailModal(null);setDetailInstrOpen(false);setSwapTarget({dayIdx:di,mealIdx:mi});setSwapSearch("");}}>Swap meal</button>
+              <button className={"md-btn-eaten" + (isEaten ? " active" : "")} onClick={function(){toggleEaten(di, mi);}}>{isEaten ? "Unmark eaten" : "Mark eaten \u2713"}</button>
+            </div>
+          </div>
+        </div>);
+      })()}
 
       {swapTarget && (function() {
         var searched = RECIPES.filter(function(r) { return !swapSearch || r.name.toLowerCase().indexOf(swapSearch.toLowerCase()) !== -1 || r.cuisine.toLowerCase().indexOf(swapSearch.toLowerCase()) !== -1; });

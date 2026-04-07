@@ -1,7 +1,7 @@
 # CLAUDE.md — Project Context
 
 ## Last Updated
-2026-04-04 — Session 3. Added 8 variants + 1 base recipe, replaced greedy adjustment loop with gradient descent solver, implemented solver-as-filter architecture. 100-week validation: 700/700 (100%).
+2026-04-04 — Session 4. Validated all Session 3 to-do items (all non-issues). Added autotest URL parameter, weekly summary bar, smart swap modal with solver-based ranking, recipe card expansion, UI overhaul (meal header density, protein shake visibility, variant labels, group colors in plan view).
 
 ---
 
@@ -23,6 +23,7 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 - `generatePlan()` — Combo-first with solver-as-filter: samples combos, pre-filters, ranks by softmax, then tries top combos through the solver until one hits [95%, 105%] on all macros.
 - `selectVariant()` — Picks best variant per recipe based on remaining macro budget during combo sampling.
 - Debug panel (type "debug") — 100-week validator, 1000-week simulator, ingredient frequency analyzer.
+- Autotest URL parameter — `index.html?autotest=CAL-CARBS-PRO-FAT` auto-runs 100-week validator with custom targets and downloads JSON results.
 
 **Data flow**: Set targets → Generate → sample 100 combos/day → feasibility pre-filter → softmax rank → solver-as-filter (try top 10 combos until one solves to zone) → add protein shake if needed → render.
 
@@ -38,13 +39,19 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 
 **Gradient descent solver (not greedy)**: The adjustment phase uses projected gradient descent with exact quadratic step sizes to find scale factors for ALL adjustable ingredients simultaneously. This replaces the original greedy 50-iteration loop that tweaked one ingredient at a time and got stuck in local optima (e.g., couldn't close a 6% protein gap because each move worsened fat). The solver treats this as a constrained linear optimization problem with 4 macro targets and K scale factors in [0.5, 3.0].
 
-**Dynamic feasibility (no hardcoded thresholds)**: The feasibility pre-filter and solver derive all thresholds from user-configured target values. The only fixed threshold is the validation zone [95%, 105%]. The algorithm self-corrects for any calorie target, macro split, or recipe pool — no tuning required when adding/removing recipes or changing targets.
+**Dynamic feasibility (no hardcoded thresholds)**: The feasibility pre-filter and solver derive all thresholds from user-configured target values. The only fixed threshold is the validation zone [95%, 105%]. The algorithm self-corrects for any calorie target, macro split, or recipe pool — no tuning required when adding/removing recipes or changing targets. Validated in Session 4 across 4 configurations (1600–2500 cal, 30–45% protein, 25–36% fat) — all 700/700.
 
 **INGREDIENT_REGISTRY**: All macros come from one central lookup. Recipe ingredients are `{ name, grams }` only. Never add inline macros. Always use USDA raw/uncooked values.
 
 **Unified recipe pool**: No separate breakfast pool. Any recipe can appear in any slot. Breakfast recipes sort first visually only.
 
 **Variant system**: 36 recipes have `variants` arrays (chicken-breast↔thigh, beef 90%↔80% lean, salmon→cod, pork-shoulder→loin, no-rice). Each variant has a complete ingredient list. `selectVariant()` picks per combo budget. Rotation tracker uses base recipe name across variants.
+
+**Variant selection skew is accepted**: Session 4 analysis confirmed that `selectVariant()` structurally favors lean variants at even-split budgets due to the extreme protein/fat ratio. This is a theoretical suboptimality, not a regression — the solver compensates. 1000-week simulator showed healthy distribution (136/136 recipes selected, no over-representation). Don't change `selectVariant()` unless validation data shows actual failures.
+
+**Smart swap modal**: Swap modal ranks candidates by solver-based scoring. Each candidate is dry-run through the solver against the day's remaining budget (target minus other meals). Candidates that solve to [95%, 105%] are shown with a green checkmark; incompatible ones are hidden behind a toggle. Variant selection runs per candidate. Protein shake rescue is factored into dry-run scoring.
+
+**No swap guardrails for duplicates/cuisine**: The swap modal intentionally does NOT filter out duplicate recipes or enforce the 2-per-week cuisine limit. Manual swaps should give the user full freedom. Cuisine limits and dedup are enforced only during automated generation.
 
 **Macro targets are extreme**: 200g protein / 55.6g fat is very high-protein low-fat. The solver handles this automatically but it's worth knowing when diagnosing edge cases.
 
@@ -54,15 +61,11 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 
 ## What to Do Next
 
-1. **Diagnose variant selection regression** — `selectVariant` may cause all combo picks to lean same direction (all lean or all fatty). Budget tracking doesn't account for early picks skewing later ones. Validate first, fix if still an issue.
+1. **Fix swap modal false negatives** — Some recipes marked "incompatible" in the dry-run scoring actually work when swapped. Root cause: solver non-determinism (random restarts produce different results between dry-run and real swap). Session 4 applied two fixes (double solver runs per candidate + protein shake in dry-run) which reduced but didn't eliminate the issue. Next step: investigate whether widening the dry-run zone slightly (e.g., [93%, 107%]) eliminates remaining false negatives without introducing false positives.
 
-2. **Run 1000-week simulator** — 100-week validator passes at 100%. Run the longer simulator to check for edge cases at scale.
+2. **Ingredient coverage gaps** — Pork Belly appears in only 1 recipe (Doenjang Jjigae), Rolled Oats in only 2. Convention says ≥5 recipes per ingredient. Low priority but worth addressing when adding new recipes.
 
-3. **Test with different macro targets** — The algorithm is designed to be dynamic. Validate with different calorie/macro configurations (e.g., 1800 cal, 2500 cal, higher fat ratio) to confirm it adapts correctly.
-
-4. **Clean up solver diagnostic logging** — Diagnostic logging was added during Session 3 debugging. Decide whether to keep it (useful for future debugging) or remove it (cleaner console output). If keeping, gate it behind a debug flag.
-
-5. **Review combo variety** — The solver-as-filter rejects more combos than before. Verify that meal variety hasn't decreased (check ingredient frequency analyzer in debug panel).
+3. **Mobile meal card UX** — The 2-line meal header layout (from Session 4) wraps to many lines on mobile (≤600px). The servings stepper, swap button, eaten button, tags, and macros stack vertically. Could benefit from a mobile-specific compact layout.
 
 ---
 
@@ -88,11 +91,17 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 
 **Two RECIPE_COOKING_DATA objects**: Verbose and compact formats. Check both if a recipe's instructions are missing.
 
-**Validation is browser-only**: Debug tools are client-side. Code can't run them. Must test in browser and share JSON reports.
+**Validation is browser-only**: Debug tools are client-side. Code can't run them. Must test in browser and share JSON reports. The autotest URL parameter (`?autotest=CAL-CARBS-PRO-FAT`) can automate multi-config testing but still requires the browser.
 
 **Feasibility pre-filter is intentionally loose**: The cross-constraint checks in `comboFeasible()` use slightly relaxed thresholds (e.g., 110% calorie ceiling on protein path). This is deliberate — the solver-as-filter is the real gate. Making the pre-filter too strict (e.g., 105%) caused a regression from 99.1% to 91.9% in Session 3. If adjusting thresholds, run the full 100-week validator before committing.
 
 **Validator/simulator fallback targets**: When macro percentages are invalid, the 100-week validator, 1000-week simulator, and background validator all use hardcoded fallback targets (2000cal, 175g carbs, 200g protein, 55.6g fat). A Session 3 bug had the simulator using 2500cal — if adding new validation tools, verify they use the correct fallback.
+
+**Swap modal dry-run scoring**: The dry-run solver calls use cloned meal data and must NOT modify actual plan state. The scoring runs the solver 2x per candidate (to reduce non-determinism from random restarts) and includes protein shake rescue logic. Batch size is 4 candidates per frame (setTimeout yielding). Try-catch wraps each candidate — a failed scoring gives fallback score 99 (incompatible). There are still some false negatives (see "What to Do Next").
+
+**Day group colors are snapshot at generation time**: Group color assignments on day cards are captured when the plan is generated and stored with the plan. Changing day grouping after generation does NOT update the current plan's colors — they apply on next generation. Saved/loaded plans preserve their group color snapshot.
+
+**Tabs work independently**: All Recipes, Ingredients, and Stats tabs render without a generated plan. Meal Plan and Grocery List tabs require a generated plan.
 
 ---
 
@@ -106,7 +115,7 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 
 **canAdjust rules**: ≥50 cal, not spice, not soy sauce. Eggs in 50g steps (binder = capped). Unit items (bread, tortillas, lime, lemon, banana) not adjustable.
 
-**Cuisine limit**: Max 2 per week. **Protein shake**: Auto-added if protein >10% below target. Max 1/day, 25P/3C/1F/120cal.
+**Cuisine limit**: Max 2 per week (enforced during generation only, not manual swaps). **Protein shake**: Auto-added if protein >10% below target. Max 1/day, 25P/3C/1F/120cal.
 
 **localStorage keys**: `mealprep_daygroups`, `mealprep_plans`, `mealprep_overrides`, `mealprep_stats`, `mealprep_stats_last_view`.
 
@@ -121,3 +130,5 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 - **Session 2 (2026-04-03)**: Data integrity overhaul. Built INGREDIENT_REGISTRY (85 entries). Comprehensive USDA audit: fixed Ground Beef (6 recipes, cooked→raw), Pork Loin (14 occurrences, wrong cut), White Rice in Egg Fried Rice (200g cooked→55g raw). Added 7 ground beef 80/90% variants. Cleaned 7 dead INGREDIENT_CATEGORIES entries. Removed duplicate Hearty Beef Tacos. Final: 135 recipes, 28 variants, 106 categories.
 
 - **Session 3 (2026-04-04)**: Algorithm overhaul + recipe expansion. Added 8 variants (2 salmon→cod, 6 chicken→thigh) + 1 new base recipe (Baked Cod with Lemon & Herbs). Fixed critical bug: 1000-week simulator and background validator used 2500cal/187.5pro fallback instead of correct 2000cal/200pro — all previous simulator results were against wrong targets. Replaced greedy 50-iteration adjustment loop with projected gradient descent solver (exact quadratic step, random restarts). Added dynamic feasibility pre-filter with 7 cross-constraint directions. Implemented solver-as-filter architecture: tries top 10 combos through solver until one hits [95%, 105%] zone. Added solver diagnostic JSON dump (downloadable from debug panel). Final: 136 recipes, 36 variants, 100-week validation 700/700 (100%).
+
+- **Session 4 (2026-04-04)**: Validation + UI overhaul. Validated all 5 Session 3 to-do items: solver logging already clean (1 gated warning), 1000-week simulator 700/700 with healthy distribution (136/136 recipes, no over-representation), combo variety confirmed good, variant selection skew confirmed theoretical but non-impactful (solver compensates), dynamic macro targets validated at 4 configs (1600–2500 cal) all 700/700. Added autotest URL parameter for automated multi-config validation. UI: fixed tabs to work independently without generated plan, added recipe card full-width breakout with cooking instructions, added weekly summary bar, cleaned up meal header density (2-line layout), improved protein shake visibility (styled pill), made variant labels visible (colored tag), carried group colors into day cards (snapshot at generation time), days default expanded. Smart swap modal: solver-based ranking of candidates with dry-run scoring, variant selection per candidate, protein shake in scoring, solver failure warning toast. Known issue: swap dry-run has residual false negatives from solver non-determinism.

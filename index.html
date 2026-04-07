@@ -290,14 +290,17 @@ function spiceDisplay(grams) {
 // USDA per-100g raw values. All recipe ingredients reference this registry at startup.
 // To update an ingredient's macros, change it here — all recipes will reflect the change.
 var INGREDIENT_REGISTRY = {
+  "Adobo": { calories: 0, carbs: 0, protein: 0, fat: 0 },
   "Ahi Tuna": { calories: 122, carbs: 0, protein: 26.7, fat: 1 },
   "Asparagus": { calories: 20, carbs: 3.9, protein: 2.2, fat: 0.1 },
   "Avocado": { calories: 160, carbs: 8.5, protein: 2, fat: 14.7 },
   "BBQ Sauce": { calories: 160, carbs: 36.7, protein: 1.3, fat: 0 },
   "Banana": { calories: 89, carbs: 22.8, protein: 1.1, fat: 0.3 },
+  "Bay Leaves": { calories: 0, carbs: 0, protein: 0, fat: 0 },
   "Basmati Rice": { calories: 356, carbs: 78.6, protein: 7.1, fat: 0.6 },
   "Beef Sirloin": { calories: 165, carbs: 0, protein: 26.1, fat: 6.3 },
   "Bell Pepper": { calories: 30, carbs: 6.7, protein: 0.8, fat: 0.2 },
+  "Black Pepper": { calories: 0, carbs: 0, protein: 0, fat: 0 },
   "Black Beans": { calories: 132, carbs: 23.7, protein: 8.9, fat: 0.5 },
   "Blueberries": { calories: 57, carbs: 14.5, protein: 0.7, fat: 0.3 },
   "Broccoli": { calories: 34, carbs: 7, protein: 2.8, fat: 0.4 },
@@ -317,6 +320,7 @@ var INGREDIENT_REGISTRY = {
   "Corn": { calories: 86, carbs: 19, protein: 3.3, fat: 1.2 },
   "Corn Tortillas": { calories: 211, carbs: 43.3, protein: 5.6, fat: 2.6 },
   "Cucumber": { calories: 15, carbs: 3.6, protein: 0.7, fat: 0.1 },
+  "Cumin": { calories: 0, carbs: 0, protein: 0, fat: 0 },
   "Edamame": { calories: 121, carbs: 8.9, protein: 11, fat: 5.2 },
   "Egg": { calories: 144, carbs: 0.8, protein: 12.6, fat: 10 },
   "Eggplant": { calories: 25, carbs: 6, protein: 1, fat: 0.2 },
@@ -342,6 +346,7 @@ var INGREDIENT_REGISTRY = {
   "Mozzarella Cheese": { calories: 280, carbs: 2.2, protein: 20, fat: 21.6 },
   "Olive Oil": { calories: 884, carbs: 0, protein: 0, fat: 100 },
   "Onion": { calories: 40, carbs: 9.3, protein: 1.1, fat: 0.1 },
+  "Oregano": { calories: 0, carbs: 0, protein: 0, fat: 0 },
   "Paneer": { calories: 260, carbs: 3, protein: 18.3, fat: 20 },
   "Panko Breadcrumbs": { calories: 374, carbs: 73.4, protein: 10.7, fat: 2.3 },
   "Parmesan Cheese": { calories: 392, carbs: 3.2, protein: 28.4, fat: 29.7 },
@@ -369,6 +374,7 @@ var INGREDIENT_REGISTRY = {
   "Tahini": { calories: 593, carbs: 17, protein: 17, fat: 53.8 },
   "Tomato Sauce": { calories: 29, carbs: 6.6, protein: 1, fat: 0.2 },
   "Turkey Breast": { calories: 135, carbs: 0, protein: 30, fat: 1 },
+  "Water": { calories: 0, carbs: 0, protein: 0, fat: 0 },
   "White Beans": { calories: 127, carbs: 22.3, protein: 8.7, fat: 0.5 },
   "White Rice": { calories: 365, carbs: 80, protein: 7.1, fat: 0.65 },
   "Whole Milk": { calories: 61, carbs: 4.8, protein: 3.2, fat: 3.3 },
@@ -515,7 +521,7 @@ var RECIPE_COOKING_DATA = {
 "Tabbouleh with Grilled Chicken":{prepTime:"15 mins",cookTime:"20 mins",steps:["Cook brown rice according to package directions and let cool.","Season and grill chicken breast until cooked through, then dice.","Finely dice cucumber and tomato.","Toss cooled brown rice with cucumber, tomato, olive oil, and lemon juice.","Season with salt, pepper, and fresh herbs.","Top tabbouleh with diced grilled chicken."]},
 "Pork Tonkatsu":{prepTime:"10 mins",cookTime:"15 mins",steps:["Cook white rice according to package directions.","Pound pork loin to even thickness and season with salt and pepper.","Set up breading station: flour, beaten egg, panko breadcrumbs.","Coat pork in flour, dip in egg, then press into panko.","Pan-fry in oil over medium-high heat for 3-4 minutes per side until golden and crispy.","Slice tonkatsu and serve with rice and shredded cabbage."]},
 "Thai Basil Chicken":{prepTime:"10 mins",cookTime:"10 mins",steps:["Cook white rice according to package directions.","Dice chicken breast into small pieces.","Mince garlic and slice bell pepper.","Heat sesame oil in a wok over high heat, cook chicken until browned.","Add garlic, bell pepper, and soy sauce. Stir-fry for 3-4 minutes.","Serve over rice."]},
-"Tuscan White Bean Soup":{prepTime:"10 mins",cookTime:"20 mins",steps:["Slice pork loin into small pieces. Mince garlic and dice tomato.","Heat olive oil in a large pot. Brown pork for 3-4 minutes. Add garlic and cook 1 minute.","Add white beans, tomato, and 2 cups water or broth.","Simmer for 15 minutes.","Stir in spinach and cook until wilted, about 2 minutes.","Toast whole wheat bread and serve soup with bread on the side."]},
+"Tuscan White Bean Soup":{prepTime:"10 mins",cookTime:"20 mins",steps:["Slice pork loin into small pieces. Mince garlic.","Heat olive oil in a large pot. Brown pork for 3-4 minutes. Add garlic and cook 1 minute.","Add white beans, tomato sauce, and 2 cups water or broth.","Simmer for 15 minutes.","Stir in spinach and cook until wilted, about 2 minutes.","Toast whole wheat bread and serve soup with bread on the side."]},
 "Mango Chicken Curry":{prepTime:"10 mins",cookTime:"25 mins",steps:["Cook brown rice according to package directions.","Cut chicken thigh into pieces and dice onion.","Saut\u00e9 onion in oil until softened, add chicken and brown on all sides.","Add coconut milk, diced mango, and spices.","Simmer for 15-20 minutes until chicken is cooked and sauce thickens.","Serve over rice."]},
 "Grilled Salmon & Asparagus":{prepTime:"10 mins",cookTime:"20 mins",steps:["Cook brown rice according to package directions.","Trim asparagus ends and toss with olive oil, salt, and pepper.","Season salmon fillet with salt, pepper, and lemon juice.","Grill or bake salmon and asparagus at 200\u00b0C (400\u00b0F) for 12-15 minutes.","Plate brown rice, top with salmon and asparagus.","Squeeze fresh lemon over everything."]},
 "Beef Tacos":{prepTime:"10 mins",cookTime:"12 mins",steps:["Brown ground beef in a skillet over medium-high heat, breaking it apart.","Season with cumin, chili powder, salt, and pepper.","Dice tomato, onion, and avocado.","Warm corn tortillas in a dry pan.","Fill tortillas with seasoned beef, tomato, onion, avocado, and cilantro.","Serve immediately."]},
@@ -574,7 +580,7 @@ var RECIPE_COOKING_DATA = {
 "Arroz con Pollo":{prepTime:"10 mins",cookTime:"30 mins",steps:["Season chicken breast with salt, pepper, and cumin. Dice onion and bell pepper.","Heat olive oil in a large pot. Brown chicken for 4 minutes per side. Remove.","Saute onion, bell pepper, and garlic for 3 minutes.","Add rice, tomato sauce, coconut milk, green beans, and 1.5 cups water.","Nestle chicken into the rice. Cover and cook 20 minutes until rice is done.","Stir in green peas and cilantro. Rest 5 minutes before serving."]},
 "Gambas al Ajillo":{prepTime:"5 mins",cookTime:"10 mins",steps:["Peel and devein shrimp. Thinly slice garlic.","Heat olive oil in a small skillet over medium heat. Add garlic and cook 1 minute until fragrant.","Add shrimp and cook 2-3 minutes per side until pink and curled.","Squeeze lemon juice over the shrimp.","Toast whole wheat bread slices.","Serve shrimp over a bed of spinach with bread on the side."]},
 "Aji de Gallina":{prepTime:"15 mins",cookTime:"25 mins",steps:["Cook white rice according to package directions. Hard-boil the egg.","Poach or simmer chicken breast in water for 15 minutes until cooked. Shred with two forks.","Soak bread in a splash of water to soften. Blend soaked bread with peanuts into a paste.","Saute onion and garlic in olive oil until soft. Add the bread-peanut paste.","Stir in shredded chicken and cook 5 minutes until sauce thickens.","Serve over rice topped with sliced hard-boiled egg."]},
-"Ropa Vieja":{prepTime:"10 mins",cookTime:"40 mins",steps:["Cook white rice according to package directions.","Slice beef sirloin into thick strips. Dice onion, bell pepper, and eggplant.","Heat olive oil in a pot. Sear beef for 3 minutes per side. Remove.","Saute onion, bell pepper, eggplant, and garlic for 5 minutes.","Add tomato sauce and 1 cup water. Return beef, cover and braise for 30 minutes.","Shred beef with two forks in the sauce. Serve over rice."]},
+"Ropa Vieja":{prepTime:"40 mins",cookTime:"3 hrs 30 mins",steps:["Cook white rice according to package directions.","Marinate beef sirloin with oregano, cumin, black pepper, mashed garlic, adobo, soy sauce, and juice of half a lemon for at least 30 minutes.","Heat olive oil in a large pot. Sear marinated beef for 3 minutes per side.","Add water and bay leaves to the pot. Cover and braise on low heat for 3 hours.","Remove bay leaves. Shred beef with two forks in the sauce.","Add diced onion, bell pepper, eggplant, and tomato sauce. Cook for 10-15 minutes until vegetables are tender. Serve over rice."]},
 "Picanha with Farofa":{prepTime:"10 mins",cookTime:"15 mins",steps:["Cook white rice and black beans separately according to package directions.","Season beef sirloin generously with coarse salt.","Grill or pan-sear beef for 4-5 minutes per side for medium-rare.","Dice onion and saute with garlic in a dry pan for farofa flavor base.","Fry an egg sunny-side up.","Slice the steak against the grain. Serve with rice, beans, egg, and a squeeze of lime."]},
 "Tortilla Espanola":{prepTime:"10 mins",cookTime:"20 mins",steps:["Peel and thinly slice potato. Slice onion into thin rings.","Heat olive oil in a non-stick skillet. Gently fry potato and onion for 10 minutes until soft.","Beat eggs in a large bowl. Add the cooked potato and onion mixture. Stir in spinach.","Pour the mixture back into the oiled skillet over medium-low heat.","Cook for 6-8 minutes until the bottom is set. Flip using a plate and cook 4 more minutes.","Slide onto a plate, top with sliced tomato, and serve warm or at room temperature."]},
 "Beef Pho":{prepTime:"10 mins",cookTime:"20 mins",steps:["Cook rice noodles according to package directions. Drain and set aside.","Slice beef sirloin very thinly against the grain.","Bring 3 cups water or beef broth to a boil with sliced onion, garlic, and a splash of soy sauce.","Place noodles in bowls. Arrange raw beef slices on top.","Pour boiling broth over the beef — the heat will cook the thin slices.","Top with spinach, a squeeze of lime, and serve immediately."]},
@@ -769,7 +775,7 @@ var RECIPES = [
   // Peruvian — Chicken Breast in creamy pepper-peanut sauce
   {name:"Aji de Gallina",cuisine:"Peruvian",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:170},{name:"Onion",grams:60},{name:"Garlic",grams:8},{name:"Whole Wheat Bread",grams:30},{name:"Egg",grams:50},{name:"Olive Oil",grams:8},{name:"White Rice",grams:55},{name:"Peanuts",grams:15}]},
   // Caribbean — Shredded beef in tomato sauce, Cuba's national dish
-  {name:"Ropa Vieja",cuisine:"Caribbean",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:180},{name:"Tomato Sauce",grams:100},{name:"Onion",grams:60},{name:"Bell Pepper",grams:80},{name:"Garlic",grams:8},{name:"Olive Oil",grams:8},{name:"White Rice",grams:55},{name:"Eggplant",grams:60}]},
+  {name:"Ropa Vieja",cuisine:"Caribbean",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:180},{name:"Tomato Sauce",grams:100},{name:"Onion",grams:60},{name:"Bell Pepper",grams:80},{name:"Garlic",grams:23},{name:"Olive Oil",grams:17},{name:"White Rice",grams:55},{name:"Eggplant",grams:60},{name:"Oregano",grams:1},{name:"Cumin",grams:0.7},{name:"Black Pepper",grams:0.7},{name:"Bay Leaves",grams:1.2},{name:"Lemon",grams:0.5},{name:"Adobo",grams:7},{name:"Soy Sauce",grams:8},{name:"Water",grams:237}]},
   // Brazilian — Grilled steak, signature of every churrascaria
   {name:"Picanha with Farofa",cuisine:"Brazilian",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:180},{name:"Onion",grams:40},{name:"Garlic",grams:8},{name:"Black Beans",grams:80},{name:"White Rice",grams:55},{name:"Lime",grams:15},{name:"Egg",grams:50}]},
   // Spanish — Thick potato omelette, Spain's most iconic everyday dish

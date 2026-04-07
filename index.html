@@ -25,6 +25,27 @@
   .settings-drawer { overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; }
   .settings-drawer.collapsed { max-height: 0; opacity: 0; pointer-events: none; }
   .settings-drawer.expanded { max-height: 2000px; opacity: 1; }
+  .sd-row1 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .sd-row1 { grid-template-columns: 1fr; } }
+  .sd-label { font-size: 0.68rem; font-weight: 700; color: #5a7a6f; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .sd-macro-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .sd-macro-grid .input-group label { font-size: 0.72rem; margin-bottom: 2px; }
+  .sd-macro-grid .input-group input { padding: 4px 8px; height: 30px; font-size: 13px; border-radius: 6px; }
+  .sd-day-pills { display: flex; gap: 4px; }
+  .sd-dpill { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 6px 2px 5px; border-radius: 8px; border: 1.5px solid #d8f3dc; background: #e8f5e9; cursor: pointer; user-select: none; transition: all 0.15s; min-width: 0; }
+  .sd-dpill .dp-name { font-size: 0.75rem; font-weight: 700; color: #2d6a4f; }
+  .sd-dpill .dp-label { font-size: 0.58rem; font-weight: 600; color: #6b7f7a; margin-top: 1px; }
+  .sd-dpill.dp-selected { border-color: #2d6a4f; box-shadow: 0 0 0 2px rgba(45,106,79,0.3); }
+  .sd-dpill.dp-excluded { opacity: 0.45; background: #f3f3f3; border-color: #e0e0e0; }
+  .sd-dpill.dp-excluded .dp-name { color: #999; }
+  .sd-row2 { border-top: 1px solid #e0e8e4; margin-top: 12px; padding-top: 10px; }
+  .sd-save-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .sd-save-row input { padding: 4px 8px; height: 30px; font-size: 13px; border: 1.5px solid #c8d6d0; border-radius: 6px; outline: none; flex: 1; min-width: 120px; }
+  .sd-saved-scroll { max-height: 120px; overflow-y: auto; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .sd-saved-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; background: #f7faf8; border-radius: 6px; font-size: 0.82rem; }
+  .sd-saved-item .sp-name { font-weight: 600; font-size: 0.82rem; }
+  .sd-saved-item .sp-meta { font-size: 0.72rem; color: #6b7f7a; margin-left: 6px; }
+  .sd-saved-item .sp-actions { display: flex; gap: 4px; flex-shrink: 0; }
   .wk-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #d8e0dc; border-radius: 12px; overflow: hidden; background: #fff; margin-bottom: 16px; }
   .wk-table th { font-size: 0.78rem; font-weight: 700; color: #5a7a6f; padding: 8px 10px; text-align: left; background: #f0f4f3; border-bottom: 1px solid #d8e0dc; }
   .wk-table th:not(:last-child) { border-right: 0.5px solid #e0e8e4; }
@@ -2817,65 +2838,57 @@ function App() {
       </div>
 
       <div className={"settings-drawer " + (settingsOpen ? "expanded" : "collapsed")}>
-        <div className="card">
-          <h2>Macro Calculator</h2>
-          <div className="macro-inputs">
-            <div className="input-group"><label>Daily Calories</label><input type="number" value={calories} min={1000} max={5000} onChange={function(e){setCalories(Number(e.target.value));}} /></div>
-            <div className="input-group"><label>Carbs %</label><input type="number" value={carbPct} min={0} max={100} onChange={function(e){setCarbPct(Number(e.target.value));}} /></div>
-            <div className="input-group"><label>Protein %</label><input type="number" value={proteinPct} min={0} max={100} onChange={function(e){setProteinPct(Number(e.target.value));}} /></div>
-            <div className="input-group"><label>Fat %</label><input type="number" value={fatPct} min={0} max={100} onChange={function(e){setFatPct(Number(e.target.value));}} /></div>
+        <div className="card" style={{paddingBottom:12}}>
+          <div className="sd-row1">
+            <div>
+              <div className="sd-label">Macro Targets</div>
+              <div className="sd-macro-grid">
+                <div className="input-group"><label>Calories</label><input type="number" value={calories} min={1000} max={5000} onChange={function(e){setCalories(Number(e.target.value));}} /></div>
+                <div className="input-group"><label>Carbs %</label><input type="number" value={carbPct} min={0} max={100} onChange={function(e){setCarbPct(Number(e.target.value));}} /></div>
+                <div className="input-group"><label>Protein %</label><input type="number" value={proteinPct} min={0} max={100} onChange={function(e){setProteinPct(Number(e.target.value));}} /></div>
+                <div className="input-group"><label>Fat %</label><input type="number" value={fatPct} min={0} max={100} onChange={function(e){setFatPct(Number(e.target.value));}} /></div>
+              </div>
+              {!pctValid && <div className={"warning"+(Math.abs(pctSum-100)>10?" error":"")} style={{marginTop:4,fontSize:'0.78rem',padding:'4px 8px'}}>Percentages sum to {pctSum}% — must equal 100%</div>}
+            </div>
+            <div>
+              <div className="sd-label">Day Grouping</div>
+              <div className="sd-day-pills">
+                {[0,1,2,3,4,5,6].map(function(d) {
+                  var isExcluded = excludedDays.indexOf(d) !== -1;
+                  var gi = findDayGroup(d);
+                  var gc = gi !== -1 ? getGroupColor(gi) : null;
+                  var isSelected = selectedDay === d;
+                  var pillClass = "sd-dpill" + (isExcluded ? " dp-excluded" : "") + (isSelected ? " dp-selected" : "");
+                  var pillStyle = {};
+                  if (!isExcluded && gc) { pillStyle = { background: gc.bg, borderColor: gc.border }; }
+                  return (<div className={pillClass} key={d} style={pillStyle}
+                    onClick={function(e) {
+                      if (clickTimer.current) { clearTimeout(clickTimer.current); clickTimer.current = null; handlePillDoubleClick(d); return; }
+                      clickTimer.current = setTimeout(function() { clickTimer.current = null; if (isExcluded) { toggleExcludeDay(d); } else { handlePillClick(d); } }, 250);
+                    }}
+                    onContextMenu={function(e){e.preventDefault();toggleExcludeDay(d);}}>
+                    <div className="dp-name" style={gc && !isExcluded ? {color: gc.text} : {}}>{DAYS_NAMES[d].slice(0,3)}</div>
+                    <div className="dp-label" style={gc && !isExcluded ? {color: gc.text} : {}}>{isExcluded ? "off" : (gi !== -1 ? "G"+(gi+1) : "\u00A0")}</div>
+                  </div>);
+                })}
+              </div>
+              {allDaysExcluded && <div className="warning" style={{marginTop:6,fontSize:'0.72rem',padding:'3px 8px'}}>All days excluded</div>}
+            </div>
           </div>
-          {!pctValid && <div className={"warning"+(Math.abs(pctSum-100)>10?" error":"")}>Percentages sum to {pctSum}% — must equal 100%</div>}
-          <div className="macro-summary">
-            <div className="macro-pill"><div className="value">{calories}</div><div className="label">Calories</div></div>
-            <div className="macro-pill"><div className="value">{carbGrams}g</div><div className="label">Carbs</div></div>
-            <div className="macro-pill"><div className="value">{proteinGrams}g</div><div className="label">Protein</div></div>
-            <div className="macro-pill"><div className="value">{fatGrams}g</div><div className="label">Fat</div></div>
+          <div className="sd-row2">
+            <div className="sd-save-row">
+              <div className="sd-label" style={{marginBottom:0}}>Saved Plans</div>
+              <input placeholder="Plan name..." value={saveName} onChange={function(e){setSaveName(e.target.value);}} />
+              <button className="btn btn-sm btn-primary" onClick={handleSave} disabled={!plan||!saveName.trim()}>Save</button>
+              {copyMsg && <span className="copy-feedback" style={{fontSize:'0.78rem'}}>{copyMsg}</span>}
+            </div>
+            {savedPlans.length > 0 && <div className="sd-saved-scroll">
+              {savedPlans.map(function(sp, i) {
+                return <div className="sd-saved-item" key={i}><div><span className="sp-name">{sp.name}</span><span className="sp-meta">{sp.date} — {sp.calories} cal</span></div>
+                  <div className="sp-actions"><button className="btn btn-sm btn-secondary" onClick={function(){handleLoad(sp);}}>Load</button><button className="btn btn-sm btn-danger" onClick={function(){handleDeleteSaved(sp.name);}}>Del</button></div></div>;
+              })}
+            </div>}
           </div>
-        </div>
-
-        <div className="card">
-          <h2>Day Grouping</h2>
-
-          <div className="day-pill-row">
-            {[0,1,2,3,4,5,6].map(function(d) {
-              var isExcluded = excludedDays.indexOf(d) !== -1;
-              var gi = findDayGroup(d);
-              var gc = gi !== -1 ? getGroupColor(gi) : null;
-              var isSelected = selectedDay === d;
-              var pillClass = "day-pill" + (isExcluded ? " dp-excluded" : "") + (isSelected ? " dp-selected" : "");
-              var pillStyle = {};
-              if (!isExcluded && gc) { pillStyle = { background: gc.bg, borderColor: gc.border }; }
-              return (<div className={pillClass} key={d} style={pillStyle}
-                onClick={function(e) {
-                  if (e.target.classList.contains('dp-toggle')) return;
-                  if (clickTimer.current) { clearTimeout(clickTimer.current); clickTimer.current = null; handlePillDoubleClick(d); return; }
-                  clickTimer.current = setTimeout(function() { clickTimer.current = null; handlePillClick(d); }, 250);
-                }}>
-                <div className="dp-name" style={gc && !isExcluded ? {color: gc.text} : {}}>{DAYS_NAMES[d].slice(0,3)}</div>
-                {gi !== -1 && !isExcluded && <div className="dp-label" style={gc ? {color: gc.text} : {}}>G{gi+1}</div>}
-                <div className={"dp-toggle" + (isExcluded ? " dp-off" : "")} onClick={function(e){e.stopPropagation();toggleExcludeDay(d);}} />
-              </div>);
-            })}
-          </div>
-
-          {allDaysExcluded && <div className="warning" style={{marginTop:10}}>All days are excluded. Include at least one day to generate a plan.</div>}
-          <div className="dg-helper">Tap a pill to select, then tap another to group. Double-tap to ungroup. Toggle switch to include/exclude.</div>
-        </div>
-
-        <div className="card">
-          <h2>Saved Plans</h2>
-          <div className="save-section">
-            <input placeholder="Plan name..." value={saveName} onChange={function(e){setSaveName(e.target.value);}} />
-            <button className="btn btn-sm btn-primary" onClick={handleSave} disabled={!plan||!saveName.trim()}>Save Current</button>
-            {copyMsg && <span className="copy-feedback">{copyMsg}</span>}
-          </div>
-          {savedPlans.length > 0 && <div className="saved-plans-list">
-            {savedPlans.map(function(sp, i) {
-              return <div className="saved-plan-item" key={i}><div><span className="sp-name">{sp.name}</span><br/><span className="sp-meta">{sp.date} — {sp.calories} cal</span></div>
-                <div className="sp-actions"><button className="btn btn-sm btn-secondary" onClick={function(){handleLoad(sp);}}>Load</button><button className="btn btn-sm btn-danger" onClick={function(){handleDeleteSaved(sp.name);}}>Del</button></div></div>;
-            })}
-          </div>}
         </div>
       </div>
 

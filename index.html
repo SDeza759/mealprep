@@ -25,6 +25,32 @@
   .settings-drawer { overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; }
   .settings-drawer.collapsed { max-height: 0; opacity: 0; pointer-events: none; }
   .settings-drawer.expanded { max-height: 2000px; opacity: 1; }
+  .wk-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #d8e0dc; border-radius: 12px; overflow: hidden; background: #fff; margin-bottom: 16px; }
+  .wk-table th { font-size: 0.78rem; font-weight: 700; color: #5a7a6f; padding: 8px 10px; text-align: left; background: #f0f4f3; border-bottom: 1px solid #d8e0dc; }
+  .wk-table th:not(:last-child) { border-right: 0.5px solid #e0e8e4; }
+  .wk-day-cell { background: #f7faf8; padding: 8px 6px; text-align: center; vertical-align: middle; font-size: 0.82rem; font-weight: 700; color: #2d6a4f; border-right: 0.5px solid #e0e8e4; width: 56px; min-width: 56px; }
+  .wk-day-cell .wk-glabel { font-size: 0.65rem; font-weight: 600; margin-top: 2px; padding: 1px 6px; border-radius: 8px; display: inline-block; }
+  .wk-meal-cell { padding: 8px 10px; vertical-align: top; position: relative; cursor: pointer; transition: background 0.15s; border-right: 0.5px solid #e0e8e4; }
+  .wk-meal-cell:last-child { border-right: none; }
+  .wk-meal-cell:hover { background: #f0f7f3; }
+  .wk-row:not(:last-child) td { border-bottom: 0.5px solid #e0e8e4; }
+  .wk-row:not(:last-child) th { border-bottom: 0.5px solid #e0e8e4; }
+  .wk-name-row { display: flex; align-items: center; gap: 5px; }
+  .wk-eaten-circle { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #c8d6d0; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; transition: all 0.15s; flex-shrink: 0; color: transparent; }
+  .wk-eaten-circle.checked { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
+  .wk-meal-name { font-size: 13px; font-weight: 500; color: #1a2e2a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wk-meal-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; flex-wrap: wrap; }
+  .wk-meal-macros { font-size: 0.72rem; color: #5a7a6f; font-weight: 500; }
+  .wk-stepper { position: absolute; top: 6px; right: 6px; display: inline-flex; align-items: center; border: 1px solid #d8e0dc; border-radius: 5px; overflow: hidden; font-size: 12px; }
+  .wk-stepper button { background: #f0f4f3; border: none; color: #2d6a4f; font-weight: 700; cursor: pointer; padding: 1px 6px; font-size: 12px; line-height: 1.4; }
+  .wk-stepper button:hover { background: #d8e0dc; }
+  .wk-stepper .wk-sv { padding: 1px 4px; font-weight: 600; color: #2d6a4f; min-width: 16px; text-align: center; background: #fff; font-size: 11px; }
+  .wk-empty-cell { text-align: center; color: #c8d6d0; font-size: 1.1rem; vertical-align: middle; }
+  .wk-shake-cell { background: linear-gradient(135deg, #EEEDFE, #E6F1FB); border: 1.5px solid #AFA9EC; border-radius: 0; cursor: default; }
+  .wk-shake-cell:hover { background: linear-gradient(135deg, #EEEDFE, #E6F1FB); }
+  .wk-shake-cell .wk-meal-name { color: #5b21b6; }
+  .wk-shake-cell .wk-meal-macros { color: #6b21a8; }
+  .wk-shake-cell .cuisine-tag { background: #ede9fe; color: #5b21b6; }
   .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
   .card h2 { color: #2d6a4f; font-size: 1.15rem; margin-bottom: 12px; }
   .macro-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
@@ -2872,8 +2898,6 @@ function App() {
           <div className="log-eaten-bar">
             <span className="le-info">{eatenCount > 0 ? eatenCount + " meal" + (eatenCount > 1 ? "s" : "") + " checked" : "Check meals as you eat them"}</span>
             <div className="expand-collapse-bar">
-              <button className="btn btn-sm btn-secondary" onClick={expandAll}>Expand All</button>
-              <button className="btn btn-sm btn-secondary" onClick={collapseAll}>Collapse All</button>
               <button className="btn btn-sm btn-primary" onClick={handleLogEaten} disabled={eatenCount === 0}>Log Eaten Meals to Stats</button>
             </div>
           </div>
@@ -2901,97 +2925,57 @@ function App() {
               </div>
             </div>);
           })()}
-          {plan.map(function(day, di) {
-          if (!day || excludedDays.indexOf(di) !== -1) return null;
-          var isDayExpanded = !!expandedDays[di];
-          var pgEntry = planGroups && planGroups[di];
-          var dgc = pgEntry ? pgEntry.color : null;
-          var dgi = pgEntry ? pgEntry.groupIndex : -1;
-          return (<div className="card day-card" key={di} style={dgc ? {borderLeftColor: dgc.border} : undefined}>
-            <div className="day-summary" onClick={function(){toggleDay(di);}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:6}}>
-                <div className="day-label" style={{marginBottom:0}}>{isDayExpanded ? "\u25BC" : "\u25B6"} {DAYS_NAMES[di]}{dgc && <span style={{background:dgc.bg,color:dgc.text,border:'1px solid '+dgc.border,padding:'1px 8px',borderRadius:12,fontSize:'0.7rem',fontWeight:600,marginLeft:8,verticalAlign:'middle'}}>G{dgi+1}</span>}</div>
-                <div className="day-meals-list">{day.meals.map(function(m){return m.name;}).join(" \u2022 ")}</div>
-              </div>
-              <div className="day-totals" style={{borderTop:'none',paddingTop:4,marginTop:4}}><span>Cal: {day.totals.calories}</span><span>C: {day.totals.carbs}g</span><span>P: {day.totals.protein}g</span><span>F: {day.totals.fat}g</span></div>
-              {day.proteinShake && <div className="shake-card"><span className="shake-label">{"\uD83E\uDD64"} Protein Shake ({day.proteinShake.scoops} scoop)</span><div className="shake-macros"><span>{day.proteinShake.protein}g P</span><span>{day.proteinShake.carbs}g C</span><span>{day.proteinShake.fat}g F</span><span>{day.proteinShake.calories} cal</span></div></div>}
-              <div className="progress-row">
-                <div className="progress-item"><div className="plabel"><span>Carbs</span><span>{Math.round(day.totals.carbs/carbGrams*100)}%</span></div><ProgressBar value={day.totals.carbs} target={carbGrams} className="fill-carb" /></div>
-                <div className="progress-item"><div className="plabel"><span>Protein</span><span>{Math.round(day.totals.protein/proteinGrams*100)}%</span></div><ProgressBar value={day.totals.protein} target={proteinGrams} className="fill-pro" /></div>
-                <div className="progress-item"><div className="plabel"><span>Fat</span><span>{Math.round(day.totals.fat/fatGrams*100)}%</span></div><ProgressBar value={day.totals.fat} target={fatGrams} className="fill-fat" /></div>
-                <div className="progress-item"><div className="plabel"><span>Calories</span><span>{Math.round(day.totals.calories/calories*100)}%</span></div><ProgressBar value={day.totals.calories} target={calories} className="fill-cal" /></div>
-              </div>
-            </div>
-            {isDayExpanded && day.meals.map(function(meal, mi) {
-              var mealKey = di + "-" + mi;
-              var isEaten = !!eatenMeals[mealKey];
-              var isMealExpanded = !!expandedMeals[mealKey];
-              return (<div className={"meal-card" + (isEaten ? " eaten" : "")} key={mi}>
-                <div className="meal-card-header" onClick={function(e){if(e.target.tagName!=='BUTTON')toggleMeal(di,mi);}}>
-                  <div className="meal-header">
-                    <div className="meal-row1">
-                      <span className="meal-name">{isMealExpanded ? "\u25BC" : "\u25B6"} {meal.name}</span>
-                      <span className="cuisine-tag">{meal.cuisine}</span>
-                      {meal.isBreakfast && <span className="cuisine-tag breakfast-tag">Breakfast</span>}
-                      {meal.variantLabel && <span className="variant-tag">{meal.variantLabel}</span>}
-                    </div>
-                    <div className="meal-row2">
-                      <div className="meal-row2-macros">
-                        <span>Cal: {round1(meal.totalMacros.calories)}</span>
-                        <span>C: {round1(meal.totalMacros.carbs)}g</span>
-                        <span>P: {round1(meal.totalMacros.protein)}g</span>
-                        <span>F: {round1(meal.totalMacros.fat)}g</span>
-                      </div>
-                      <div className="meal-row2-actions">
-                        <span className="servings-ctrl">
-                          <button onClick={function(e){e.stopPropagation();var k=di+"-"+mi;var cur=mealServings[k]||1;if(cur>1){var n=Object.assign({},mealServings);n[k]=cur-1;if(n[k]===1)delete n[k];setMealServings(n);}}}>−</button>
-                          <span className="sv-val">{mealServings[di+"-"+mi]||1}</span>
-                          <button onClick={function(e){e.stopPropagation();var k=di+"-"+mi;var n=Object.assign({},mealServings);n[k]=(mealServings[k]||1)+1;setMealServings(n);}}>+</button>
-                        </span>
-                        <button className="swap-btn" onClick={function(e){e.stopPropagation();setSwapTarget({dayIdx:di,mealIdx:mi});setSwapSearch("");}}>Swap</button>
-                        <button className={"eaten-btn" + (isEaten ? " active" : "")} onClick={function(e){e.stopPropagation();toggleEaten(di,mi);}}>{isEaten ? "\u2713 Eaten" : "\u2713"}</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {isMealExpanded && (function() {
-                  // Variant-safe: uses originalName (base recipe name) for lookup. selectedVariant does not change recipe.name.
-                  var recipeData = RECIPES.find(function(r){return r.name===meal.originalName;});
-                  var instrKey = di+"-"+mi+"-instr";
-                  var instrOpen = !!expandedInstructions[instrKey];
-                  return (<>
-                  {recipeData && recipeData.prepTime && <div className="cook-times"><span>Prep: {recipeData.prepTime}</span><span>Cook: {recipeData.cookTime}</span></div>}
-                  <table className="ing-table">
-                    <thead><tr><th>Ingredient</th><th>Qty</th><th>Cal</th><th>C</th><th>P</th><th>F</th></tr></thead>
-                    <tbody>
-                      {meal.ingredients.map(function(ing, ii) {
-                        return (<React.Fragment key={ii}>
-                          <tr className={ing.isSpice?"spice-row":""}>
-                            <td>{ing.name}</td>
-                            <td>{ingQtyDisplay(ing)}</td>
-                            <td>{ing.isSpice ? "\u2014" : round1(ing.calories)}</td>
-                            <td>{ing.isSpice ? "\u2014" : round1(ing.carbs)}</td>
-                            <td>{ing.isSpice ? "\u2014" : round1(ing.protein)}</td>
-                            <td>{ing.isSpice ? "\u2014" : round1(ing.fat)}</td>
-                          </tr>
-                          {ing.adjustment && <tr><td colSpan={6}><div className="adj-note">{"\u26A0\uFE0F"} {ing.adjustment}</div></td></tr>}
-                        </React.Fragment>);
-                      })}
-                    </tbody>
-                  </table>
-                  <div className="meal-totals">
-                    <span>Cal: {round1(meal.totalMacros.calories)}</span><span>C: {round1(meal.totalMacros.carbs)}g</span>
-                    <span>P: {round1(meal.totalMacros.protein)}g</span><span>F: {round1(meal.totalMacros.fat)}g</span>
-                  </div>
-                  {recipeData && recipeData.steps && (<>
-                    <button className="instructions-toggle" onClick={function(e){e.stopPropagation();var n=Object.assign({},expandedInstructions);if(n[instrKey])delete n[instrKey];else n[instrKey]=true;setExpandedInstructions(n);}}>{instrOpen ? "\u25BC" : "\u25B6"} {instrOpen ? "Hide Instructions" : "How to Cook"}</button>
-                    {instrOpen && <div className="instructions-list"><ol>{recipeData.steps.map(function(step,si){return <li key={si}>{step}</li>;})}</ol></div>}
-                  </>)}
-                </>);})()}
-              </div>);
-            })}
-          </div>);
-        })}
+          {(function() {
+            var maxMeals = 0;
+            plan.forEach(function(day, di) { if (day && excludedDays.indexOf(di) === -1) { var total = day.meals.length + (day.proteinShake ? 1 : 0); if (total > maxMeals) maxMeals = total; } });
+            if (maxMeals === 0) return null;
+            return (<table className="wk-table">
+              <thead><tr><th></th>{Array.from({length: maxMeals}, function(_, i) { return <th key={i}>Meal {i + 1}</th>; })}</tr></thead>
+              <tbody>
+                {plan.map(function(day, di) {
+                  if (!day || excludedDays.indexOf(di) !== -1) return null;
+                  var pgEntry = planGroups && planGroups[di];
+                  var dgc = pgEntry ? pgEntry.color : null;
+                  var dgi = pgEntry ? pgEntry.groupIndex : -1;
+                  var allSlots = day.meals.slice();
+                  if (day.proteinShake) allSlots.push({ _isShake: true, name: "Protein Shake", totalMacros: { calories: day.proteinShake.calories, protein: day.proteinShake.protein, carbs: day.proteinShake.carbs, fat: day.proteinShake.fat } });
+                  return (<tr className="wk-row" key={di}>
+                    <td className="wk-day-cell">
+                      <div>{DAYS_NAMES[di].slice(0, 3)}</div>
+                      {dgc && <div className="wk-glabel" style={{background: dgc.bg, color: dgc.text, border: '1px solid ' + dgc.border}}>G{dgi + 1}</div>}
+                    </td>
+                    {Array.from({length: maxMeals}, function(_, si) {
+                      var slot = allSlots[si];
+                      if (!slot) return <td className="wk-meal-cell wk-empty-cell" key={si}>{"\u2014"}</td>;
+                      if (slot._isShake) {
+                        return (<td className="wk-meal-cell wk-shake-cell" key={si}>
+                          <div className="wk-name-row"><span className="wk-meal-name">{slot.name}</span></div>
+                          <div className="wk-meal-meta"><span className="wk-meal-macros">{Math.round(slot.totalMacros.calories)} cal {"\u00B7"} {Math.round(slot.totalMacros.protein)}P</span></div>
+                        </td>);
+                      }
+                      var mealKey = di + "-" + si;
+                      var isEaten = !!eatenMeals[mealKey];
+                      return (<td className="wk-meal-cell" key={si}>
+                        <div className="wk-stepper">
+                          <button onClick={function(){var k=di+"-"+si;var cur=mealServings[k]||1;if(cur>1){var n=Object.assign({},mealServings);n[k]=cur-1;if(n[k]===1)delete n[k];setMealServings(n);}}}>−</button>
+                          <span className="wk-sv">{mealServings[mealKey] || 1}</span>
+                          <button onClick={function(){var k=di+"-"+si;var n=Object.assign({},mealServings);n[k]=(mealServings[k]||1)+1;setMealServings(n);}}>+</button>
+                        </div>
+                        <div className="wk-name-row">
+                          <span className={"wk-eaten-circle" + (isEaten ? " checked" : "")} onClick={function(e){e.stopPropagation();toggleEaten(di, si);}}>{isEaten ? "\u2713" : ""}</span>
+                          <span className="wk-meal-name">{slot.name}</span>
+                        </div>
+                        <div className="wk-meal-meta">
+                          <span className="cuisine-tag">{slot.cuisine}</span>
+                          <span className="wk-meal-macros">{Math.round(slot.totalMacros.calories)} cal {"\u00B7"} {Math.round(slot.totalMacros.protein)}P</span>
+                        </div>
+                      </td>);
+                    })}
+                  </tr>);
+                })}
+              </tbody>
+            </table>);
+          })()}
         </>)}
 
         {view === "grocery" && (<div className="card">

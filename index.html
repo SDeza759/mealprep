@@ -2960,7 +2960,7 @@ function App() {
                       if (slot._isShake) {
                         return (<td className="wk-meal-cell wk-shake-cell" key={si}>
                           <div className="wk-name-row"><span className="wk-meal-name">{slot.name}</span></div>
-                          <div className="wk-meal-meta"><span className="wk-meal-macros">{Math.round(slot.totalMacros.calories)} cal {"\u00B7"} {Math.round(slot.totalMacros.protein)}P</span></div>
+                          <div className="wk-meal-meta"><span className="wk-meal-macros">{Math.round(slot.totalMacros.calories)} cal</span></div>
                         </td>);
                       }
                       var mealKey = di + "-" + si;
@@ -2977,7 +2977,7 @@ function App() {
                         </div>
                         <div className="wk-meal-meta">
                           <span className="cuisine-tag">{slot.cuisine}</span>
-                          <span className="wk-meal-macros">{Math.round(slot.totalMacros.calories)} cal {"\u00B7"} {Math.round(slot.totalMacros.protein)}P</span>
+                          <span className="wk-meal-macros">{Math.round(slot.totalMacros.calories)} cal</span>
                         </div>
                       </td>);
                     })}

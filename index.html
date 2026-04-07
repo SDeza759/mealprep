@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Meal Prep Optimizer</title>
+<title>Actual Size Optimizer</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -11,8 +11,20 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f4f3; color: #1a2e2a; line-height: 1.5; }
   .app { max-width: 1200px; margin: 0 auto; padding: 16px; }
-  h1 { text-align: center; font-size: 1.8rem; color: #2d6a4f; margin-bottom: 4px; }
-  .subtitle { text-align: center; color: #6b7f7a; margin-bottom: 24px; font-size: 0.95rem; }
+  h1 { font-size: 1.8rem; color: #2d6a4f; margin-bottom: 0; }
+  .app-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .header-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .header-pill { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+  .header-pill-cal { background: #e8f5e9; color: #2d6a4f; }
+  .header-pill-carb { background: #e3f2fd; color: #1565c0; }
+  .header-pill-pro { background: #fce4ec; color: #c62828; }
+  .header-pill-fat { background: #fff8e1; color: #f57f17; }
+  .settings-toggle { background: #e0e8e4; color: #2d6a4f; border: none; border-radius: 8px; padding: 6px 14px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .settings-toggle:hover { background: #c8d6d0; }
+  .settings-drawer { overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; }
+  .settings-drawer.collapsed { max-height: 0; opacity: 0; pointer-events: none; }
+  .settings-drawer.expanded { max-height: 2000px; opacity: 1; }
   .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
   .card h2 { color: #2d6a4f; font-size: 1.15rem; margin-bottom: 12px; }
   .macro-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
@@ -2098,6 +2110,7 @@ function App() {
   var [swapWarning, setSwapWarning] = React.useState(null);
   var [copyMsg, setCopyMsg] = React.useState("");
   var [saveName, setSaveName] = React.useState("");
+  var [settingsOpen, setSettingsOpen] = React.useState(false);
   var [savedPlans, setSavedPlans] = React.useState(function() { try { return JSON.parse(localStorage.getItem("mealprep_plans") || "[]"); } catch(e) { return []; } });
   var [recipeSearch, setRecipeSearch] = React.useState("");
   var [recipeCuisine, setRecipeCuisine] = React.useState("All");
@@ -2764,72 +2777,84 @@ function App() {
           {validationProgress && !validationResults && <div style={{marginTop:16,fontSize:13,color:'#888'}}>Progress: {validationProgress.done}/{validationProgress.total} weeks</div>}
         </div>
       </div>}
-      <h1>Meal Prep Optimizer</h1>
-      <p className="subtitle">Generate personalized weekly meal plans with smart grocery lists</p>
-
-      <div className="card">
-        <h2>Macro Calculator</h2>
-        <div className="macro-inputs">
-          <div className="input-group"><label>Daily Calories</label><input type="number" value={calories} min={1000} max={5000} onChange={function(e){setCalories(Number(e.target.value));}} /></div>
-          <div className="input-group"><label>Carbs %</label><input type="number" value={carbPct} min={0} max={100} onChange={function(e){setCarbPct(Number(e.target.value));}} /></div>
-          <div className="input-group"><label>Protein %</label><input type="number" value={proteinPct} min={0} max={100} onChange={function(e){setProteinPct(Number(e.target.value));}} /></div>
-          <div className="input-group"><label>Fat %</label><input type="number" value={fatPct} min={0} max={100} onChange={function(e){setFatPct(Number(e.target.value));}} /></div>
-        </div>
-        {!pctValid && <div className={"warning"+(Math.abs(pctSum-100)>10?" error":"")}>Percentages sum to {pctSum}% — must equal 100%</div>}
-        <div className="macro-summary">
-          <div className="macro-pill"><div className="value">{calories}</div><div className="label">Calories</div></div>
-          <div className="macro-pill"><div className="value">{carbGrams}g</div><div className="label">Carbs</div></div>
-          <div className="macro-pill"><div className="value">{proteinGrams}g</div><div className="label">Protein</div></div>
-          <div className="macro-pill"><div className="value">{fatGrams}g</div><div className="label">Fat</div></div>
+      <div className="app-header">
+        <h1>Actual Size Optimizer</h1>
+        <div className="header-right">
+          <div className="header-pills">
+            <span className="header-pill header-pill-cal">{calories} cal</span>
+            <span className="header-pill header-pill-carb">{carbGrams}g C</span>
+            <span className="header-pill header-pill-pro">{proteinGrams}g P</span>
+            <span className="header-pill header-pill-fat">{fatGrams}g F</span>
+          </div>
+          <button className="settings-toggle" onClick={function(){setSettingsOpen(!settingsOpen);}}>{settingsOpen ? "\u25B2 Settings" : "\u25BC Settings"}</button>
         </div>
       </div>
 
-      <div className="card">
-        <h2>Day Grouping</h2>
-
-        <div className="day-pill-row">
-          {[0,1,2,3,4,5,6].map(function(d) {
-            var isExcluded = excludedDays.indexOf(d) !== -1;
-            var gi = findDayGroup(d);
-            var gc = gi !== -1 ? getGroupColor(gi) : null;
-            var isSelected = selectedDay === d;
-            var pillClass = "day-pill" + (isExcluded ? " dp-excluded" : "") + (isSelected ? " dp-selected" : "");
-            var pillStyle = {};
-            if (!isExcluded && gc) { pillStyle = { background: gc.bg, borderColor: gc.border }; }
-            return (<div className={pillClass} key={d} style={pillStyle}
-              onClick={function(e) {
-                if (e.target.classList.contains('dp-toggle')) return;
-                if (clickTimer.current) { clearTimeout(clickTimer.current); clickTimer.current = null; handlePillDoubleClick(d); return; }
-                clickTimer.current = setTimeout(function() { clickTimer.current = null; handlePillClick(d); }, 250);
-              }}>
-              <div className="dp-name" style={gc && !isExcluded ? {color: gc.text} : {}}>{DAYS_NAMES[d].slice(0,3)}</div>
-              {gi !== -1 && !isExcluded && <div className="dp-label" style={gc ? {color: gc.text} : {}}>G{gi+1}</div>}
-              <div className={"dp-toggle" + (isExcluded ? " dp-off" : "")} onClick={function(e){e.stopPropagation();toggleExcludeDay(d);}} />
-            </div>);
-          })}
+      <div className={"settings-drawer " + (settingsOpen ? "expanded" : "collapsed")}>
+        <div className="card">
+          <h2>Macro Calculator</h2>
+          <div className="macro-inputs">
+            <div className="input-group"><label>Daily Calories</label><input type="number" value={calories} min={1000} max={5000} onChange={function(e){setCalories(Number(e.target.value));}} /></div>
+            <div className="input-group"><label>Carbs %</label><input type="number" value={carbPct} min={0} max={100} onChange={function(e){setCarbPct(Number(e.target.value));}} /></div>
+            <div className="input-group"><label>Protein %</label><input type="number" value={proteinPct} min={0} max={100} onChange={function(e){setProteinPct(Number(e.target.value));}} /></div>
+            <div className="input-group"><label>Fat %</label><input type="number" value={fatPct} min={0} max={100} onChange={function(e){setFatPct(Number(e.target.value));}} /></div>
+          </div>
+          {!pctValid && <div className={"warning"+(Math.abs(pctSum-100)>10?" error":"")}>Percentages sum to {pctSum}% — must equal 100%</div>}
+          <div className="macro-summary">
+            <div className="macro-pill"><div className="value">{calories}</div><div className="label">Calories</div></div>
+            <div className="macro-pill"><div className="value">{carbGrams}g</div><div className="label">Carbs</div></div>
+            <div className="macro-pill"><div className="value">{proteinGrams}g</div><div className="label">Protein</div></div>
+            <div className="macro-pill"><div className="value">{fatGrams}g</div><div className="label">Fat</div></div>
+          </div>
         </div>
 
-        {allDaysExcluded && <div className="warning" style={{marginTop:10}}>All days are excluded. Include at least one day to generate a plan.</div>}
-        <div className="dg-helper">Tap a pill to select, then tap another to group. Double-tap to ungroup. Toggle switch to include/exclude.</div>
+        <div className="card">
+          <h2>Day Grouping</h2>
+
+          <div className="day-pill-row">
+            {[0,1,2,3,4,5,6].map(function(d) {
+              var isExcluded = excludedDays.indexOf(d) !== -1;
+              var gi = findDayGroup(d);
+              var gc = gi !== -1 ? getGroupColor(gi) : null;
+              var isSelected = selectedDay === d;
+              var pillClass = "day-pill" + (isExcluded ? " dp-excluded" : "") + (isSelected ? " dp-selected" : "");
+              var pillStyle = {};
+              if (!isExcluded && gc) { pillStyle = { background: gc.bg, borderColor: gc.border }; }
+              return (<div className={pillClass} key={d} style={pillStyle}
+                onClick={function(e) {
+                  if (e.target.classList.contains('dp-toggle')) return;
+                  if (clickTimer.current) { clearTimeout(clickTimer.current); clickTimer.current = null; handlePillDoubleClick(d); return; }
+                  clickTimer.current = setTimeout(function() { clickTimer.current = null; handlePillClick(d); }, 250);
+                }}>
+                <div className="dp-name" style={gc && !isExcluded ? {color: gc.text} : {}}>{DAYS_NAMES[d].slice(0,3)}</div>
+                {gi !== -1 && !isExcluded && <div className="dp-label" style={gc ? {color: gc.text} : {}}>G{gi+1}</div>}
+                <div className={"dp-toggle" + (isExcluded ? " dp-off" : "")} onClick={function(e){e.stopPropagation();toggleExcludeDay(d);}} />
+              </div>);
+            })}
+          </div>
+
+          {allDaysExcluded && <div className="warning" style={{marginTop:10}}>All days are excluded. Include at least one day to generate a plan.</div>}
+          <div className="dg-helper">Tap a pill to select, then tap another to group. Double-tap to ungroup. Toggle switch to include/exclude.</div>
+        </div>
+
+        <div className="card">
+          <h2>Saved Plans</h2>
+          <div className="save-section">
+            <input placeholder="Plan name..." value={saveName} onChange={function(e){setSaveName(e.target.value);}} />
+            <button className="btn btn-sm btn-primary" onClick={handleSave} disabled={!plan||!saveName.trim()}>Save Current</button>
+            {copyMsg && <span className="copy-feedback">{copyMsg}</span>}
+          </div>
+          {savedPlans.length > 0 && <div className="saved-plans-list">
+            {savedPlans.map(function(sp, i) {
+              return <div className="saved-plan-item" key={i}><div><span className="sp-name">{sp.name}</span><br/><span className="sp-meta">{sp.date} — {sp.calories} cal</span></div>
+                <div className="sp-actions"><button className="btn btn-sm btn-secondary" onClick={function(){handleLoad(sp);}}>Load</button><button className="btn btn-sm btn-danger" onClick={function(){handleDeleteSaved(sp.name);}}>Del</button></div></div>;
+            })}
+          </div>}
+        </div>
       </div>
 
-      <div className="btn-row">
+      <div className="btn-row" style={{justifyContent:'flex-end'}}>
         <button className="btn btn-primary" onClick={handleGenerate} disabled={!pctValid || allDaysExcluded}>Generate Weekly Plan</button>
-      </div>
-
-      <div className="card">
-        <h2>Saved Plans</h2>
-        <div className="save-section">
-          <input placeholder="Plan name..." value={saveName} onChange={function(e){setSaveName(e.target.value);}} />
-          <button className="btn btn-sm btn-primary" onClick={handleSave} disabled={!plan||!saveName.trim()}>Save Current</button>
-          {copyMsg && <span className="copy-feedback">{copyMsg}</span>}
-        </div>
-        {savedPlans.length > 0 && <div className="saved-plans-list">
-          {savedPlans.map(function(sp, i) {
-            return <div className="saved-plan-item" key={i}><div><span className="sp-name">{sp.name}</span><br/><span className="sp-meta">{sp.date} — {sp.calories} cal</span></div>
-              <div className="sp-actions"><button className="btn btn-sm btn-secondary" onClick={function(){handleLoad(sp);}}>Load</button><button className="btn btn-sm btn-danger" onClick={function(){handleDeleteSaved(sp.name);}}>Del</button></div></div>;
-          })}
-        </div>}
       </div>
 
       {/* Tab bar — always visible */}

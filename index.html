@@ -458,6 +458,7 @@ var INGREDIENT_REGISTRY = {
   "Romaine Lettuce": { calories: 17, carbs: 3.3, protein: 1.2, fat: 0.3 },
   "Salmon Fillet": { calories: 208, carbs: 0, protein: 20, fat: 13.4 },
   "Sesame Oil": { calories: 884, carbs: 0, protein: 0, fat: 100 },
+  "Smoked Paprika": { calories: 0, carbs: 0, protein: 0, fat: 0 },
   "Shrimp": { calories: 99, carbs: 0.2, protein: 24, fat: 0.3 },
   "Soy Sauce": { calories: 53, carbs: 4.9, protein: 8.1, fat: 0.6 },
   "Spinach": { calories: 23, carbs: 3.6, protein: 2.9, fat: 0.4 },
@@ -465,6 +466,7 @@ var INGREDIENT_REGISTRY = {
   "Sweet Potato": { calories: 86, carbs: 20, protein: 1.6, fat: 0.1 },
   "Sweet Potato Noodles": { calories: 110, carbs: 27, protein: 0.2, fat: 0.1 },
   "Tahini": { calories: 593, carbs: 17, protein: 17, fat: 53.8 },
+  "Thyme": { calories: 0, carbs: 0, protein: 0, fat: 0 },
   "Tomato Sauce": { calories: 29, carbs: 6.6, protein: 1, fat: 0.2 },
   "Turkey Breast": { calories: 135, carbs: 0, protein: 30, fat: 1 },
   "Water": { calories: 0, carbs: 0, protein: 0, fat: 0 },
@@ -476,86 +478,157 @@ var INGREDIENT_REGISTRY = {
   "Zucchini": { calories: 17, carbs: 3.1, protein: 1.2, fat: 0.3 }
 };
 
-// ===== SPICES BY CUISINE =====
-var CUISINE_SPICES = {
-  "Indian": [
-    { name: "Cumin", grams: 2 }, { name: "Turmeric", grams: 1 }, { name: "Garam Masala", grams: 2 },
-    { name: "Coriander Powder", grams: 2 }, { name: "Chili Powder", grams: 1 }, { name: "Salt", grams: 2 }, { name: "Black Pepper", grams: 1 }
-  ],
-  "Mexican": [
-    { name: "Cumin", grams: 2 }, { name: "Chili Powder", grams: 2 }, { name: "Paprika", grams: 2 },
-    { name: "Garlic Powder", grams: 1 }, { name: "Salt", grams: 2 }, { name: "Black Pepper", grams: 1 }
-  ],
-  "Middle Eastern": [
-    { name: "Cumin", grams: 2 }, { name: "Paprika", grams: 2 }, { name: "Coriander Powder", grams: 1 },
-    { name: "Salt", grams: 2 }, { name: "Black Pepper", grams: 1 }
-  ],
-  "Japanese": [
-    { name: "Salt", grams: 1 }, { name: "White Pepper", grams: 1 }
-  ],
-  "Korean": [
-    { name: "Gochugaru", grams: 2 }, { name: "Garlic Powder", grams: 1 },
-    { name: "Salt", grams: 1 }, { name: "Black Pepper", grams: 1 }
-  ],
-  "Thai": [
-    { name: "Chili Flakes", grams: 1 }, { name: "White Pepper", grams: 1 }, { name: "Salt", grams: 1 }
-  ],
-  "Italian": [
-    { name: "Salt", grams: 2 }, { name: "Black Pepper", grams: 1 }, { name: "Oregano", grams: 1 }, { name: "Dried Basil", grams: 1 }
-  ],
-  "American": [
-    { name: "Salt", grams: 2 }, { name: "Black Pepper", grams: 1 }, { name: "Garlic Powder", grams: 1 }
-  ],
-  "Mediterranean": [
-    { name: "Salt", grams: 2 }, { name: "Black Pepper", grams: 1 }, { name: "Oregano", grams: 1 }
-  ]
-};
-
+// ===== PER-RECIPE SPICE OVERRIDES =====
 var RECIPE_SPICE_OVERRIDES = {
+  // === BREAKFAST ===
+  "Scrambled Eggs & Toast": [{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  "Avocado Toast with Egg": [{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 },{ name: "Chili Flakes", grams: 0.5 }],
+  "Breakfast Burrito": [{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  "Shakshuka Breakfast": [{ name: "Cumin", grams: 2 },{ name: "Paprika", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Japanese Tamagoyaki": [{ name: "Salt", grams: 1 }],
+  "Egg & Potato Paratha": [{ name: "Cumin", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Chilaquiles": [{ name: "Cumin", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "French Toast": [{ name: "Cinnamon", grams: 1 }],
+  "Huevos Rancheros": [{ name: "Cumin", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  // === AMERICAN ===
+  "Grilled Chicken & Rice Bowl": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Beef Stir Fry": [{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 },{ name: "Garlic Powder", grams: 1 }],
+  "Pork Club Wrap": [{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  "Brown Rice Power Bowl": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "BBQ Chicken Plate": [{ name: "Paprika", grams: 2 },{ name: "Garlic Powder", grams: 1 },{ name: "Cayenne", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Egg Fried Rice": [{ name: "Salt", grams: 1 },{ name: "White Pepper", grams: 1 }],
+  "Chicken Quesadilla": [{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 },{ name: "Garlic Powder", grams: 1 }],
+  "Chicken Caesar Salad": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 },{ name: "Garlic Powder", grams: 1 }],
+  "Cobb Salad": [{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  "Chicken Fried Rice": [{ name: "Salt", grams: 1 },{ name: "White Pepper", grams: 1 }],
+  "Beef Meatballs & Zoodles": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 },{ name: "Oregano", grams: 1 },{ name: "Dried Basil", grams: 1 }],
+  "Pulled Pork Sandwich": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 },{ name: "Smoked Paprika", grams: 2 }],
+  "Grilled Salmon & Asparagus": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Steak & Sweet Potato": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Chicken Lettuce Wraps with Rice": [{ name: "Salt", grams: 1 },{ name: "White Pepper", grams: 1 }],
+  "Meatball Sub": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 },{ name: "Garlic Powder", grams: 1 }],
+  "Shrimp Spinach & Rice Salad": [{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  "Beef & Broccoli": [{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 },{ name: "Garlic Powder", grams: 1 }],
+  "Turkey & Broccoli Bowl": [{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  "Chicken & Sweet Potato Bowl": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Turkey Lettuce Wraps": [{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  // === ITALIAN ===
+  "Spaghetti Bolognese": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 },{ name: "Oregano", grams: 1 },{ name: "Dried Basil", grams: 1 }],
+  "Sausage Flatbread": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 },{ name: "Oregano", grams: 1 }],
+  "Shrimp Primavera": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 },{ name: "Dried Basil", grams: 1 }],
+  "Spaghetti alle Vongole": [{ name: "Chili Flakes", grams: 1 },{ name: "Dried Parsley", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Chicken Pesto Pasta": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Chicken Alfredo": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Shrimp Fra Diavolo": [{ name: "Chili Flakes", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Pesto Shrimp Pasta": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Chicken Enchiladas": [{ name: "Cumin", grams: 2 },{ name: "Chili Powder", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Minestrone Soup": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 },{ name: "Oregano", grams: 1 },{ name: "Dried Basil", grams: 1 }],
+  "Tuscan White Bean Soup": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 },{ name: "Oregano", grams: 1 }],
+  "Shrimp Scampi": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 },{ name: "Dried Parsley", grams: 1 }],
+  "Caprese Panini": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Pork Milanese": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  // === MEXICAN ===
+  "Chicken Burrito Bowl": [{ name: "Cumin", grams: 2 },{ name: "Chili Powder", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Carnitas Tacos": [{ name: "Cumin", grams: 2 },{ name: "Oregano", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Shrimp Tacos": [{ name: "Cumin", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Beef Tacos": [{ name: "Cumin", grams: 2 },{ name: "Chili Powder", grams: 2 },{ name: "Paprika", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Black Bean Bowl": [{ name: "Cumin", grams: 2 },{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  "Chipotle Chicken Bowl": [{ name: "Cumin", grams: 2 },{ name: "Paprika", grams: 2 },{ name: "Chili Powder", grams: 1 },{ name: "Garlic Powder", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Veggie Burrito": [{ name: "Cumin", grams: 2 },{ name: "Chili Powder", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Shrimp Ceviche Bowl": [{ name: "Salt", grams: 2 },{ name: "Chili Flakes", grams: 1 }],
+  "Shrimp Fajitas": [{ name: "Cumin", grams: 2 },{ name: "Paprika", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Turkey Burrito Bowl": [{ name: "Cumin", grams: 2 },{ name: "Paprika", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Lean Beef Tacos": [{ name: "Cumin", grams: 2 },{ name: "Chili Powder", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  // === INDIAN ===
+  "Chicken Tikka Masala": [{ name: "Cumin", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Garam Masala", grams: 2 },{ name: "Coriander Powder", grams: 1 },{ name: "Chili Powder", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Palak Paneer": [{ name: "Cumin", grams: 2 },{ name: "Garam Masala", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Chana Masala": [{ name: "Cumin", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Garam Masala", grams: 2 },{ name: "Coriander Powder", grams: 2 },{ name: "Chili Powder", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Aloo Gobi": [{ name: "Cumin", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Coriander Powder", grams: 2 },{ name: "Chili Powder", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Mango Chicken Curry": [{ name: "Cumin", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Garam Masala", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Butter Chicken": [{ name: "Cumin", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Garam Masala", grams: 2 },{ name: "Coriander Powder", grams: 1 },{ name: "Chili Powder", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
   "Lamb Biryani": [{ name: "Cumin", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Garam Masala", grams: 2 },{ name: "Cardamom", grams: 1 },{ name: "Cinnamon", grams: 1 },{ name: "Bay Leaf", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Saag Chicken": [{ name: "Cumin", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Garam Masala", grams: 2 },{ name: "Coriander Powder", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Dal Tadka": [{ name: "Cumin", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Chili Powder", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Chicken Korma": [{ name: "Cumin", grams: 2 },{ name: "Coriander Powder", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Cardamom", grams: 1 },{ name: "Cinnamon", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Paneer Tikka Wrap": [{ name: "Cumin", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Garam Masala", grams: 2 },{ name: "Coriander Powder", grams: 1 },{ name: "Chili Powder", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Tandoori Chicken": [{ name: "Cumin", grams: 2 },{ name: "Paprika", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Garam Masala", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  // === MIDDLE EASTERN ===
+  "Falafel Plate": [{ name: "Cumin", grams: 2 },{ name: "Coriander Powder", grams: 2 },{ name: "Dried Parsley", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
   "Shawarma Bowl": [{ name: "Cumin", grams: 2 },{ name: "Paprika", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Cinnamon", grams: 1 },{ name: "Allspice", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
   "Chicken Shawarma Plate": [{ name: "Cumin", grams: 2 },{ name: "Paprika", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Cinnamon", grams: 1 },{ name: "Allspice", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Lamb Kofta Plate": [{ name: "Cumin", grams: 2 },{ name: "Paprika", grams: 2 },{ name: "Coriander Powder", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Lamb Shawarma Wrap": [{ name: "Cumin", grams: 2 },{ name: "Paprika", grams: 2 },{ name: "Turmeric", grams: 1 },{ name: "Cinnamon", grams: 1 },{ name: "Allspice", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
   "Lamb Tagine": [{ name: "Cumin", grams: 2 },{ name: "Cinnamon", grams: 1 },{ name: "Ginger (ground)", grams: 1 },{ name: "Turmeric", grams: 1 },{ name: "Paprika", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
-  "Falafel Plate": [{ name: "Cumin", grams: 2 },{ name: "Coriander Powder", grams: 2 },{ name: "Dried Parsley", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Tabbouleh with Grilled Chicken": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Baba Ganoush Plate": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 },{ name: "Cumin", grams: 1 }],
+  "Stuffed Grape Leaves": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 },{ name: "Allspice", grams: 1 },{ name: "Cinnamon", grams: 1 }],
+  "Turkey Kofta Plate": [{ name: "Cumin", grams: 2 },{ name: "Coriander Powder", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  // === JAPANESE ===
+  "Teriyaki Salmon Bowl": [{ name: "Salt", grams: 1 },{ name: "White Pepper", grams: 1 }],
+  "Miso Ramen": [{ name: "Salt", grams: 1 },{ name: "White Pepper", grams: 1 }],
+  "Chicken Stir Fry": [{ name: "Salt", grams: 1 },{ name: "White Pepper", grams: 1 }],
+  "Poke Bowl": [{ name: "Salt", grams: 1 }],
+  "Sushi Bowl (Chirashi)": [{ name: "Salt", grams: 1 }],
+  "Pork Tonkatsu": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
   "Katsu Curry": [{ name: "Curry Powder", grams: 3 },{ name: "Salt", grams: 1 },{ name: "White Pepper", grams: 1 }],
+  "Spicy Tuna Bowl": [{ name: "Chili Flakes", grams: 1 },{ name: "Salt", grams: 1 }],
+  "Salmon Teriyaki Bento": [{ name: "Salt", grams: 1 },{ name: "White Pepper", grams: 1 }],
+  "Veggie Sushi Wrap": [{ name: "Salt", grams: 1 }],
+  "Asian Noodle Soup": [{ name: "Salt", grams: 1 },{ name: "White Pepper", grams: 1 }],
+  "Okonomiyaki": [{ name: "Salt", grams: 1 }],
+  "Tuna Tataki Bowl": [{ name: "Salt", grams: 1 }],
+  "Chicken Yakitori Bowl": [{ name: "Salt", grams: 1 }],
+  "Turkey Stir Fry with Rice": [{ name: "Salt", grams: 1 },{ name: "White Pepper", grams: 1 }],
+  // === KOREAN ===
+  "Kimchi Fried Rice": [{ name: "Gochugaru", grams: 1 },{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  "Japchae": [{ name: "Garlic Powder", grams: 1 },{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  "Bulgogi Rice Bowl": [{ name: "Garlic Powder", grams: 1 },{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
   "Dakgalbi": [{ name: "Gochugaru", grams: 3 },{ name: "Gochujang", grams: 5 },{ name: "Garlic Powder", grams: 1 },{ name: "Salt", grams: 1 }],
   "Beef Japchae": [{ name: "Garlic Powder", grams: 1 },{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
-  "BBQ Chicken Plate": [{ name: "Paprika", grams: 2 },{ name: "Garlic Powder", grams: 1 },{ name: "Cayenne", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
-  "Spaghetti alle Vongole": [{ name: "Chili Flakes", grams: 1 },{ name: "Dried Parsley", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Korean Chicken Wings": [{ name: "Gochugaru", grams: 2 },{ name: "Garlic Powder", grams: 1 },{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  "Doenjang Jjigae": [{ name: "Garlic Powder", grams: 1 },{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  "Beef Bulgogi Noodle Bowl": [{ name: "Garlic Powder", grams: 1 },{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  // === THAI ===
+  "Shrimp Fried Rice": [{ name: "Chili Flakes", grams: 1 },{ name: "White Pepper", grams: 1 },{ name: "Salt", grams: 1 }],
+  "Thai Basil Chicken": [{ name: "Chili Flakes", grams: 1 },{ name: "White Pepper", grams: 1 },{ name: "Salt", grams: 1 }],
+  "Shrimp & Veggie Stir Fry": [{ name: "Chili Flakes", grams: 1 },{ name: "White Pepper", grams: 1 },{ name: "Salt", grams: 1 }],
+  // === MEDITERRANEAN ===
+  "Greek Chicken Salad": [{ name: "Oregano", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Lamb & Lentil Soup": [{ name: "Cumin", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Tuna Nicoise Salad": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Lamb & Hummus Wrap": [{ name: "Cumin", grams: 2 },{ name: "Paprika", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Shrimp & Feta Salad": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 },{ name: "Oregano", grams: 1 }],
+  "Mediterranean Stuffed Peppers": [{ name: "Cumin", grams: 2 },{ name: "Oregano", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Mediterranean Tuna Salad": [{ name: "Oregano", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
   "Chicken Souvlaki Plate": [{ name: "Oregano", grams: 2 },{ name: "Paprika", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
-  "Ropa Vieja": [{ name: "Oregano", grams: 1 },{ name: "Cumin", grams: 0.7 },{ name: "Black Pepper", grams: 0.7 },{ name: "Bay Leaves", grams: 1.2 },{ name: "Adobo", grams: 7 },{ name: "Water", grams: 237 }]
+  "Lamb Gyro": [{ name: "Cumin", grams: 2 },{ name: "Oregano", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Greek Lemon Chicken": [{ name: "Oregano", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Seared Tuna Steak": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Baked Cod with Lemon & Herbs": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 },{ name: "Oregano", grams: 1 },{ name: "Dried Parsley", grams: 1 }],
+  // === CARIBBEAN ===
+  "Ropa Vieja": [{ name: "Oregano", grams: 1 },{ name: "Cumin", grams: 0.7 },{ name: "Black Pepper", grams: 0.7 },{ name: "Bay Leaves", grams: 1.2 },{ name: "Adobo", grams: 7 },{ name: "Water", grams: 237 }],
+  "Pollo Guisado": [{ name: "Cumin", grams: 2 },{ name: "Oregano", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Arroz con Pollo": [{ name: "Cumin", grams: 2 },{ name: "Oregano", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Jerk Chicken Rice Bowl": [{ name: "Allspice", grams: 2 },{ name: "Thyme", grams: 1 },{ name: "Cayenne", grams: 1 },{ name: "Garlic Powder", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  // === PERUVIAN ===
+  "Lomo Saltado": [{ name: "Cumin", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Ceviche de Pescado": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Aji de Gallina": [{ name: "Cumin", grams: 1 },{ name: "Turmeric", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Pollo a la Plancha": [{ name: "Cumin", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  // === BRAZILIAN ===
+  "Feijoada": [{ name: "Cumin", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Moqueca": [{ name: "Paprika", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Picanha with Farofa": [{ name: "Salt", grams: 3 }],
+  // === SPANISH ===
+  "Paella Mixta": [{ name: "Paprika", grams: 2 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Gambas al Ajillo": [{ name: "Chili Flakes", grams: 1 },{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  "Tortilla Espanola": [{ name: "Salt", grams: 2 },{ name: "Black Pepper", grams: 1 }],
+  // === VIETNAMESE ===
+  "Beef Pho": [{ name: "Cinnamon", grams: 1 },{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  "Chicken Pho": [{ name: "Cinnamon", grams: 1 },{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }],
+  "Bun Tom": [{ name: "Salt", grams: 1 },{ name: "Black Pepper", grams: 1 }]
 };
 
-// ===== COOKING INSTRUCTIONS =====
-var COOKING_INSTRUCTIONS = {
-  "Classic Oatmeal with Berries": { prepTime: "5 mins", cookTime: "10 mins", steps: ["1. Bring 240ml whole milk to a gentle simmer in a small saucepan over medium heat.", "2. Stir in rolled oats, reduce heat to low, and cook for 5-7 minutes, stirring occasionally, until creamy.", "3. Slice the banana into rounds.", "4. Transfer oatmeal to a bowl, top with blueberries and banana slices.", "5. Top with granola and strawberries. Drizzle with honey and maple syrup."] },
-  "Scrambled Eggs & Toast": { prepTime: "5 mins", cookTime: "5 mins", steps: ["1. Crack eggs into a bowl, season with salt and pepper, and whisk until well combined.", "2. Toast the whole wheat bread until golden brown.", "3. Melt butter in a non-stick skillet over medium-low heat.", "4. Pour in eggs and gently stir with a spatula, pushing curds from the edges to the center, for 2-3 minutes until just set but still soft.", "5. Remove from heat, fold in shredded cheddar cheese, and let residual heat melt it.", "6. Serve scrambled eggs alongside the toast."] },
-  "Greek Yogurt Parfait": { prepTime: "5 mins", cookTime: "0 mins", steps: ["1. Spoon half the Greek yogurt into the bottom of a bowl or glass.", "2. Add a layer of granola and sliced strawberries.", "3. Spoon the remaining yogurt on top.", "4. Finish with more granola, strawberries, sliced banana, and blueberries.", "5. Drizzle honey over the top and serve immediately."] },
-  "Avocado Toast with Egg": { prepTime: "5 mins", cookTime: "5 mins", steps: ["1. Toast the whole wheat bread slices until golden and crisp.", "2. Halve the avocado, remove the pit, and mash the flesh with a fork. Season with salt and pepper.", "3. Fry or poach the eggs to your preference (about 3-4 minutes for a runny yolk).", "4. Spread mashed avocado evenly onto the toast slices.", "5. Top each slice with an egg.", "6. Season with salt, pepper, and a pinch of red pepper flakes if desired."] },
-  "Protein Pancakes": { prepTime: "5 mins", cookTime: "10 mins", steps: ["1. Blend rolled oats, eggs, banana, and Greek yogurt in a blender until smooth.", "2. Heat a non-stick skillet or griddle over medium heat and lightly grease.", "3. Pour about 60ml batter per pancake onto the skillet.", "4. Cook for 2-3 minutes until bubbles form on the surface and edges look set.", "5. Flip and cook for another 1-2 minutes until golden brown.", "6. Stack pancakes on a plate, top with granola, blueberries, and strawberries. Drizzle with maple syrup."] },
-  "Breakfast Burrito": { prepTime: "10 mins", cookTime: "10 mins", steps: ["1. Scramble the eggs in a non-stick skillet over medium heat until just set, about 2-3 minutes. Set aside.", "2. Warm the black beans in a small saucepan or microwave.", "3. Warm the tortilla in a dry skillet for 30 seconds per side.", "4. Layer scrambled eggs, black beans, shredded cheddar cheese, and sliced avocado down the center of the tortilla.", "5. Fold in the sides, then roll tightly from the bottom up.", "6. Optional: toast the burrito seam-side down in a skillet for 1-2 minutes for a crispy exterior."] },
-  "Shakshuka Breakfast": { prepTime: "10 mins", cookTime: "20 mins", steps: ["1. Dice the onion and bell pepper. Sauté in a skillet with a drizzle of olive oil over medium heat for 5 minutes until softened.", "2. Pour in the tomato sauce, season with cumin, paprika, salt, and pepper. Simmer for 5 minutes.", "3. Make small wells in the sauce and crack eggs into them.", "4. Cover the skillet and cook on medium-low for 6-8 minutes until egg whites are set but yolks are still slightly runny.", "5. Crumble feta cheese over the top.", "6. Serve straight from the skillet with warm pita bread for dipping."] },
-  "Japanese Tamagoyaki": { prepTime: "10 mins", cookTime: "15 mins", steps: ["1. Cook white rice according to package directions (or use pre-cooked rice).", "2. Whisk eggs with soy sauce and a pinch of sugar until well combined.", "3. Heat a tamagoyaki pan or small non-stick skillet over medium-low heat and lightly oil.", "4. Pour a thin layer of egg mixture into the pan. When it begins to set, roll it toward one end.", "5. Add another thin layer of egg, lift the roll to let raw egg flow underneath, then roll again. Repeat until all egg is used.", "6. Slice the tamagoyaki into rounds. Serve with rice, a small bowl of miso soup (dissolve miso paste in hot water), and sliced green onion as garnish."] },
-  "Smoothie Bowl": { prepTime: "5 mins", cookTime: "0 mins", steps: ["1. Freeze the banana for at least 2 hours (or use a pre-frozen banana).", "2. Blend frozen banana, blueberries, and Greek yogurt until thick and smooth. Add a splash of water if needed, but keep it thicker than a regular smoothie.", "3. Pour into a bowl.", "4. Top with granola, extra blueberries, mango, strawberries, and a drizzle of honey and maple syrup.", "5. Serve immediately before it melts."] },
-  "Egg & Potato Paratha": { prepTime: "10 mins", cookTime: "15 mins", steps: ["1. Boil potato until fork-tender, about 12 minutes. Peel and mash roughly.", "2. Mix mashed potato with diced onion, salt, and spices (cumin, turmeric).", "3. Warm tortilla in a dry pan, spread potato filling on one half.", "4. Fry eggs sunny-side up or scrambled in butter.", "5. Place eggs on top of the potato-filled tortilla, fold over.", "6. Press and cook for 2 minutes per side until golden and crispy."] },
-  "Chilaquiles": { prepTime: "10 mins", cookTime: "15 mins", steps: ["1. Cut corn tortillas into triangles and fry in oil until crispy, about 2 minutes per side. Drain on paper towels.", "2. Heat tomato sauce in a large skillet over medium heat.", "3. Add the tortilla chips to the sauce and toss to coat. Cook for 2-3 minutes until chips soften slightly.", "4. Fry the eggs sunny-side up in a separate skillet.", "5. Plate the sauced chilaquiles, top with fried eggs, sliced avocado, diced onion, and crumbled feta cheese.", "6. Serve immediately while chips still have some crunch."] },
-  "French Toast": { prepTime: "5 mins", cookTime: "10 mins", steps: ["1. Whisk together eggs, whole milk, a pinch of cinnamon, and a splash of vanilla extract in a shallow dish.", "2. Melt butter in a non-stick skillet over medium heat.", "3. Dip each bread slice into the egg mixture, letting it soak for 10-15 seconds per side.", "4. Cook in the skillet for 2-3 minutes per side until golden brown.", "5. Slice strawberries while the toast cooks.", "6. Serve topped with fresh strawberries, blueberries, sliced banana, and granola. Drizzle with maple syrup."] },
-  "Huevos Rancheros": { prepTime: "10 mins", cookTime: "15 mins", steps: ["1. Warm the black beans in a small saucepan with a pinch of cumin and salt.", "2. Heat tomato sauce in a skillet until simmering.", "3. Lightly toast or fry the corn tortillas in a dry skillet until slightly crisp.", "4. Fry the eggs sunny-side up or over-easy in a lightly oiled skillet.", "5. Place tortillas on a plate, spread with black beans, top with fried eggs, and spoon warm tomato sauce over everything.", "6. Garnish with sliced avocado and crumbled feta cheese."] },
-  "Grilled Chicken & Rice Bowl": { prepTime: "10 mins", cookTime: "25 mins", steps: ["1. Cook brown rice according to package directions, about 20-25 minutes.", "2. Season chicken breast with salt, pepper, and a drizzle of olive oil.", "3. Grill or pan-sear chicken over medium-high heat for 6-7 minutes per side until internal temperature reaches 74°C (165°F). Let rest 5 minutes, then slice.", "4. Steam or blanch broccoli for 3-4 minutes until bright green and tender-crisp.", "5. Assemble the bowl with rice, sliced chicken, and broccoli.", "6. Drizzle with remaining olive oil and season to taste."] },
-  "Spaghetti Bolognese": { prepTime: "10 mins", cookTime: "30 mins", steps: ["1. Bring a large pot of salted water to a boil. Cook spaghetti according to package directions until al dente. Drain, reserving a splash of pasta water.", "2. Dice the onion. Sauté in a drizzle of olive oil over medium heat until translucent, about 3-4 minutes.", "3. Add ground beef, breaking it apart with a wooden spoon. Cook until browned, about 5-6 minutes. Drain excess fat.", "4. Stir in tomato sauce, season with salt, pepper, and Italian herbs. Simmer on low for 15-20 minutes.", "5. Toss the cooked spaghetti into the sauce, adding a splash of pasta water to help it coat.", "6. Serve topped with grated Parmesan cheese."] },
-  "Chicken Burrito Bowl": { prepTime: "10 mins", cookTime: "25 mins", steps: ["1. Cook brown rice according to package directions.", "2. Season chicken breast with cumin, chili powder, salt, and pepper. Grill or pan-sear over medium-high heat for 6-7 minutes per side until cooked through. Slice into strips.", "3. Warm black beans in a small saucepan with a pinch of cumin.", "4. Slice the bell pepper and sauté in a skillet until slightly charred, about 3-4 minutes.", "5. Slice the avocado.", "6. Assemble the bowl: rice on the bottom, topped with chicken, black beans, bell pepper, and avocado slices."] },
-  "Teriyaki Salmon Bowl": { prepTime: "10 mins", cookTime: "15 mins", steps: ["1. Cook white rice according to package directions.", "2. Mix soy sauce with a tablespoon of honey or mirin for the teriyaki glaze.", "3. Pat salmon fillet dry and season with salt. Sear skin-side down in an oiled skillet over medium-high heat for 4 minutes.", "4. Flip, brush with teriyaki glaze, and cook for another 3-4 minutes until the salmon flakes easily.", "5. Cook edamame in boiling water for 3 minutes, then drain.", "6. Assemble the bowl with rice, salmon, and edamame. Drizzle with remaining teriyaki glaze."] },
-  "Chicken Tikka Masala": { prepTime: "15 mins", cookTime: "30 mins", steps: ["1. Cut chicken breast into bite-sized pieces. Marinate in Greek yogurt with turmeric, garam masala, cumin, and salt for at least 10 minutes.", "2. Cook brown rice according to package directions.", "3. Heat olive oil in a large skillet. Sear marinated chicken pieces over high heat for 3-4 minutes until browned. Remove and set aside.", "4. In the same skillet, sauté diced onion until golden, about 5 minutes.", "5. Add tomato sauce, a pinch of garam masala, and a splash of cream. Simmer for 10 minutes until the sauce thickens.", "6. Return chicken to the sauce, stir to coat, and cook for 5 more minutes. Serve over basmati rice."] },
-  "Falafel Plate": { prepTime: "15 mins", cookTime: "15 mins", steps: ["1. Drain and rinse the chickpeas. Blend with cumin, coriander, garlic, parsley, salt, and a tablespoon of flour until a coarse paste forms (do not puree smooth).", "2. Shape the mixture into small patties or balls.", "3. Pan-fry falafel in oil over medium heat for 3-4 minutes per side until golden and crispy.", "4. Dice cucumber for a simple salad, seasoned with salt and a squeeze of lemon.", "5. Warm the pita bread in a dry skillet or oven.", "6. Plate the falafel with the salad, pita bread, and a drizzle of tahini."] },
-  "Greek Chicken Salad": { prepTime: "15 mins", cookTime: "15 mins", steps: ["1. Season chicken breast with olive oil, oregano, salt, and pepper.", "2. Grill or pan-sear over medium-high heat for 6-7 minutes per side until cooked through. Rest 5 minutes, then slice.", "3. Dice cucumber and red onion.", "4. Toss the vegetables together in a large bowl.", "5. Top the salad with sliced chicken and crumbled feta cheese.", "6. Drizzle with olive oil and a squeeze of lemon juice. Season to taste."] },
-  "Beef Stir Fry": { prepTime: "10 mins", cookTime: "20 mins", steps: ["1. Cook brown rice according to package directions.", "2. Slice beef sirloin into thin strips against the grain. Season with soy sauce and a pinch of cornstarch.", "3. Heat sesame oil in a wok or large skillet over high heat. Sear beef strips for 2-3 minutes until browned. Remove and set aside.", "4. Add sliced bell pepper and broccoli florets to the wok. Stir-fry for 3-4 minutes until tender-crisp.", "5. Return beef to the wok, add a splash of soy sauce, and toss everything together for 1 minute.", "6. Serve over brown rice."] },
-  "Sausage Flatbread": { prepTime: "5 mins", cookTime: "12 mins", steps: ["1. Preheat oven to 220°C (425°F). Cook pork sausage in a skillet, breaking into crumbles, for 4-5 minutes.", "2. Place the flatbread on a baking sheet.", "3. Tear or slice the mozzarella.", "4. Arrange mozzarella and cooked sausage on the flatbread. Drizzle with olive oil.", "5. Bake for 8-10 minutes until the cheese is melted and bubbly and edges are golden.", "6. Remove from oven, season with salt and pepper, slice, and serve."] },
-  "Carnitas Tacos": { prepTime: "10 mins", cookTime: "120 mins", steps: ["1. Season pork shoulder generously with salt, pepper, cumin, and oregano.", "2. Place pork in a Dutch oven or slow cooker with a squeeze of lime juice and a splash of water. Cover and braise at 160°C (325°F) for about 2 hours, or slow-cook on low for 4-6 hours, until fork-tender.", "3. Shred the pork with two forks and crisp it under a broiler or in a hot skillet for 3-4 minutes.", "4. Warm corn tortillas in a dry skillet for 30 seconds per side.", "5. Dice the onion and roughly chop the cilantro.", "6. Fill tortillas with carnitas, top with diced onion, cilantro, and a squeeze of fresh lime."] },
-  "Miso Ramen": { prepTime: "10 mins", cookTime: "25 mins", steps: ["1. Bring a pot of water to a boil. Cook ramen noodles according to package directions. Drain and set aside.", "2. Slice pork loin slices thinly. Sear in a hot skillet for 2-3 minutes per side until browned and cooked through.", "3. In a saucepan, bring 500ml of water or broth to a simmer. Whisk in miso paste until dissolved. Do not boil.", "4. Soft-boil the egg: lower into boiling water for 6.5 minutes, then transfer to ice water. Peel and halve.", "5. Divide noodles between bowls and ladle the miso broth over them.", "6. Top with sliced pork, the soft-boiled egg halves, spinach, and sliced green onion."] },
-  "Palak Paneer": { prepTime: "10 mins", cookTime: "25 mins", steps: ["1. Cook brown rice according to package directions.", "2. Blanch spinach in boiling water for 2 minutes, then drain and blend into a smooth puree.", "3. Cut paneer into cubes. Pan-fry in a little oil over medium heat until golden on all sides, about 3-4 minutes. Set aside.", "4. Sauté diced onion and minced garlic in the same pan until softened, about 4-5 minutes.", "5. Add the spinach puree, season with cumin, garam masala, and salt. Simmer for 5-7 minutes.", "6. Fold in the paneer cubes, cook for 2 more minutes, and serve over brown rice."] },
-  "Shawarma Bowl": { prepTime: "15 mins", cookTime: "20 mins", steps: ["1. Cook white rice according to package directions.", "2. Slice chicken thigh and season with cumin, paprika, turmeric, garlic powder, salt, and pepper.", "3. Cook the seasoned chicken in an oiled skillet over medium-high heat for 5-6 minutes per side until charred and cooked through.", "4. Dice the cucumber.", "5. Assemble the bowl: rice on the bottom, topped with shawarma chicken, cucumber, and a generous dollop of hummus.", "6. Drizzle with a squeeze of lemon juice and serve."] },
-  "Kimchi Fried Rice": { prepTime: "5 mins", cookTime: "10 mins", steps: ["1. Slice pork loin into small pieces. Cook in a wok or large skillet over medium-high heat until browned, about 4-5 minutes. Remove and set aside.", "2. Roughly chop the kimchi. Add to the wok and stir-fry for 2 minutes.", "3. Add the cooked white rice, breaking up any clumps. Stir-fry for 3-4 minutes until rice is heated through and slightly crispy.", "4. Drizzle with sesame oil and toss to combine. Return pork loin to the wok.", "5. Fry the egg sunny-side up in a separate skillet.", "6. Plate the fried rice, top with the fried egg, browned pork loin, and sliced green onion."] }
-};
 
 // ===== COOKING INSTRUCTIONS =====
 var RECIPE_COOKING_DATA = {
@@ -935,7 +1008,7 @@ function _enrichFromRegistry(ingredients) {
 RECIPES.forEach(function(r) {
   var cookData = RECIPE_COOKING_DATA[r.name];
   if (cookData) { r.steps = cookData.steps; r.prepTime = cookData.prepTime; r.cookTime = cookData.cookTime; }
-  var spices = RECIPE_SPICE_OVERRIDES[r.name] || CUISINE_SPICES[r.cuisine] || [];
+  var spices = RECIPE_SPICE_OVERRIDES[r.name] || [];
   spices.forEach(function(s) {
     r.ingredients.push({ name: s.name, grams: s.grams, calories: 0, carbs: 0, protein: 0, fat: 0, isSpice: true });
   });
@@ -965,7 +1038,7 @@ var INGREDIENT_CATEGORIES = {
   "Mozzarella Cheese":"Dairy","Parmesan Cheese":"Dairy","Feta Cheese":"Dairy","Cheddar Cheese":"Dairy","Greek Yogurt":"Dairy","Whole Milk":"Dairy","Butter":"Dairy",
   "Olive Oil":"Pantry","Sesame Oil":"Pantry","Soy Sauce":"Pantry","Tomato Sauce":"Pantry","BBQ Sauce":"Pantry","Pesto Sauce":"Pantry","Miso Paste":"Pantry","Tahini":"Pantry","Hummus":"Pantry","Coconut Milk":"Pantry","Peanuts":"Pantry","Honey":"Pantry","Maple Syrup":"Pantry",
   "Avocado":"Other","Lime":"Other","Lemon":"Other","Banana":"Other","Blueberries":"Other","Strawberries":"Other","Mango":"Other",
-  "Cumin":"Spices","Turmeric":"Spices","Garam Masala":"Spices","Coriander Powder":"Spices","Chili Powder":"Spices","Black Pepper":"Spices","Salt":"Spices","Garlic Powder":"Spices","Oregano":"Spices","Dried Basil":"Spices","Paprika":"Spices","White Pepper":"Spices","Chili Flakes":"Spices","Gochugaru":"Spices","Gochujang":"Spices","Cayenne":"Spices","Cinnamon":"Spices","Cardamom":"Spices","Bay Leaf":"Spices","Allspice":"Spices","Ginger (ground)":"Spices","Curry Powder":"Spices","Dried Parsley":"Spices"
+  "Cumin":"Spices","Turmeric":"Spices","Garam Masala":"Spices","Coriander Powder":"Spices","Chili Powder":"Spices","Black Pepper":"Spices","Salt":"Spices","Garlic Powder":"Spices","Oregano":"Spices","Dried Basil":"Spices","Paprika":"Spices","White Pepper":"Spices","Chili Flakes":"Spices","Gochugaru":"Spices","Gochujang":"Spices","Cayenne":"Spices","Cinnamon":"Spices","Cardamom":"Spices","Bay Leaf":"Spices","Allspice":"Spices","Ginger (ground)":"Spices","Curry Powder":"Spices","Dried Parsley":"Spices","Thyme":"Spices","Smoked Paprika":"Spices"
 };
 
 function getCategory(name) { return INGREDIENT_CATEGORIES[name] || "Other"; }
@@ -3076,7 +3149,7 @@ function App() {
                   if (filteredRecipes[ri].name === expandedRecipe) { expR = filteredRecipes[ri]; break; }
                 }
                 if (expR) {
-                  var cookData = COOKING_INSTRUCTIONS[expR.name] || RECIPE_COOKING_DATA[expR.name];
+                  var cookData = RECIPE_COOKING_DATA[expR.name];
                   var expIdx = filteredRecipes.indexOf(expR);
                   var colInRow = expIdx - rowStart;
                   var colWidth = 100 / rbColCount;
@@ -3344,7 +3417,7 @@ function App() {
         var isEaten = !!eatenMeals[mealKey];
         var servings = mealServings[mealKey] || 1;
         var recipeData = RECIPES.find(function(r) { return r.name === meal.originalName; });
-        var cookData = COOKING_INSTRUCTIONS[meal.originalName] || RECIPE_COOKING_DATA[meal.originalName];
+        var cookData = RECIPE_COOKING_DATA[meal.originalName];
         var mainIngs = meal.ingredients.filter(function(x) { return !x.isSpice; });
         var spiceIngs = meal.ingredients.filter(function(x) { return x.isSpice; });
         return (<div className="md-overlay" onClick={function(e){if(e.target===e.currentTarget){setDetailModal(null);setDetailInstrOpen(false);}}}>

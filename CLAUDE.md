@@ -1,12 +1,12 @@
 # CLAUDE.md — Project Context
 
 ## Last Updated
-2026-04-04 — Session 4. Validated all Session 3 to-do items (all non-issues). Added autotest URL parameter, weekly summary bar, smart swap modal with solver-based ranking, recipe card expansion, UI overhaul (meal header density, protein shake visibility, variant labels, group colors in plan view).
+2026-04-07 — Session 5. Data integrity overhaul (recipe instructions audit, per-recipe spice system, Ropa Vieja seasonings). Major UI redesign (dashboard layout with weekly overview table, meal detail modal, collapsible settings). Ingredient coverage gaps fixed (Pork Belly, Rolled Oats).
 
 ---
 
 ## Project Overview
-Single-file HTML meal prep optimizer. Generates weekly meal plans against macro targets (2000 cal, 175g carbs, 200g protein, 55.6g fat). React 18 + Babel via CDN, no build step, no server. 136 recipes, 14 cuisines, solver-driven selection algorithm. File: `/Users/sebas/Desktop/MealPrep/index.html`.
+Single-file HTML meal prep optimizer ("Actual Size Optimizer"). Generates weekly meal plans against macro targets (2000 cal, 175g carbs, 200g protein, 55.6g fat). React 18 + Babel via CDN, no build step, no server. 136 recipes, 14 cuisines, solver-driven selection algorithm. File: `/Users/sebas/Desktop/MealPrep/index.html`.
 
 ---
 
@@ -15,9 +15,11 @@ Single-file HTML meal prep optimizer. Generates weekly meal plans against macro 
 Single-file React SPA. Key sections (line numbers approximate — search by name):
 
 - `UNIT_INGREDIENTS` — Unit-based display items (eggs, tortillas, etc.)
-- `INGREDIENT_REGISTRY` — 85 entries, USDA per-100g raw macros. Single source of truth.
+- `INGREDIENT_REGISTRY` — 93 entries, USDA per-100g raw macros. Single source of truth.
 - `RECIPES[]` — 136 recipes, grams-only ingredients. Macros computed at startup from registry.
-- `_enrichFromRegistry()` — Startup: computes ingredient macros, totalMacros, injects spices & cooking data.
+- `RECIPE_SPICE_OVERRIDES` — Per-recipe spice/seasoning lists. Every recipe has its own entry. Single source of truth for spices.
+- `RECIPE_COOKING_DATA` — Compact cooking instructions for all recipes. Single source of truth for instructions (verbose `COOKING_INSTRUCTIONS` was deleted in Session 5).
+- `_enrichFromRegistry()` — Startup: computes ingredient macros, totalMacros, injects spices from `RECIPE_SPICE_OVERRIDES` & cooking data.
 - `comboFeasible()` — Pre-filter: range checks + multi-direction cross-constraint analysis. Rejects combos that are mathematically infeasible.
 - `adjustDayMeals()` — Projected gradient descent solver. Finds scale factors for all adjustable ingredients simultaneously to hit macro targets.
 - `generatePlan()` — Combo-first with solver-as-filter: samples combos, pre-filters, ranks by softmax, then tries top combos through the solver until one hits [95%, 105%] on all macros.
@@ -25,7 +27,9 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 - Debug panel (type "debug") — 100-week validator, 1000-week simulator, ingredient frequency analyzer.
 - Autotest URL parameter — `index.html?autotest=CAL-CARBS-PRO-FAT` auto-runs 100-week validator with custom targets and downloads JSON results.
 
-**Data flow**: Set targets → Generate → sample 100 combos/day → feasibility pre-filter → softmax rank → solver-as-filter (try top 10 combos until one solves to zone) → add protein shake if needed → render.
+**UI architecture (Session 5)**: Dashboard layout. Settings panel (macro calculator, day grouping, saved plans) is always visible and compact at the top. Weekly overview table shows all days/meals in a grid. Clicking a meal cell opens a detail modal with ingredients, macros, servings stepper, swap, cooking instructions, and eaten toggle. Generate Plan button is always visible above the table.
+
+**Data flow**: Set targets → Generate → sample 100 combos/day → feasibility pre-filter → softmax rank → solver-as-filter (try top 10 combos until one solves to zone) → add protein shake if needed → render in weekly table.
 
 ---
 
@@ -45,9 +49,11 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 
 **Unified recipe pool**: No separate breakfast pool. Any recipe can appear in any slot. Breakfast recipes sort first visually only.
 
-**Variant system**: 36 recipes have `variants` arrays (chicken-breast↔thigh, beef 90%↔80% lean, salmon→cod, pork-shoulder→loin, no-rice). Each variant has a complete ingredient list. `selectVariant()` picks per combo budget. Rotation tracker uses base recipe name across variants.
+**Variant system**: 40 recipes have `variants` arrays (chicken-breast↔thigh, beef 90%↔80% lean, salmon→cod, pork-shoulder→loin→belly, no-rice). Each variant has a complete ingredient list. `selectVariant()` picks per combo budget. Rotation tracker uses base recipe name across variants.
 
 **Variant selection skew is accepted**: Session 4 analysis confirmed that `selectVariant()` structurally favors lean variants at even-split budgets due to the extreme protein/fat ratio. This is a theoretical suboptimality, not a regression — the solver compensates. 1000-week simulator showed healthy distribution (136/136 recipes selected, no over-representation). Don't change `selectVariant()` unless validation data shows actual failures.
+
+**Per-recipe spice system (no cuisine defaults)**: Every recipe has its own spice list in `RECIPE_SPICE_OVERRIDES`. The old `CUISINE_SPICES` system (which auto-injected a default spice set per cuisine) was removed in Session 5 because it caused inconsistency — some cuisines had defaults, some didn't, and recipe-specific needs were often missed. Now each recipe explicitly declares its spices. When adding a new recipe, always add a corresponding `RECIPE_SPICE_OVERRIDES` entry.
 
 **Smart swap modal**: Swap modal ranks candidates by solver-based scoring. Each candidate is dry-run through the solver against the day's remaining budget (target minus other meals). Candidates that solve to [95%, 105%] are shown with a green checkmark; incompatible ones are hidden behind a toggle. Variant selection runs per candidate. Protein shake rescue is factored into dry-run scoring.
 
@@ -57,15 +63,17 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 
 **All macros use raw USDA data**: Audit in Session 2 found cooked values for ground beef, pork loin, and rice. All corrected. Always use raw values when adding ingredients.
 
+**Weekly overview table (not day cards)**: Session 5 replaced the old expandable day cards with a compact weekly grid. All days visible at a glance, meal details accessed via click-to-modal. The table has fixed column widths to prevent layout shifting when regenerating plans.
+
 ---
 
 ## What to Do Next
 
-1. **Fix swap modal false negatives** — Some recipes marked "incompatible" in the dry-run scoring actually work when swapped. Root cause: solver non-determinism (random restarts produce different results between dry-run and real swap). Session 4 applied two fixes (double solver runs per candidate + protein shake in dry-run) which reduced but didn't eliminate the issue. Next step: investigate whether widening the dry-run zone slightly (e.g., [93%, 107%]) eliminates remaining false negatives without introducing false positives.
+1. **Re-run 100-week validator** — Session 5 made significant data changes (93 registry entries, 40 variants, per-recipe spice overrides, Rolled Oats added to 3 breakfasts, 4 Pork Belly variants) without re-running validation. Run `?autotest=2000-175-200-55.6` to confirm 700/700. No algorithm changes were made, so this should pass, but verify.
 
-2. **Ingredient coverage gaps** — Pork Belly appears in only 1 recipe (Doenjang Jjigae), Rolled Oats in only 2. Convention says ≥5 recipes per ingredient. Low priority but worth addressing when adding new recipes.
+2. **Fix swap modal false negatives** (carried from Session 4) — Some recipes marked "incompatible" in the dry-run scoring actually work when swapped. Root cause: solver non-determinism (random restarts produce different results between dry-run and real swap). Session 4 applied two fixes (double solver runs per candidate + protein shake in dry-run) which reduced but didn't eliminate the issue. Next step: investigate whether widening the dry-run zone slightly (e.g., [93%, 107%]) eliminates remaining false negatives without introducing false positives.
 
-3. **Mobile meal card UX** — The 2-line meal header layout (from Session 4) wraps to many lines on mobile (≤600px). The servings stepper, swap button, eaten button, tags, and macros stack vertically. Could benefit from a mobile-specific compact layout.
+3. **Mobile UX** — The weekly overview table and meal detail modal have not been tested on mobile (≤600px). The table columns may be too narrow for recipe names on small screens. The modal should work reasonably but may need responsive adjustments.
 
 ---
 
@@ -89,8 +97,6 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 
 **isBreakfast set after adjustment**: Don't use meal index for breakfast detection inside `adjustDayMeals`. Use `tags.indexOf("breakfast")`.
 
-**Two RECIPE_COOKING_DATA objects**: Verbose and compact formats. Check both if a recipe's instructions are missing.
-
 **Validation is browser-only**: Debug tools are client-side. Code can't run them. Must test in browser and share JSON reports. The autotest URL parameter (`?autotest=CAL-CARBS-PRO-FAT`) can automate multi-config testing but still requires the browser.
 
 **Feasibility pre-filter is intentionally loose**: The cross-constraint checks in `comboFeasible()` use slightly relaxed thresholds (e.g., 110% calorie ceiling on protein path). This is deliberate — the solver-as-filter is the real gate. Making the pre-filter too strict (e.g., 105%) caused a regression from 99.1% to 91.9% in Session 3. If adjusting thresholds, run the full 100-week validator before committing.
@@ -103,6 +109,10 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 
 **Tabs work independently**: All Recipes, Ingredients, and Stats tabs render without a generated plan. Meal Plan and Grocery List tabs require a generated plan.
 
+**Plans store stale data**: Plans are cloned and stored in localStorage at generation time. Changes to recipe data (ingredients, spices, variants) only appear after regenerating the plan. If a user reports missing spices or wrong ingredients, first check if they need to regenerate.
+
+**Spice injection for variants**: Spices from `RECIPE_SPICE_OVERRIDES` are injected during `_enrichFromRegistry`. For variant-selected meals, the spice injection must happen after variant selection. A Session 5 bug caused spices to not appear for variant-selected meals in the plan — this was fixed by ensuring spice injection runs on the final selected variant, not just the base recipe.
+
 ---
 
 ## Conventions
@@ -111,7 +121,16 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 
 **New variant**: Add `variants` array with `id`, `label`, complete `ingredients` (grams-only). Use separate registry entries for different proteins.
 
-**New recipe**: Add to `RECIPES[]`. Verify all ingredient names match registry keys. Run 100-week validator after adding. Ingredient must appear in ≥5 recipes.
+**New recipe checklist**:
+1. Add recipe to `RECIPES[]` with grams-only ingredients. Verify all ingredient names match `INGREDIENT_REGISTRY` keys exactly.
+2. Add a `RECIPE_SPICE_OVERRIDES` entry with the recipe's spices/seasonings. Research traditional spices for the dish. At minimum, savory recipes need Salt and Black Pepper.
+3. Add cooking instructions to `RECIPE_COOKING_DATA`. Do NOT use numbered prefixes in the step strings (the `<ol>` element adds numbering automatically).
+4. Verify instructions reference every non-spice ingredient in the ingredient list. Do NOT reference ingredients that aren't in the list (phantom ingredient bug).
+5. Verify instructions name the specific spices from the `RECIPE_SPICE_OVERRIDES` entry (not vague terms like "spice blend" or "seasonings"). Salt and Black Pepper don't need explicit instruction steps.
+6. Ensure every ingredient appears in ≥5 recipes. If adding a new ingredient, add it to enough recipes to meet the threshold.
+7. Run 100-week validator after adding. Confirm 700/700.
+
+**Editing cooking instructions**: Only edit `RECIPE_COOKING_DATA`. The legacy `COOKING_INSTRUCTIONS` object was deleted in Session 5. Do not recreate it. Steps should NOT include number prefixes (no "1. Cook rice" — just "Cook rice") because the `<ol>` rendering adds numbers automatically.
 
 **canAdjust rules**: ≥50 cal, not spice, not soy sauce. Eggs in 50g steps (binder = capped). Unit items (bread, tortillas, lime, lemon, banana) not adjustable.
 
@@ -132,3 +151,5 @@ Single-file React SPA. Key sections (line numbers approximate — search by name
 - **Session 3 (2026-04-04)**: Algorithm overhaul + recipe expansion. Added 8 variants (2 salmon→cod, 6 chicken→thigh) + 1 new base recipe (Baked Cod with Lemon & Herbs). Fixed critical bug: 1000-week simulator and background validator used 2500cal/187.5pro fallback instead of correct 2000cal/200pro — all previous simulator results were against wrong targets. Replaced greedy 50-iteration adjustment loop with projected gradient descent solver (exact quadratic step, random restarts). Added dynamic feasibility pre-filter with 7 cross-constraint directions. Implemented solver-as-filter architecture: tries top 10 combos through solver until one hits [95%, 105%] zone. Added solver diagnostic JSON dump (downloadable from debug panel). Final: 136 recipes, 36 variants, 100-week validation 700/700 (100%).
 
 - **Session 4 (2026-04-04)**: Validation + UI overhaul. Validated all 5 Session 3 to-do items: solver logging already clean (1 gated warning), 1000-week simulator 700/700 with healthy distribution (136/136 recipes, no over-representation), combo variety confirmed good, variant selection skew confirmed theoretical but non-impactful (solver compensates), dynamic macro targets validated at 4 configs (1600–2500 cal) all 700/700. Added autotest URL parameter for automated multi-config validation. UI: fixed tabs to work independently without generated plan, added recipe card full-width breakout with cooking instructions, added weekly summary bar, cleaned up meal header density (2-line layout), improved protein shake visibility (styled pill), made variant labels visible (colored tag), carried group colors into day cards (snapshot at generation time), days default expanded. Smart swap modal: solver-based ranking of candidates with dry-run scoring, variant selection per candidate, protein shake in scoring, solver failure warning toast. Known issue: swap dry-run has residual false negatives from solver non-determinism.
+
+- **Session 5 (2026-04-07)**: Data integrity + UI redesign + recipe expansion. **Data fixes**: Fixed Tuscan White Bean Soup instruction mismatch (tomato→tomato sauce). Added Ropa Vieja seasonings (oregano, cumin, black pepper, bay leaves, lemon, adobo, soy sauce) with rewritten braising instructions. Full audit of 136 recipes: fixed 43 phantom tomato references, 3 rice type mismatches, 3 duplicate Basmati Rice entries, added missing Sesame Oil/Garlic/Baked Cod instructions. **Spice system overhaul**: Replaced `CUISINE_SPICES` (per-cuisine defaults) with per-recipe `RECIPE_SPICE_OVERRIDES` for all 136 recipes — every recipe now has its own explicit spice list. Deleted legacy `COOKING_INSTRUCTIONS` object (fixed double-numbering bug in 27 recipes). Aligned all cooking instructions with spice overrides (eliminated vague "shawarma spices" etc.). Fixed spice injection bug for variant-selected meals. **UI redesign**: Renamed app to "Actual Size Optimizer". Replaced day cards with compact weekly overview table (all days visible at a glance, fixed column widths). Added meal detail modal (click any meal → ingredients, macros, servings, swap, instructions). Made settings panel always-visible and compact (macro inputs + day grouping side by side, scrollable saved plans). Pantry items show ounces in grocery list. **Recipe expansion**: Added 4 Pork Belly variants (Kimchi Fried Rice, Okonomiyaki, Miso Ramen, Egg Fried Rice) and Rolled Oats to 3 breakfast recipes (Smoothie Bowl, French Toast, Greek Yogurt Parfait) — both ingredients now meet ≥5 recipe convention. Final: 136 recipes, 40 variants, 93 registry entries. Validation not re-run — data changes only (no algorithm changes), but should be re-validated.

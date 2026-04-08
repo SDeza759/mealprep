@@ -1018,6 +1018,9 @@ RECIPES.forEach(function(r) {
   }, { calories:0, carbs:0, protein:0, fat:0 });
   if (r.variants) {
     r.variants.forEach(function(v) {
+      spices.forEach(function(s) {
+        v.ingredients.push({ name: s.name, grams: s.grams, calories: 0, carbs: 0, protein: 0, fat: 0, isSpice: true });
+      });
       _enrichFromRegistry(v.ingredients);
       v.totalMacros = v.ingredients.reduce(function(a, i) {
         return { calories: a.calories+i.calories, carbs: a.carbs+i.carbs, protein: a.protein+i.protein, fat: a.fat+i.fat };

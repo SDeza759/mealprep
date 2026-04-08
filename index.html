@@ -46,10 +46,11 @@
   .sd-saved-item .sp-name { font-weight: 600; font-size: 0.82rem; }
   .sd-saved-item .sp-meta { font-size: 0.72rem; color: #6b7f7a; margin-left: 6px; }
   .sd-saved-item .sp-actions { display: flex; gap: 4px; flex-shrink: 0; }
-  .wk-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #d8e0dc; border-radius: 12px; overflow: hidden; background: #fff; margin-bottom: 16px; }
+  .wk-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #d8e0dc; border-radius: 12px; overflow: hidden; background: #fff; margin-bottom: 16px; table-layout: fixed; }
   .wk-table th { font-size: 0.78rem; font-weight: 700; color: #5a7a6f; padding: 8px 10px; text-align: left; background: #f0f4f3; border-bottom: 1px solid #d8e0dc; }
   .wk-table th:not(:last-child) { border-right: 0.5px solid #e0e8e4; }
-  .wk-day-cell { background: #f7faf8; padding: 8px 6px; text-align: center; vertical-align: middle; font-size: 0.82rem; font-weight: 700; color: #2d6a4f; border-right: 0.5px solid #e0e8e4; width: 56px; min-width: 56px; }
+  .wk-table th:first-child, .wk-table td:first-child { width: 56px; }
+  .wk-day-cell { background: #f7faf8; padding: 8px 6px; text-align: center; vertical-align: middle; font-size: 0.82rem; font-weight: 700; color: #2d6a4f; border-right: 0.5px solid #e0e8e4; }
   .wk-day-cell .wk-glabel { font-size: 0.65rem; font-weight: 600; margin-top: 2px; padding: 1px 6px; border-radius: 8px; display: inline-block; }
   .wk-meal-cell { padding: 8px 10px; vertical-align: top; position: relative; cursor: pointer; transition: background 0.15s; border-right: 0.5px solid #e0e8e4; }
   .wk-meal-cell:last-child { border-right: none; }
@@ -59,7 +60,7 @@
   .wk-name-row { display: flex; align-items: center; gap: 5px; }
   .wk-eaten-circle { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #c8d6d0; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; transition: all 0.15s; flex-shrink: 0; color: transparent; }
   .wk-eaten-circle.checked { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
-  .wk-meal-name { font-size: 13px; font-weight: 500; color: #1a2e2a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wk-meal-name { font-size: 13px; font-weight: 500; color: #1a2e2a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: block; }
   .wk-meal-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; flex-wrap: wrap; }
   .wk-meal-macros { font-size: 0.72rem; color: #5a7a6f; font-weight: 500; }
   .wk-stepper { position: absolute; top: 6px; right: 6px; display: inline-flex; align-items: center; border: 1px solid #d8e0dc; border-radius: 5px; overflow: hidden; font-size: 12px; }

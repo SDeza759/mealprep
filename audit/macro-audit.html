@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amazon Fresh vs USDA — Macro Audit</title>
+<style>
+  :root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  body { margin: 0; padding: 0 0 80px; background: #f6f7f9; color: #1c1f23; }
+  header { background: #1c1f23; color: #fff; padding: 24px 32px; }
+  header h1 { margin: 0 0 4px; font-size: 22px; }
+  header p { margin: 2px 0; color: #b9c0c8; font-size: 13px; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; margin: 16px 0; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .dot.ok { background: #2f9e44; } .dot.warn { background: #f08c00; } .dot.bad { background: #e03131; } .dot.na { background: #adb5bd; }
+  table { border-collapse: collapse; width: 100%; background: #fff; }
+  .summary { border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+  .summary th, .summary td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #eef0f2; font-size: 13px; }
+  .summary thead th { background: #f1f3f5; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: #495057; }
+  .summary td a { color: #1971c2; text-decoration: none; font-weight: 600; }
+  .summary td a:hover { text-decoration: underline; }
+  .cat { color: #868e96; font-weight: 400; font-size: 12px; }
+  .card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px 18px; margin: 16px 0; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+  .card h3 { margin: 0 0 10px; font-size: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; color: #fff; }
+  .badge.ok { background: #2f9e44; } .badge.warn { background: #f08c00; } .badge.bad { background: #e03131; } .badge.na { background: #adb5bd; }
+  .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .tag { font-size: 11px; background: #f1f3f5; color: #495057; padding: 3px 8px; border-radius: 4px; }
+  .tag.mismatch { background: #fff3bf; color: #846200; }
+  .tag-amazon-page { background: #d3f9d8; color: #2b8a3e; }
+  .tag-aggregator { background: #e7f5ff; color: #1971c2; }
+  .tag-none { background: #ffe3e3; color: #c92a2a; }
+  .notes { font-size: 13px; color: #495057; margin: 6px 0; font-style: italic; }
+  .links { font-size: 13px; margin: 8px 0 12px; line-height: 1.6; }
+  .links a { color: #1971c2; }
+  .cmp { border: 1px solid #e9ecef; border-radius: 6px; overflow: hidden; }
+  .cmp th, .cmp td { padding: 7px 10px; font-size: 13px; border-bottom: 1px solid #f1f3f5; text-align: right; }
+  .cmp thead th { background: #f8f9fa; text-align: right; font-size: 12px; color: #495057; }
+  .cmp thead th:first-child, .cmp tbody th { text-align: left; font-weight: 600; color: #343a40; }
+  .cmp tbody th { background: #fcfcfd; }
+  .cmp tr.delta th, .cmp tr.delta td { border-top: 2px solid #dee2e6; font-weight: 600; }
+  .pct { font-weight: 400; font-size: 11px; opacity: .8; }
+  td.ok { background: #ebfbee; color: #2b8a3e; } td.warn { background: #fff9db; color: #a05a00; } td.bad { background: #fff0f0; color: #c92a2a; } td.na { color: #adb5bd; }
+  .summary td.ok { font-weight: 600; color: #2b8a3e; } .summary td.warn { font-weight: 600; color: #a05a00; } .summary td.bad { font-weight: 700; color: #c92a2a; } .summary td.na { color: #adb5bd; }
+  .muted { color: #adb5bd; }
+  .decision { margin-top: 12px; font-size: 13px; color: #495057; }
+  .decision label { margin-right: 16px; cursor: pointer; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: #495057; margin: 28px 0 8px; }
+
+  th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+  th.sortable:hover { background: #e3e6ea; }
+  th .arrow { font-size: 10px; opacity: .45; margin-left: 4px; }
+  th .hint { font-weight: 400; font-size: 10px; color: #868e96; margin-left: 3px; }
+  .summary td[data-sort] { text-align: right; white-space: nowrap; }
+
+  .decpanel { background:#fff; border:1px solid #dee2e6; border-radius:8px; padding:14px 16px; margin:16px 0 8px; box-shadow:0 1px 2px rgba(0,0,0,.05); }
+  .decpanel-h { font-size:14px; margin-bottom:8px; }
+  .decbtns { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+  .decbtns button { font-size:13px; padding:6px 12px; border:1px solid #ced4da; background:#f1f3f5; border-radius:6px; cursor:pointer; }
+  .decbtns button:hover { background:#e3e6ea; }
+  #decText { width:100%; box-sizing:border-box; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; border:1px solid #dee2e6; border-radius:6px; padding:8px; resize:vertical; background:#fbfcfd; }
+  .deccell.keep { color:#2b8a3e; font-weight:600; } .deccell.adjust { color:#c92a2a; font-weight:700; } .deccell { color:#adb5bd; }
+  .decision .clearrow { font-size:11px; margin-left:10px; padding:2px 8px; border:1px solid #e9ecef; background:#f8f9fa; border-radius:4px; cursor:pointer; color:#868e96; }
+  .decision input[type=radio] { margin-right:3px; }
+</style></head>
+<body>
+<header>
+  <h1>Amazon Fresh vs USDA — Macro Audit</h1>
+  <p>Packaged ingredients only (45). Generated 2026-06-07. All values normalized to per 100 g.</p>
+  <p>45/45 ingredients matched to an Amazon listing · 1 flagged for raw-vs-cooked/canned form mismatch.</p>
+</header>
+<div class="wrap">
+  <div class="legend">
+    <strong>Δ magnitude (max macro):</strong>
+    <span><i class="dot ok"></i> &lt;5%</span>
+    <span><i class="dot warn"></i> 5–15%</span>
+    <span><i class="dot bad"></i> &gt;15%</span>
+    <span><i class="dot na"></i> no data</span>
+  </div>
+  <p style="font-size:13px;color:#495057;margin:4px 0 16px">Each Δ column shows <strong>Amazon − ours</strong> per 100 g as grams and percent (same as the detail tables), heat-mapped by magnitude. <strong>Click any column header to sort</strong> (Δ columns sort by <strong>percent</strong>; toggles ascending/descending; blank/no-percent cells sort last). Default view: largest calorie gap first. ⚠ marks items whose Amazon label is a different form (cooked/canned/drained) than our USDA raw/dry data, so a large delta is expected. Review each and tick a decision box.</p>
+  <h2>Summary — all 45, biggest deltas first</h2>
+  <table class="summary" id="summaryTable">
+    <thead><tr><th class="sortable" onclick="sortTable(this,0,'text')">Ingredient<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,1,'text')">Category<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,2,'num')">Δ Cal<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,3,'num')">Δ Carbs<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,4,'num')">Δ Protein<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,5,'num')">Δ Fat<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,6,'text')">Form<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,7,'text')">Source<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,8,'text')">Conf.<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,9,'text')">Decision<span class="arrow">↕</span></th></tr></thead>
+    <tbody><tr>
+    <td><a href="#detail-23">Cherry Sauce</a></td>
+    <td class="cat">Condiments &amp;amp; Oils</td>
+    <td class="bad" data-sort="178.4">162.3 <span class="pct">(+178.4%)</span></td>
+    <td class="bad" data-sort="166.1">38.7 <span class="pct">(+166.1%)</span></td>
+    <td class="bad" data-sort="-76.2">-0.5 <span class="pct">(-76.2%)</span></td>
+    <td class="bad" data-sort="-33.3">0 <span class="pct">(-33.3%)</span></td>
+    <td>as-sold</td>
+    <td>mixed</td>
+    <td>low</td>
+    <td class="deccell" data-ing="Cherry Sauce">—</td>
+  </tr><tr>
+    <td><a href="#detail-32">Pesto Sauce</a></td>
+    <td class="cat">Condiments &amp;amp; Oils</td>
+    <td class="bad" data-sort="37.5">150 <span class="pct">(+37.5%)</span></td>
+    <td class="bad" data-sort="123.9">8.3 <span class="pct">(+123.9%)</span></td>
+    <td class="bad" data-sort="49.3">3.3 <span class="pct">(+49.3%)</span></td>
+    <td class="bad" data-sort="25">10 <span class="pct">(+25%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Pesto Sauce">—</td>
+  </tr><tr>
+    <td><a href="#detail-26">Hummus</a></td>
+    <td class="cat">Condiments &amp;amp; Oils</td>
+    <td class="bad" data-sort="50.7">89.7 <span class="pct">(+50.7%)</span></td>
+    <td class="bad" data-sort="25">4 <span class="pct">(+25%)</span></td>
+    <td class="bad" data-sort="-16.7">-1.3 <span class="pct">(-16.7%)</span></td>
+    <td class="bad" data-sort="60.3">6.3 <span class="pct">(+60.3%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Hummus">—</td>
+  </tr><tr>
+    <td><a href="#detail-16">Chickpeas</a></td>
+    <td class="cat">Canned &amp;amp; Legumes</td>
+    <td class="bad" data-sort="16.9">63.9 <span class="pct">(+16.9%)</span></td>
+    <td class="ok" data-sort="-0.3">-0.2 <span class="pct">(-0.3%)</span></td>
+    <td class="warn" data-sort="13.4">2.8 <span class="pct">(+13.4%)</span></td>
+    <td class="bad" data-sort="16.3">1 <span class="pct">(+16.3%)</span></td>
+    <td>dry</td>
+    <td>mixed</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Chickpeas">—</td>
+  </tr><tr>
+    <td><a href="#detail-42">Paneer</a></td>
+    <td class="cat">Eggs &amp;amp; Dairy</td>
+    <td class="bad" data-sort="23.6">61.4 <span class="pct">(+23.6%)</span></td>
+    <td class="bad" data-sort="19">0.6 <span class="pct">(+19%)</span></td>
+    <td class="bad" data-sort="17.1">3.1 <span class="pct">(+17.1%)</span></td>
+    <td class="bad" data-sort="25">5 <span class="pct">(+25%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Paneer">—</td>
+  </tr><tr>
+    <td><a href="#detail-10">Flatbread</a></td>
+    <td class="cat">Bakery &amp;amp; Bread</td>
+    <td class="warn" data-sort="11.3">31.5 <span class="pct">(+11.3%)</span></td>
+    <td class="ok" data-sort="2.2">1.1 <span class="pct">(+2.2%)</span></td>
+    <td class="warn" data-sort="7">0.6 <span class="pct">(+7%)</span></td>
+    <td class="bad" data-sort="27.6">1.5 <span class="pct">(+27.6%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Flatbread">—</td>
+  </tr><tr>
+    <td><a href="#detail-27">Kimchi</a></td>
+    <td class="cat">Condiments &amp;amp; Oils</td>
+    <td class="bad" data-sort="132.9">30.6 <span class="pct">(+132.9%)</span></td>
+    <td class="bad" data-sort="58.7">2.6 <span class="pct">(+58.7%)</span></td>
+    <td class="bad" data-sort="-79">-1.3 <span class="pct">(-79%)</span></td>
+    <td class="bad" data-sort="1090.5">3.3 <span class="pct">(+1090.5%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Kimchi">—</td>
+  </tr><tr>
+    <td><a href="#detail-40">Greek Yogurt</a></td>
+    <td class="cat">Eggs &amp;amp; Dairy</td>
+    <td class="bad" data-sort="-31.3">-30.3 <span class="pct">(-31.3%)</span></td>
+    <td class="bad" data-sort="-33.3">-2 <span class="pct">(-33.3%)</span></td>
+    <td class="bad" data-sort="20">2 <span class="pct">(+20%)</span></td>
+    <td class="bad" data-sort="-100">-0.7 <span class="pct">(-100%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Greek Yogurt">—</td>
+  </tr><tr>
+    <td><a href="#detail-30">Olive Oil</a></td>
+    <td class="cat">Condiments &amp;amp; Oils</td>
+    <td class="ok" data-sort="-3">-26.9 <span class="pct">(-3%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Olive Oil">—</td>
+  </tr><tr>
+    <td><a href="#detail-33">Sesame Oil</a></td>
+    <td class="cat">Condiments &amp;amp; Oils</td>
+    <td class="ok" data-sort="-3">-26.9 <span class="pct">(-3%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Sesame Oil">—</td>
+  </tr><tr>
+    <td><a href="#detail-5">Rice Noodles</a></td>
+    <td class="cat">Grains &amp;amp; Pasta</td>
+    <td class="warn" data-sort="-7.4">-26.7 <span class="pct">(-7.4%)</span></td>
+    <td class="ok" data-sort="-3.5">-2.8 <span class="pct">(-3.5%)</span></td>
+    <td class="bad" data-sort="17">1 <span class="pct">(+17%)</span></td>
+    <td class="bad" data-sort="-100">-0.6 <span class="pct">(-100%)</span></td>
+    <td>dry</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Rice Noodles">—</td>
+  </tr><tr>
+    <td><a href="#detail-21">White Beans</a></td>
+    <td class="cat">Canned &amp;amp; Legumes</td>
+    <td class="warn" data-sort="-6.2">-20.5 <span class="pct">(-6.2%)</span></td>
+    <td class="ok" data-sort="-3.3">-2 <span class="pct">(-3.3%)</span></td>
+    <td class="warn" data-sort="-11">-2.6 <span class="pct">(-11%)</span></td>
+    <td class="bad" data-sort="15.7">0.1 <span class="pct">(+15.7%)</span></td>
+    <td>dry</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="White Beans">—</td>
+  </tr><tr>
+    <td><a href="#detail-29">Miso Paste</a></td>
+    <td class="cat">Condiments &amp;amp; Oils</td>
+    <td class="warn" data-sort="9.9">19.8 <span class="pct">(+9.9%)</span></td>
+    <td class="warn" data-sort="-5.7">-1.5 <span class="pct">(-5.7%)</span></td>
+    <td class="warn" data-sort="6.8">0.8 <span class="pct">(+6.8%)</span></td>
+    <td class="ok" data-sort="4.2">0.3 <span class="pct">(+4.2%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Miso Paste">—</td>
+  </tr><tr>
+    <td><a href="#detail-18">Edamame</a></td>
+    <td class="cat">Canned &amp;amp; Legumes</td>
+    <td class="bad" data-sort="15.7">19 <span class="pct">(+15.7%)</span></td>
+    <td class="bad" data-sort="23.6">2.1 <span class="pct">(+23.6%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-3.8">-0.2 <span class="pct">(-3.8%)</span></td>
+    <td>cooked ⚠</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Edamame">—</td>
+  </tr><tr>
+    <td><a href="#detail-19">Red Lentils</a></td>
+    <td class="cat">Canned &amp;amp; Legumes</td>
+    <td class="warn" data-sort="-5.3">-18.7 <span class="pct">(-5.3%)</span></td>
+    <td class="warn" data-sort="-5.4">-3.4 <span class="pct">(-5.4%)</span></td>
+    <td class="ok" data-sort="-0.6">-0.2 <span class="pct">(-0.6%)</span></td>
+    <td class="bad" data-sort="-100">-1.1 <span class="pct">(-100%)</span></td>
+    <td>dry</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Red Lentils">—</td>
+  </tr><tr>
+    <td><a href="#detail-28">Maple Syrup</a></td>
+    <td class="cat">Condiments &amp;amp; Oils</td>
+    <td class="warn" data-sort="5.8">15 <span class="pct">(+5.8%)</span></td>
+    <td class="ok" data-sort="0.7">0.5 <span class="pct">(+0.7%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Maple Syrup">—</td>
+  </tr><tr>
+    <td><a href="#detail-1">Brown Rice</a></td>
+    <td class="cat">Grains &amp;amp; Pasta</td>
+    <td class="ok" data-sort="-3.9">-14.4 <span class="pct">(-3.9%)</span></td>
+    <td class="ok" data-sort="-2.1">-1.6 <span class="pct">(-2.1%)</span></td>
+    <td class="bad" data-sort="-15.6">-1.2 <span class="pct">(-15.6%)</span></td>
+    <td class="bad" data-sort="-23.4">-0.7 <span class="pct">(-23.4%)</span></td>
+    <td>dry</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Brown Rice">—</td>
+  </tr><tr>
+    <td><a href="#detail-35">Tahini</a></td>
+    <td class="cat">Condiments &amp;amp; Oils</td>
+    <td class="ok" data-sort="2.4">14.1 <span class="pct">(+2.4%)</span></td>
+    <td class="bad" data-sort="26.1">4.4 <span class="pct">(+26.1%)</span></td>
+    <td class="warn" data-sort="5">0.9 <span class="pct">(+5%)</span></td>
+    <td class="warn" data-sort="6.2">3.3 <span class="pct">(+6.2%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Tahini">—</td>
+  </tr><tr>
+    <td><a href="#detail-39">Feta Cheese</a></td>
+    <td class="cat">Eggs &amp;amp; Dairy</td>
+    <td class="warn" data-sort="-5.3">-14 <span class="pct">(-5.3%)</span></td>
+    <td class="bad" data-sort="74.2">3 <span class="pct">(+74.2%)</span></td>
+    <td class="bad" data-sort="50.9">7.2 <span class="pct">(+50.9%)</span></td>
+    <td class="bad" data-sort="-32.9">-7 <span class="pct">(-32.9%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Feta Cheese">—</td>
+  </tr><tr>
+    <td><a href="#detail-4">Pasta</a></td>
+    <td class="cat">Grains &amp;amp; Pasta</td>
+    <td class="ok" data-sort="-3.7">-13.9 <span class="pct">(-3.7%)</span></td>
+    <td class="ok" data-sort="0.4">0.3 <span class="pct">(+0.4%)</span></td>
+    <td class="ok" data-sort="-3.8">-0.5 <span class="pct">(-3.8%)</span></td>
+    <td class="bad" data-sort="19">0.3 <span class="pct">(+19%)</span></td>
+    <td>dry</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Pasta">—</td>
+  </tr><tr>
+    <td><a href="#detail-37">Cheddar Cheese</a></td>
+    <td class="cat">Eggs &amp;amp; Dairy</td>
+    <td class="ok" data-sort="-2.5">-10.1 <span class="pct">(-2.5%)</span></td>
+    <td class="bad" data-sort="174.7">2.3 <span class="pct">(+174.7%)</span></td>
+    <td class="warn" data-sort="-14.3">-3.6 <span class="pct">(-14.3%)</span></td>
+    <td class="ok" data-sort="-2.6">-0.9 <span class="pct">(-2.6%)</span></td>
+    <td>as-sold</td>
+    <td>mixed</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Cheddar Cheese">—</td>
+  </tr><tr>
+    <td><a href="#detail-34">Soy Sauce</a></td>
+    <td class="cat">Condiments &amp;amp; Oils</td>
+    <td class="bad" data-sort="17.9">9.5 <span class="pct">(+17.9%)</span></td>
+    <td class="bad" data-sort="27.6">1.3 <span class="pct">(+27.6%)</span></td>
+    <td class="bad" data-sort="-22.8">-1.8 <span class="pct">(-22.8%)</span></td>
+    <td class="bad" data-sort="-100">-0.6 <span class="pct">(-100%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>low</td>
+    <td class="deccell" data-ing="Soy Sauce">—</td>
+  </tr><tr>
+    <td><a href="#detail-8">White Rice</a></td>
+    <td class="cat">Grains &amp;amp; Pasta</td>
+    <td class="ok" data-sort="-2.6">-9.4 <span class="pct">(-2.6%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="warn" data-sort="-6.1">-0.4 <span class="pct">(-6.1%)</span></td>
+    <td class="bad" data-sort="-100">-0.6 <span class="pct">(-100%)</span></td>
+    <td>dry</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="White Rice">—</td>
+  </tr><tr>
+    <td><a href="#detail-7">Sweet Potato Noodles</a></td>
+    <td class="cat">Grains &amp;amp; Pasta</td>
+    <td class="ok" data-sort="2.6">9 <span class="pct">(+2.6%)</span></td>
+    <td class="ok" data-sort="2.3">2 <span class="pct">(+2.3%)</span></td>
+    <td class="bad" data-sort="-100">-0.2 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="-100">-0.1 <span class="pct">(-100%)</span></td>
+    <td>dry</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Sweet Potato Noodles">—</td>
+  </tr><tr>
+    <td><a href="#detail-13">Whole Wheat Bread</a></td>
+    <td class="cat">Bakery &amp;amp; Bread</td>
+    <td class="ok" data-sort="-3.5">-9 <span class="pct">(-3.5%)</span></td>
+    <td class="warn" data-sort="7.2">3.1 <span class="pct">(+7.2%)</span></td>
+    <td class="bad" data-sort="19">1.7 <span class="pct">(+19%)</span></td>
+    <td class="bad" data-sort="-55.4">-2.2 <span class="pct">(-55.4%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Whole Wheat Bread">—</td>
+  </tr><tr>
+    <td><a href="#detail-43">Parmesan Cheese</a></td>
+    <td class="cat">Eggs &amp;amp; Dairy</td>
+    <td class="ok" data-sort="2">8 <span class="pct">(+2%)</span></td>
+    <td class="bad" data-sort="-100">-3.2 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="40.8">11.6 <span class="pct">(+40.8%)</span></td>
+    <td class="ok" data-sort="1">0.3 <span class="pct">(+1%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Parmesan Cheese">—</td>
+  </tr><tr>
+    <td><a href="#detail-14">Whole Wheat Tortilla</a></td>
+    <td class="cat">Bakery &amp;amp; Bread</td>
+    <td class="ok" data-sort="-2.9">-7.8 <span class="pct">(-2.9%)</span></td>
+    <td class="ok" data-sort="-2.1">-1 <span class="pct">(-2.1%)</span></td>
+    <td class="warn" data-sort="11.2">0.8 <span class="pct">(+11.2%)</span></td>
+    <td class="warn" data-sort="11.2">0.8 <span class="pct">(+11.2%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Whole Wheat Tortilla">—</td>
+  </tr><tr>
+    <td><a href="#detail-11">Panko Breadcrumbs</a></td>
+    <td class="cat">Bakery &amp;amp; Bread</td>
+    <td class="ok" data-sort="-2">-7.3 <span class="pct">(-2%)</span></td>
+    <td class="ok" data-sort="4.5">3.3 <span class="pct">(+4.5%)</span></td>
+    <td class="bad" data-sort="24.6">2.6 <span class="pct">(+24.6%)</span></td>
+    <td class="bad" data-sort="44.9">1 <span class="pct">(+44.9%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Panko Breadcrumbs">—</td>
+  </tr><tr>
+    <td><a href="#detail-22">BBQ Sauce</a></td>
+    <td class="cat">Condiments &amp;amp; Oils</td>
+    <td class="ok" data-sort="4.2">6.7 <span class="pct">(+4.2%)</span></td>
+    <td class="warn" data-sort="6">2.2 <span class="pct">(+6%)</span></td>
+    <td class="bad" data-sort="-100">-1.3 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="BBQ Sauce">—</td>
+  </tr><tr>
+    <td><a href="#detail-24">Hoisin Sauce</a></td>
+    <td class="cat">Condiments &amp;amp; Oils</td>
+    <td class="ok" data-sort="-2.6">-5.7 <span class="pct">(-2.6%)</span></td>
+    <td class="warn" data-sort="-6.6">-3.4 <span class="pct">(-6.6%)</span></td>
+    <td class="bad" data-sort="-100">-3.3 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="-32">-1.1 <span class="pct">(-32%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Hoisin Sauce">—</td>
+  </tr><tr>
+    <td><a href="#detail-41">Mozzarella Cheese</a></td>
+    <td class="cat">Eggs &amp;amp; Dairy</td>
+    <td class="ok" data-sort="2">5.7 <span class="pct">(+2%)</span></td>
+    <td class="bad" data-sort="62.3">1.4 <span class="pct">(+62.3%)</span></td>
+    <td class="bad" data-sort="25">5 <span class="pct">(+25%)</span></td>
+    <td class="bad" data-sort="-17.3">-3.7 <span class="pct">(-17.3%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Mozzarella Cheese">—</td>
+  </tr><tr>
+    <td><a href="#detail-3">Granola</a></td>
+    <td class="cat">Grains &amp;amp; Pasta</td>
+    <td class="ok" data-sort="1">4.5 <span class="pct">(+1%)</span></td>
+    <td class="ok" data-sort="-3.6">-2.4 <span class="pct">(-3.6%)</span></td>
+    <td class="bad" data-sort="-27.3">-2.7 <span class="pct">(-27.3%)</span></td>
+    <td class="warn" data-sort="11.1">2 <span class="pct">(+11.1%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Granola">—</td>
+  </tr><tr>
+    <td><a href="#detail-31">Peanuts</a></td>
+    <td class="cat">Condiments &amp;amp; Oils</td>
+    <td class="ok" data-sort="0.8">4.4 <span class="pct">(+0.8%)</span></td>
+    <td class="bad" data-sort="33.1">5.3 <span class="pct">(+33.1%)</span></td>
+    <td class="ok" data-sort="-3.1">-0.8 <span class="pct">(-3.1%)</span></td>
+    <td class="ok" data-sort="1.6">0.8 <span class="pct">(+1.6%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Peanuts">—</td>
+  </tr><tr>
+    <td><a href="#detail-6">Rolled Oats</a></td>
+    <td class="cat">Grains &amp;amp; Pasta</td>
+    <td class="ok" data-sort="-1.1">-4 <span class="pct">(-1.1%)</span></td>
+    <td class="ok" data-sort="-0.3">-0.2 <span class="pct">(-0.3%)</span></td>
+    <td class="warn" data-sort="-5.3">-0.7 <span class="pct">(-5.3%)</span></td>
+    <td class="ok" data-sort="-3.8">-0.2 <span class="pct">(-3.8%)</span></td>
+    <td>dry</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Rolled Oats">—</td>
+  </tr><tr>
+    <td><a href="#detail-17">Coconut Milk</a></td>
+    <td class="cat">Canned &amp;amp; Legumes</td>
+    <td class="ok" data-sort="-2.6">-4 <span class="pct">(-2.6%)</span></td>
+    <td class="bad" data-sort="-55.4">-1.5 <span class="pct">(-55.4%)</span></td>
+    <td class="bad" data-sort="-55.4">-0.8 <span class="pct">(-55.4%)</span></td>
+    <td class="warn" data-sort="-6.2">-1 <span class="pct">(-6.2%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Coconut Milk">—</td>
+  </tr><tr>
+    <td><a href="#detail-38">Egg</a></td>
+    <td class="cat">Eggs &amp;amp; Dairy</td>
+    <td class="ok" data-sort="-2.8">-4 <span class="pct">(-2.8%)</span></td>
+    <td class="bad" data-sort="-100">-0.8 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="-4.8">-0.6 <span class="pct">(-4.8%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Egg">—</td>
+  </tr><tr>
+    <td><a href="#detail-20">Tomato Sauce</a></td>
+    <td class="cat">Canned &amp;amp; Legumes</td>
+    <td class="warn" data-sort="11.2">3.3 <span class="pct">(+11.2%)</span></td>
+    <td class="ok" data-sort="-2.2">-0.1 <span class="pct">(-2.2%)</span></td>
+    <td class="bad" data-sort="-19.4">-0.2 <span class="pct">(-19.4%)</span></td>
+    <td class="bad" data-sort="-100">-0.2 <span class="pct">(-100%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Tomato Sauce">—</td>
+  </tr><tr>
+    <td><a href="#detail-2">Flour</a></td>
+    <td class="cat">Grains &amp;amp; Pasta</td>
+    <td class="ok" data-sort="0.7">2.7 <span class="pct">(+0.7%)</span></td>
+    <td class="ok" data-sort="0.5">0.4 <span class="pct">(+0.5%)</span></td>
+    <td class="ok" data-sort="-2.9">-0.3 <span class="pct">(-2.9%)</span></td>
+    <td class="bad" data-sort="-100">-1 <span class="pct">(-100%)</span></td>
+    <td>dry</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Flour">—</td>
+  </tr><tr>
+    <td><a href="#detail-36">Butter</a></td>
+    <td class="cat">Eggs &amp;amp; Dairy</td>
+    <td class="ok" data-sort="-0.4">-2.7 <span class="pct">(-0.4%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="bad" data-sort="-100">-0.9 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="-3.1">-2.5 <span class="pct">(-3.1%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Butter">—</td>
+  </tr><tr>
+    <td><a href="#detail-9">Corn Tortillas</a></td>
+    <td class="cat">Bakery &amp;amp; Bread</td>
+    <td class="ok" data-sort="0.8">1.8 <span class="pct">(+0.8%)</span></td>
+    <td class="ok" data-sort="3.2">1.4 <span class="pct">(+3.2%)</span></td>
+    <td class="bad" data-sort="-24">-1.3 <span class="pct">(-24%)</span></td>
+    <td class="bad" data-sort="-18.2">-0.5 <span class="pct">(-18.2%)</span></td>
+    <td>as-sold</td>
+    <td>mixed</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Corn Tortillas">—</td>
+  </tr><tr>
+    <td><a href="#detail-44">Whole Milk</a></td>
+    <td class="cat">Eggs &amp;amp; Dairy</td>
+    <td class="ok" data-sort="-1.9">-1.2 <span class="pct">(-1.9%)</span></td>
+    <td class="warn" data-sort="-6.1">-0.3 <span class="pct">(-6.1%)</span></td>
+    <td class="ok" data-sort="1.2">0 <span class="pct">(+1.2%)</span></td>
+    <td class="ok" data-sort="-1.9">-0.1 <span class="pct">(-1.9%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Whole Milk">—</td>
+  </tr><tr>
+    <td><a href="#detail-15">Black Beans</a></td>
+    <td class="cat">Canned &amp;amp; Legumes</td>
+    <td class="ok" data-sort="-0.3">-1 <span class="pct">(-0.3%)</span></td>
+    <td class="ok" data-sort="2.6">1.6 <span class="pct">(+2.6%)</span></td>
+    <td class="ok" data-sort="1.9">0.4 <span class="pct">(+1.9%)</span></td>
+    <td class="bad" data-sort="-100">-1.4 <span class="pct">(-100%)</span></td>
+    <td>dry</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Black Beans">—</td>
+  </tr><tr>
+    <td><a href="#detail-25">Honey</a></td>
+    <td class="cat">Condiments &amp;amp; Oils</td>
+    <td class="ok" data-sort="0.3">0.8 <span class="pct">(+0.3%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-4.8">0 <span class="pct">(-4.8%)</span></td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Honey">—</td>
+  </tr><tr>
+    <td><a href="#detail-0">Basmati Rice</a></td>
+    <td class="cat">Grains &amp;amp; Pasta</td>
+    <td class="ok" data-sort="-0.1">-0.4 <span class="pct">(-0.1%)</span></td>
+    <td class="ok" data-sort="1.8">1.4 <span class="pct">(+1.8%)</span></td>
+    <td class="bad" data-sort="25.2">1.8 <span class="pct">(+25.2%)</span></td>
+    <td class="bad" data-sort="-100">-0.6 <span class="pct">(-100%)</span></td>
+    <td>dry</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Basmati Rice">—</td>
+  </tr><tr>
+    <td><a href="#detail-12">Pita Bread</a></td>
+    <td class="cat">Bakery &amp;amp; Bread</td>
+    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-1.3">-0.7 <span class="pct">(-1.3%)</span></td>
+    <td class="warn" data-sort="-8.4">-0.8 <span class="pct">(-8.4%)</span></td>
+    <td class="bad" data-sort="38.9">0.5 <span class="pct">(+38.9%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Pita Bread">—</td>
+  </tr></tbody>
+  </table>
+  <div id="decisionPanel" class="decpanel">
+    <div class="decpanel-h"><strong>Your decisions</strong> <span id="decCounts" class="muted"></span></div>
+    <div class="decbtns">
+      <button type="button" onclick="copyDec()">📋 Copy decisions</button>
+      <button type="button" onclick="downloadDec()">⬇ Download JSON</button>
+      <button type="button" onclick="clearAll()">✕ Clear all</button>
+    </div>
+    <textarea id="decText" readonly rows="6" spellcheck="false"></textarea>
+    <p class="muted" style="font-size:12px;margin:6px 0 0">Choices save automatically in this browser and survive reopening. To send them to me: click <strong>Copy decisions</strong> and paste into chat, <em>or</em> <strong>Download JSON</strong> (saves <code>macro-audit-decisions.json</code> to your Downloads) and tell me to read it.</p>
+  </div>
+  <h2>Detail — per ingredient</h2>
+  
+  <section class="card" id="detail-0">
+    <h3><span class="badge bad">max 100%</span> Basmati Rice <span class="cat">Grains &amp; Pasta</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: dry</span>
+      
+    </div>
+    <p class="notes">No Amazon Fresh store brand exists; used Royal (the #1 basmati brand sold on Amazon). Dry 45g label scales to ~356cal/80C/8P/0F per 100g, closely matching our USDA raw data. Amazon page itself wouldn&#39;t render the label, so numbers came from FatSecret/CalorieKing for the Royal product.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Royal-Naturally-Authentic-Grain-Indian/dp/B00I330QEQ" target="_blank" rel="noopener">Royal Authentic White Basmati Rice, 15 lb (Amazon)</a><br><a href="https://www.amazon.com/Royal-White-Basmati-Rice-Pound/dp/B0037JCLIU" target="_blank" rel="noopener">Royal White Basmati Rice, 10 lb (Amazon)</a><br><a href="https://foods.fatsecret.com/calories-nutrition/royal/basmati-rice" target="_blank" rel="noopener">Royal Basmati Rice nutrition (FatSecret)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>356</td><td>78.6</td><td>7.1</td><td>0.6</td></tr>
+        <tr><th>Amazon (as labeled, 45 g serving)</th><td>160</td><td>36</td><td>4</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>355.6</td><td>80</td><td>8.9</td><td>0</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-0.4 <span class="pct">(-0.1%)</span></td><td class="ok">1.4 <span class="pct">(+1.8%)</span></td><td class="bad">1.8 <span class="pct">(+25.2%)</span></td><td class="bad">-0.6 <span class="pct">(-100%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Basmati Rice">Decision:
+      <label><input type="radio" name="dec_1" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_1" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-1">
+    <h3><span class="badge bad">max 23.4%</span> Brown Rice <span class="cat">Grains &amp; Pasta</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: dry</span>
+      
+    </div>
+    <p class="notes">Amazon Grocery/Happy Belly store-brand long grain brown rice; dry/uncooked label (45g = 1/4 cup), directly comparable to our USDA raw data and within ~4% of it.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Happy-Belly-Brown-Rice/dp/B08C92WFWG" target="_blank" rel="noopener">Amazon Grocery (Happy Belly) Brown Long Grain Rice, 5 Lb</a><br><a href="https://www.eatthismuch.com/calories/long-grain-brown-rice-3329090" target="_blank" rel="noopener">Happy Belly Long Grain Brown Rice - Eat This Much</a><br><a href="https://www.mynetdiary.com/food/calories-in-brown-rice-long-grain-by-happy-belly-cup-dry-26350648-0.html" target="_blank" rel="noopener">Brown Rice Long Grain by Happy Belly - MyNetDiary</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>370</td><td>77.2</td><td>7.9</td><td>2.9</td></tr>
+        <tr><th>Amazon (as labeled, 45 g serving)</th><td>160</td><td>34</td><td>3</td><td>1</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>355.6</td><td>75.6</td><td>6.7</td><td>2.2</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-14.4 <span class="pct">(-3.9%)</span></td><td class="ok">-1.6 <span class="pct">(-2.1%)</span></td><td class="bad">-1.2 <span class="pct">(-15.6%)</span></td><td class="bad">-0.7 <span class="pct">(-23.4%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Brown Rice">Decision:
+      <label><input type="radio" name="dec_2" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_2" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-2">
+    <h3><span class="badge bad">max 100%</span> Flour <span class="cat">Grains &amp; Pasta</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: dry</span>
+      
+    </div>
+    <p class="notes">Amazon Fresh branded flour via Eat This Much (Amazon page wouldn&#39;t render label); listing is bread flour (367 cal/100g) vs our all-purpose USDA data (364/100g) — close; dry form, directly comparable.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.eatthismuch.com/calories/unbleached-enriched-bread-flour-4141002" target="_blank" rel="noopener">Amazon Fresh Unbleached Enriched Bread Flour (Eat This Much)</a><br><a href="https://www.amazon.com/Amazon-Brand-Fresh-Purpose-Unbleached/dp/B075KJH45B" target="_blank" rel="noopener">Amazon Grocery Unbleached All Purpose Flour, 5 Lb</a><br><a href="https://www.amazon.com/Amazon-Fresh-Purpose-Flour-Pack/dp/B0D181XRLD" target="_blank" rel="noopener">Amazon Grocery All Purpose Flour, 2 Lb (Previously Amazon Fresh)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>364</td><td>76.3</td><td>10.3</td><td>1</td></tr>
+        <tr><th>Amazon (as labeled, 30 g serving)</th><td>110</td><td>23</td><td>3</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>366.7</td><td>76.7</td><td>10</td><td>0</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">2.7 <span class="pct">(+0.7%)</span></td><td class="ok">0.4 <span class="pct">(+0.5%)</span></td><td class="ok">-0.3 <span class="pct">(-2.9%)</span></td><td class="bad">-1 <span class="pct">(-100%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Flour">Decision:
+      <label><input type="radio" name="dec_3" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_3" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-3">
+    <h3><span class="badge bad">max 27.3%</span> Granola <span class="cat">Grains &amp; Pasta</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Amazon Fresh Berry Crunch Granola (55g serving); per-100g ~455cal/64C/7P/20F, close to our USDA carbs/fat but lower protein since this variant has berries; granola macros vary by brand/flavor.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Fresh-Brand-Berry-Crunch-Granola/dp/B086ZM71NZ" target="_blank" rel="noopener">Amazon Fresh Berry Crunch Granola, 9.2 Oz</a><br><a href="https://www.amazon.com/Fresh-Brand-Super-Fruit-Granola/dp/B086ZMQ3CT" target="_blank" rel="noopener">Amazon Fresh Super Seed &amp; Fruit Granola, 10.5 Oz</a><br><a href="https://foods.fatsecret.com/calories-nutrition/amazon-fresh/berry-crunch-granola" target="_blank" rel="noopener">FatSecret: Amazon Fresh Berry Crunch Granola</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>450</td><td>66</td><td>10</td><td>18</td></tr>
+        <tr><th>Amazon (as labeled, 55 g serving)</th><td>250</td><td>35</td><td>4</td><td>11</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>454.5</td><td>63.6</td><td>7.3</td><td>20</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">4.5 <span class="pct">(+1%)</span></td><td class="ok">-2.4 <span class="pct">(-3.6%)</span></td><td class="bad">-2.7 <span class="pct">(-27.3%)</span></td><td class="warn">2 <span class="pct">(+11.1%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Granola">Decision:
+      <label><input type="radio" name="dec_4" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_4" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-4">
+    <h3><span class="badge bad">max 19%</span> Pasta <span class="cat">Grains &amp; Pasta</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: dry</span>
+      
+    </div>
+    <p class="notes">Amazon Fresh store-brand spaghetti (enriched durum semolina), dry form — directly comparable to our USDA dry data; per-100g ~357cal/75C/12.5P/1.8F matches ours within ~4%.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Amazon-Fresh-Pasta-Spaghetti-Ounce/dp/B09TSGDMY5" target="_blank" rel="noopener">Amazon Grocery Spaghetti, 16 Oz</a><br><a href="https://www.amazon.com/Amazon-Fresh-Penne-Rigate-Pasta/dp/B0BVC34Z36" target="_blank" rel="noopener">Amazon Grocery Penne Rigate Pasta, 16 Oz</a><br><a href="https://www.eatthismuch.com/calories/spaghetti-enriched-macaroni-product-4116453" target="_blank" rel="noopener">Eat This Much: Amazon Fresh Spaghetti nutrition</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>371</td><td>74.7</td><td>13</td><td>1.5</td></tr>
+        <tr><th>Amazon (as labeled, 56 g serving)</th><td>200</td><td>42</td><td>7</td><td>1</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>357.1</td><td>75</td><td>12.5</td><td>1.8</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-13.9 <span class="pct">(-3.7%)</span></td><td class="ok">0.3 <span class="pct">(+0.4%)</span></td><td class="ok">-0.5 <span class="pct">(-3.8%)</span></td><td class="bad">0.3 <span class="pct">(+19%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Pasta">Decision:
+      <label><input type="radio" name="dec_5" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_5" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-5">
+    <h3><span class="badge bad">max 100%</span> Rice Noodles <span class="cat">Grains &amp; Pasta</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: dry</span>
+      
+    </div>
+    <p class="notes">No Amazon Fresh store brand exists; used mainstream &quot;A Taste of Thai&quot; rice noodles sold on Amazon (dry, rice flour). Per-serving from aggregators since Amazon page wouldn&#39;t render the label; scaled to 100g (~333cal/77C/7P/0F) it aligns with our USDA dry data.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Taste-Thai-Noodles-16-Ounce-Boxes/dp/B004I5IC5I" target="_blank" rel="noopener">A Taste of Thai Rice Noodles (16 oz, Pack of 6) - Amazon</a><br><a href="https://www.calorieking.com/us/en/foods/f/calories-in-noodles-wide-rice-noodles/c3SGX2P3TTuPmu9JdmdMOA" target="_blank" rel="noopener">A Taste of Thai Wide Rice Noodles - CalorieKing</a><br><a href="https://www.myfooddiary.com/foods/7287806/a-taste-of-thai-rice-noodles" target="_blank" rel="noopener">A Taste of Thai Rice Noodles - MyFoodDiary</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>360</td><td>80</td><td>6</td><td>0.6</td></tr>
+        <tr><th>Amazon (as labeled, 57 g serving)</th><td>190</td><td>44</td><td>4</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>333.3</td><td>77.2</td><td>7</td><td>0</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="warn">-26.7 <span class="pct">(-7.4%)</span></td><td class="ok">-2.8 <span class="pct">(-3.5%)</span></td><td class="bad">1 <span class="pct">(+17%)</span></td><td class="bad">-0.6 <span class="pct">(-100%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Rice Noodles">Decision:
+      <label><input type="radio" name="dec_6" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_6" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-6">
+    <h3><span class="badge warn">max 5.3%</span> Rolled Oats <span class="cat">Grains &amp; Pasta</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: dry</span>
+      
+    </div>
+    <p class="notes">Amazon store-brand (Happy Belly/Amazon Saver) Old Fashioned Oats, 40g dry serving; per-100g scales to ~375/67.5/12.5/6.25, closely matching our USDA dry data. Amazon page blocked label, numbers from MyFoodDiary referencing the branded product.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Amazon-Brand-Happy-Belly-Fashioned/dp/B08FNGHYL3" target="_blank" rel="noopener">Amazon Saver Whole Grain Old Fashioned Oats, 2.6 Lb</a><br><a href="https://www.amazon.com/Amazon-Brand-Happy-Belly-Fashioned/dp/B07TV7ZHT2" target="_blank" rel="noopener">Amazon Grocery Old Fashioned Oats, 18 Oz</a><br><a href="https://www.amazon.com/Quaker-Fashioned-Oatmeal-Breakfast-Cereal/dp/B01KV4H51G" target="_blank" rel="noopener">Quaker Old Fashioned Rolled Oats (backup mainstream brand)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>379</td><td>67.7</td><td>13.2</td><td>6.5</td></tr>
+        <tr><th>Amazon (as labeled, 40 g serving)</th><td>150</td><td>27</td><td>5</td><td>2.5</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>375</td><td>67.5</td><td>12.5</td><td>6.3</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-4 <span class="pct">(-1.1%)</span></td><td class="ok">-0.2 <span class="pct">(-0.3%)</span></td><td class="warn">-0.7 <span class="pct">(-5.3%)</span></td><td class="ok">-0.2 <span class="pct">(-3.8%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Rolled Oats">Decision:
+      <label><input type="radio" name="dec_7" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_7" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-7">
+    <h3><span class="badge bad">max 100%</span> Sweet Potato Noodles <span class="cat">Grains &amp; Pasta</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: dry</span>
+      
+    </div>
+    <p class="notes">No Amazon Fresh store brand; used Chung Jung One (mainstream Korean dry glass noodle). Label 360 cal/100g matches our 351 well; Amazon page wouldn&#39;t render label so numbers via Eat This Much aggregator.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Chung-Jung-One-Potato-Noodle/dp/B0796M3DSJ" target="_blank" rel="noopener">Chung Jung One Sweet Potato Glass Noodle (Amazon)</a><br><a href="https://www.amazon.com/Fusion-Select-Sweet-Potato-Noodles/dp/B0B199BKQZ" target="_blank" rel="noopener">Fusion Select Sweet Potato Glass Noodles (Amazon)</a><br><a href="https://www.amazon.com/SUNGIVEN-Vermicelli-Noodles-Additive-NON-ALUM/dp/B00LM994ZK" target="_blank" rel="noopener">SUNGIVEN Sweet Potato Glass Noodles (Amazon)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>351</td><td>86</td><td>0.2</td><td>0.1</td></tr>
+        <tr><th>Amazon (as labeled, 25 g serving)</th><td>90</td><td>22</td><td>0</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>360</td><td>88</td><td>0</td><td>0</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">9 <span class="pct">(+2.6%)</span></td><td class="ok">2 <span class="pct">(+2.3%)</span></td><td class="bad">-0.2 <span class="pct">(-100%)</span></td><td class="bad">-0.1 <span class="pct">(-100%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Sweet Potato Noodles">Decision:
+      <label><input type="radio" name="dec_8" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_8" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-8">
+    <h3><span class="badge bad">max 100%</span> White Rice <span class="cat">Grains &amp; Pasta</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: dry</span>
+      
+    </div>
+    <p class="notes">Amazon Grocery (formerly Amazon Fresh) Enriched White Long Grain Rice; dry label is 1/4 cup (45g) ~160cal, matching our USDA dry data. Amazon page didn&#39;t expose the panel; one aggregator listed the COOKED form (143g/150cal) — not comparable to our raw figures.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Amazon-Enriched-Previously-Fresh-Packaging/dp/B08C8ZBVPH" target="_blank" rel="noopener">Amazon Grocery (prev. Amazon Fresh) Enriched White Long Grain Rice, 2 Lb</a><br><a href="https://www.amazon.com/Amazon-Grocery-Enriched-Previously-Packaging/dp/B08C8WMK6N" target="_blank" rel="noopener">Amazon Grocery (prev. Amazon Fresh) Enriched White Long Grain Rice, 5 Lb</a><br><a href="https://www.eatthismuch.com/calories/long-grain-white-rice-4911528" target="_blank" rel="noopener">Eat This Much — Amazon Fresh Long Grain White Rice</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>365</td><td>80</td><td>7.1</td><td>0.7</td></tr>
+        <tr><th>Amazon (as labeled, 45 g serving)</th><td>160</td><td>36</td><td>3</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>355.6</td><td>80</td><td>6.7</td><td>0</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-9.4 <span class="pct">(-2.6%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="warn">-0.4 <span class="pct">(-6.1%)</span></td><td class="bad">-0.6 <span class="pct">(-100%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="White Rice">Decision:
+      <label><input type="radio" name="dec_9" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_9" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-9">
+    <h3><span class="badge bad">max 24%</span> Corn Tortillas <span class="cat">Bakery &amp; Bread</span></h3>
+    <div class="meta">
+      <span class="tag tag-mixed">source: mixed</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Mission White Corn Tortillas (sold on Amazon); 2-tortilla/47g serving = ~213cal/100g, in line with our USDA 211; as-sold ready-to-eat.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Mission-White-Corn-Tortillas-Count/dp/B00EOEA544" target="_blank" rel="noopener">Mission White Corn Tortillas, 30 Count (Amazon)</a><br><a href="https://www.amazon.com/Mission-Foods-White-Tortillas-Count/dp/B07KN4QDPV" target="_blank" rel="noopener">Mission White Corn Tortillas, Gluten Free, 30 Count (Amazon)</a><br><a href="https://foods.fatsecret.com/calories-nutrition/mission/white-corn-tortilla-(47g)" target="_blank" rel="noopener">Mission White Corn Tortilla nutrition (FatSecret)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>211</td><td>43.3</td><td>5.6</td><td>2.6</td></tr>
+        <tr><th>Amazon (as labeled, 47 g serving)</th><td>100</td><td>21</td><td>2</td><td>1</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>212.8</td><td>44.7</td><td>4.3</td><td>2.1</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">1.8 <span class="pct">(+0.8%)</span></td><td class="ok">1.4 <span class="pct">(+3.2%)</span></td><td class="bad">-1.3 <span class="pct">(-24%)</span></td><td class="bad">-0.5 <span class="pct">(-18.2%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Corn Tortillas">Decision:
+      <label><input type="radio" name="dec_10" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_10" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-10">
+    <h3><span class="badge bad">max 27.6%</span> Flatbread <span class="cat">Bakery &amp; Bread</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Stonefire Original Naan (sold on Amazon); per-100g ~310cal/50C/9.5P/7F runs hotter than our USDA 278cal flatbread; flatbread macros vary widely by type (naan vs pita vs wrap).</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Stonefire-Fresh-Authentic-Flatbreads-Origional/dp/B07N18LH69" target="_blank" rel="noopener">Stonefire Naan Authentic Flatbreads (3 Pack) on Amazon</a><br><a href="https://www.amazon.com/Stonefire-Authentic-Flatbreads-resealable-packaging/dp/B08B5S51JW" target="_blank" rel="noopener">Stonefire Mini Naan Original Flatbreads on Amazon</a><br><a href="https://www.eatthismuch.com/calories/original-naan-4209910" target="_blank" rel="noopener">Stonefire Original Naan nutrition (Eat This Much)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>278</td><td>48.9</td><td>8.9</td><td>5.6</td></tr>
+        <tr><th>Amazon (as labeled, 42 g serving)</th><td>130</td><td>21</td><td>4</td><td>3</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>309.5</td><td>50</td><td>9.5</td><td>7.1</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="warn">31.5 <span class="pct">(+11.3%)</span></td><td class="ok">1.1 <span class="pct">(+2.2%)</span></td><td class="warn">0.6 <span class="pct">(+7%)</span></td><td class="bad">1.5 <span class="pct">(+27.6%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Flatbread">Decision:
+      <label><input type="radio" name="dec_11" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_11" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-11">
+    <h3><span class="badge bad">max 44.9%</span> Panko Breadcrumbs <span class="cat">Bakery &amp; Bread</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">365 by Whole Foods Market (Amazon store brand, ASIN B074H5LYGT); Amazon page wouldn&#39;t render label so used CalorieKing/MyFoodDiary aggregators; per-100g (~367cal/76.7C/13.3P/3.3F) closely matches our USDA data.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/365-Everyday-Value-Panko-Crumbs/dp/B074H5LYGT" target="_blank" rel="noopener">365 by Whole Foods Market Panko Bread Crumbs, 8 oz (Amazon)</a><br><a href="https://www.amazon.com/Kikkoman-Panko-Japanese-Style-Crumbs/dp/B000WD3PZM" target="_blank" rel="noopener">Kikkoman Panko Japanese Style Bread Crumbs, 8 oz (Amazon)</a><br><a href="https://www.amazon.com/Panko-Bread-Crumbs/s?k=Panko+Bread+Crumbs" target="_blank" rel="noopener">Amazon search: Panko Bread Crumbs</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>374</td><td>73.4</td><td>10.7</td><td>2.3</td></tr>
+        <tr><th>Amazon (as labeled, 30 g serving)</th><td>110</td><td>23</td><td>4</td><td>1</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>366.7</td><td>76.7</td><td>13.3</td><td>3.3</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-7.3 <span class="pct">(-2%)</span></td><td class="ok">3.3 <span class="pct">(+4.5%)</span></td><td class="bad">2.6 <span class="pct">(+24.6%)</span></td><td class="bad">1 <span class="pct">(+44.9%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Panko Breadcrumbs">Decision:
+      <label><input type="radio" name="dec_12" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_12" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-12">
+    <h3><span class="badge bad">max 38.9%</span> Pita Bread <span class="cat">Bakery &amp; Bread</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Amazon product nutrition table not machine-readable; used standard white pita (60g serving, 275 cal/100g) which matches our USDA data exactly. Amazon-sold brands vary: Toufayan ~170cal/57g, Joseph&#39;s flax is a low-carb specialty.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Value-Pack-Josephs-Whole-Reduced/dp/B01HHITSLE" target="_blank" rel="noopener">Joseph&#39;s Flax Pita 3-Pack (Amazon)</a><br><a href="https://www.amazon.com/pita-bread-Grocery-Gourmet-Food/s?k=pita+bread&amp;rh=n:16310101" target="_blank" rel="noopener">Amazon pita bread (Grocery) search</a><br><a href="https://www.eatthismuch.com/food/nutrition/pita-bread,4298/" target="_blank" rel="noopener">Pita Bread nutrition (Eat This Much)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>275</td><td>55.7</td><td>9.1</td><td>1.2</td></tr>
+        <tr><th>Amazon (as labeled, 60 g serving)</th><td>165</td><td>33</td><td>5</td><td>1</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>275</td><td>55</td><td>8.3</td><td>1.7</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">-0.7 <span class="pct">(-1.3%)</span></td><td class="warn">-0.8 <span class="pct">(-8.4%)</span></td><td class="bad">0.5 <span class="pct">(+38.9%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Pita Bread">Decision:
+      <label><input type="radio" name="dec_13" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_13" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-13">
+    <h3><span class="badge bad">max 55.4%</span> Whole Wheat Bread <span class="cat">Bakery &amp; Bread</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">No Amazon Fresh store-brand bread exists; used Nature&#39;s Own 100% Whole Wheat (sold on Amazon). Amazon page wouldn&#39;t render labels, so macros are from FatSecret. Per-100g (~250cal/46C/11P/1.8F) roughly matches our USDA values except fat is much lower; brands vary by slice weight (~28g).</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Natures-Own-Whole-Wheat-Bread/dp/B004A94260" target="_blank" rel="noopener">Nature&#39;s Own 100% Whole Wheat Bread, 20 oz Loaf (Amazon)</a><br><a href="https://foods.fatsecret.com/calories-nutrition/natures-own/100%25-whole-wheat-bread" target="_blank" rel="noopener">Nature&#39;s Own 100% Whole Wheat Bread nutrition (FatSecret)</a><br><a href="https://www.myfooddiary.com/foods/649503/natures-own-100-percent-whole-wheat-bread" target="_blank" rel="noopener">Nature&#39;s Own 100% Whole Wheat Bread (MyFoodDiary)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>259</td><td>43.3</td><td>9</td><td>4</td></tr>
+        <tr><th>Amazon (as labeled, 28 g serving)</th><td>70</td><td>13</td><td>3</td><td>0.5</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>250</td><td>46.4</td><td>10.7</td><td>1.8</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-9 <span class="pct">(-3.5%)</span></td><td class="warn">3.1 <span class="pct">(+7.2%)</span></td><td class="bad">1.7 <span class="pct">(+19%)</span></td><td class="bad">-2.2 <span class="pct">(-55.4%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Whole Wheat Bread">Decision:
+      <label><input type="radio" name="dec_14" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_14" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-14">
+    <h3><span class="badge warn">max 11.2%</span> Whole Wheat Tortilla <span class="cat">Bakery &amp; Bread</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">365 by Whole Foods (Amazon house brand), 1 tortilla/38g; Amazon page hides label so values from aggregators; our USDA per-100g (271 cal) ~103 cal/38g, closely matches the product. Brands vary 100-130 cal.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/365-Everyday-Value-Organic-Tortillas/dp/B07FW7FXWY" target="_blank" rel="noopener">365 by Whole Foods Market Whole Wheat Tortillas, 10.7 oz (Amazon)</a><br><a href="https://www.amazon.com/Mission-Whole-Wheat-Tortillas-Medium/dp/B004XJLYJ0" target="_blank" rel="noopener">Mission Soft Taco Whole Wheat Tortillas, 10 Count (Amazon)</a><br><a href="https://www.amazon.com/Tortilla-Factory-Whole-Wheat-Tortillas/dp/B002QM9CTA" target="_blank" rel="noopener">La Tortilla Factory Whole Wheat Low Carb Tortillas (Amazon)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>271</td><td>45.7</td><td>7.1</td><td>7.1</td></tr>
+        <tr><th>Amazon (as labeled, 38 g serving)</th><td>100</td><td>17</td><td>3</td><td>3</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>263.2</td><td>44.7</td><td>7.9</td><td>7.9</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-7.8 <span class="pct">(-2.9%)</span></td><td class="ok">-1 <span class="pct">(-2.1%)</span></td><td class="warn">0.8 <span class="pct">(+11.2%)</span></td><td class="warn">0.8 <span class="pct">(+11.2%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Whole Wheat Tortilla">Decision:
+      <label><input type="radio" name="dec_15" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_15" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-15">
+    <h3><span class="badge bad">max 100%</span> Black Beans <span class="cat">Canned &amp; Legumes</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: dry</span>
+      
+    </div>
+    <p class="notes">Amazon Fresh sells a dry black bean (B09SHHYCXW); its Amazon label wouldn&#39;t render, so dry-form per-50g numbers are from an aggregator and scale to ~340cal/100g, matching our 341cal USDA dry data. A canned Amazon Fresh variant also exists (130g drained=110cal) but is not directly comparable.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Amazon-Fresh-REGULAR-BLACK-WHOLE/dp/B09SHHYCXW" target="_blank" rel="noopener">Amazon Fresh Regular Black Beans Whole (dry), 16 oz</a><br><a href="https://www.amazon.com/Amazon-Fresh-Canned-Black-Beans/dp/B0DDT8FF3T" target="_blank" rel="noopener">Amazon Fresh Canned Black Beans, 15.25 oz (Pack of 4)</a><br><a href="https://www.recipal.com/ingredients/9933-nutrition-facts-calories-protein-carbs-fat-organic-black-beans-dry" target="_blank" rel="noopener">Organic Black Beans (dry) nutrition facts</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>341</td><td>62.4</td><td>21.6</td><td>1.4</td></tr>
+        <tr><th>Amazon (as labeled, 50 g serving)</th><td>170</td><td>32</td><td>11</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>340</td><td>64</td><td>22</td><td>0</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-1 <span class="pct">(-0.3%)</span></td><td class="ok">1.6 <span class="pct">(+2.6%)</span></td><td class="ok">0.4 <span class="pct">(+1.9%)</span></td><td class="bad">-1.4 <span class="pct">(-100%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Black Beans">Decision:
+      <label><input type="radio" name="dec_16" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_16" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-16">
+    <h3><span class="badge bad">max 16.9%</span> Chickpeas <span class="cat">Canned &amp; Legumes</span></h3>
+    <div class="meta">
+      <span class="tag tag-mixed">source: mixed</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: dry</span>
+      
+    </div>
+    <p class="notes">Goya 1-lb DRY bag chosen (matches our USDA dry form); 43g serving label ~190cal/27C/10P/3F scales to ~378/63/20.5/6 per 100g, consistent with our data. Amazon Fresh store-brand is canned-only, not comparable.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Goya-Chick-Peas-1-Pound/dp/B000G632OY" target="_blank" rel="noopener">Goya Chick Peas, Garbanzo Beans, Dry, 1 Pound Bag (Amazon)</a><br><a href="https://www.amazon.com/Amazon-Fresh-Canned-Chick-Garbanzo/dp/B0BZBJRBY7" target="_blank" rel="noopener">Amazon Grocery Canned Garbanzo Beans 15.5 oz (canned, not dry)</a><br><a href="https://foods.fatsecret.com/calories-nutrition/goya/chick-peas-garbanzos" target="_blank" rel="noopener">FatSecret: Goya Chick Peas Garbanzos</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>378</td><td>63</td><td>20.5</td><td>6</td></tr>
+        <tr><th>Amazon (as labeled, 43 g serving)</th><td>190</td><td>27</td><td>10</td><td>3</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>441.9</td><td>62.8</td><td>23.3</td><td>7</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">63.9 <span class="pct">(+16.9%)</span></td><td class="ok">-0.2 <span class="pct">(-0.3%)</span></td><td class="warn">2.8 <span class="pct">(+13.4%)</span></td><td class="bad">1 <span class="pct">(+16.3%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Chickpeas">Decision:
+      <label><input type="radio" name="dec_17" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_17" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-17">
+    <h3><span class="badge bad">max 55.4%</span> Coconut Milk <span class="cat">Canned &amp; Legumes</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Chose Thai Kitchen Unsweetened canned (no Amazon-brand canned coconut milk exists); 1/3 cup serving listed in cups only, 80g estimated from ~80mL at density ~1.0; per-100g (~150cal/15g fat) matches our USDA data well.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Thai-Kitchen-Gluten-Unsweetened-Coconut/dp/B07YG5X8MK" target="_blank" rel="noopener">Thai Kitchen Gluten Free Unsweetened Coconut Milk 13.66 fl oz (Amazon)</a><br><a href="https://www.amazon.com/Thai-Kitchen-Coconut-Milk-13-66/dp/B000GZSDZI" target="_blank" rel="noopener">Thai Kitchen Unsweetened Coconut Milk 13.66 fl oz (Amazon)</a><br><a href="https://www.eatthismuch.com/calories/coconut-milk-unsweetened-1585383" target="_blank" rel="noopener">Thai Kitchen Coconut Milk Unsweetened nutrition (EatThisMuch)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>154</td><td>2.8</td><td>1.4</td><td>16</td></tr>
+        <tr><th>Amazon (as labeled, 80 g serving)</th><td>120</td><td>1</td><td>0.5</td><td>12</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>150</td><td>1.3</td><td>0.6</td><td>15</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-4 <span class="pct">(-2.6%)</span></td><td class="bad">-1.5 <span class="pct">(-55.4%)</span></td><td class="bad">-0.8 <span class="pct">(-55.4%)</span></td><td class="warn">-1 <span class="pct">(-6.2%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Coconut Milk">Decision:
+      <label><input type="radio" name="dec_18" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_18" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-18">
+    <h3><span class="badge bad">max 23.6%</span> Edamame <span class="cat">Canned &amp; Legumes</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: cooked</span>
+      <span class="tag mismatch">⚠ form differs from USDA raw/dry — delta expected</span>
+    </div>
+    <p class="notes">365 by Whole Foods (Amazon-owned, sold on Amazon); frozen shelled edamame label is per 100g cooked/prepared, reads ~140 cal vs our 121 USDA raw, so not directly comparable.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://us.amazon.com/365-Everyday-Value-Shelled-Edamame/dp/B074H6S8D8" target="_blank" rel="noopener">365 by Whole Foods Market Shelled Edamame (Amazon)</a><br><a href="https://www.amazon.com/Amazon-Brand-Happy-Frozen-Edamame/dp/B089DTNYK7" target="_blank" rel="noopener">Amazon Grocery Edamame Pods, 12 Oz, Frozen</a><br><a href="https://foods.fatsecret.com/calories-nutrition/365/shelled-edamame" target="_blank" rel="noopener">FatSecret: 365 Shelled Edamame nutrition</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>121</td><td>8.9</td><td>11</td><td>5.2</td></tr>
+        <tr><th>Amazon (as labeled, 100 g serving)</th><td>140</td><td>11</td><td>11</td><td>5</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>140</td><td>11</td><td>11</td><td>5</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">19 <span class="pct">(+15.7%)</span></td><td class="bad">2.1 <span class="pct">(+23.6%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">-0.2 <span class="pct">(-3.8%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Edamame">Decision:
+      <label><input type="radio" name="dec_19" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_19" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-19">
+    <h3><span class="badge bad">max 100%</span> Red Lentils <span class="cat">Canned &amp; Legumes</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: dry</span>
+      
+    </div>
+    <p class="notes">Bob&#39;s Red Mill dry red lentils (sold on Amazon); per-100g ~333cal/60C/24.4P/0F closely matches our USDA dry data. Amazon Grocery store-brand exists but label didn&#39;t render.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Amazon-Fresh-REGULAR-LENTIL-WHOLE/dp/B09SHLXK12" target="_blank" rel="noopener">Amazon Grocery Lentils, Non GMO, 16 oz (store brand)</a><br><a href="https://www.amazon.com/Bobs-Red-Mill-Lentils-27-ounce/dp/B000VDZ2GI" target="_blank" rel="noopener">Bob&#39;s Red Mill Red Lentils, 27 oz (Amazon)</a><br><a href="https://www.amazon.com/365-Whole-Foods-Market-Organic/dp/B084NHCPPD" target="_blank" rel="noopener">365 Whole Foods Organic Red Lentils, 16 oz (Amazon)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>352</td><td>63.4</td><td>24.6</td><td>1.1</td></tr>
+        <tr><th>Amazon (as labeled, 45 g serving)</th><td>150</td><td>27</td><td>11</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>333.3</td><td>60</td><td>24.4</td><td>0</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="warn">-18.7 <span class="pct">(-5.3%)</span></td><td class="warn">-3.4 <span class="pct">(-5.4%)</span></td><td class="ok">-0.2 <span class="pct">(-0.6%)</span></td><td class="bad">-1.1 <span class="pct">(-100%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Red Lentils">Decision:
+      <label><input type="radio" name="dec_20" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_20" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-20">
+    <h3><span class="badge bad">max 100%</span> Tomato Sauce <span class="cat">Canned &amp; Legumes</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Amazon store-brand label wouldn&#39;t render; used Hunt&#39;s canned sauce (sold on Amazon) at 62g/serving — comparable to our USDA canned figures.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Amazon-Brand-Happy-Belly-Tomato/dp/B07TYTL6JQ" target="_blank" rel="noopener">Amazon Grocery (formerly Amazon Fresh) Tomato Sauce, 15 oz</a><br><a href="https://www.amazon.com/Hunts-Tomato-Sauce-8-oz/dp/B000Q3R6KS" target="_blank" rel="noopener">Hunt&#39;s Tomato Sauce, 8 oz Can (Amazon)</a><br><a href="https://www.amazon.com/Amazon-Brand-Happy-Belly-Tomato/dp/B07TSCWN1P" target="_blank" rel="noopener">Amazon Grocery Tomato Sauce, 8 Oz</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>29</td><td>6.6</td><td>1</td><td>0.2</td></tr>
+        <tr><th>Amazon (as labeled, 62 g serving)</th><td>20</td><td>4</td><td>0.5</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>32.3</td><td>6.5</td><td>0.8</td><td>0</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="warn">3.3 <span class="pct">(+11.2%)</span></td><td class="ok">-0.1 <span class="pct">(-2.2%)</span></td><td class="bad">-0.2 <span class="pct">(-19.4%)</span></td><td class="bad">-0.2 <span class="pct">(-100%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Tomato Sauce">Decision:
+      <label><input type="radio" name="dec_21" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_21" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-21">
+    <h3><span class="badge bad">max 15.7%</span> White Beans <span class="cat">Canned &amp; Legumes</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: dry</span>
+      
+    </div>
+    <p class="notes">Dry small white beans label (Bob&#39;s Red Mill, sold on Amazon) via Eat This Much; scales to ~313cal/100g vs our 333 — close, our USDA dry data checks out. Amazon pages did not render nutrition; canned/cooked white beans differ greatly.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Organic-Cannellini-Food-Live-Non-GMO/dp/B078SRZKLV" target="_blank" rel="noopener">Food to Live Organic Cannellini Beans (dried white kidney beans), 1 lb</a><br><a href="https://www.amazon.com/365-Everyday-Value-Organic-Cannellini/dp/B074H54XM2" target="_blank" rel="noopener">365 by Whole Foods Market Organic Cannellini Beans, 15.5 oz (canned)</a><br><a href="https://www.amazon.com/dried-white-beans/s?k=dried+white+beans" target="_blank" rel="noopener">Amazon search: Dried White Beans</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>333</td><td>60.3</td><td>23.4</td><td>0.9</td></tr>
+        <tr><th>Amazon (as labeled, 48 g serving)</th><td>150</td><td>28</td><td>10</td><td>0.5</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>312.5</td><td>58.3</td><td>20.8</td><td>1</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="warn">-20.5 <span class="pct">(-6.2%)</span></td><td class="ok">-2 <span class="pct">(-3.3%)</span></td><td class="warn">-2.6 <span class="pct">(-11%)</span></td><td class="bad">0.1 <span class="pct">(+15.7%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="White Beans">Decision:
+      <label><input type="radio" name="dec_22" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_22" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-22">
+    <h3><span class="badge bad">max 100%</span> BBQ Sauce <span class="cat">Condiments &amp; Oils</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Kraft Original (Amazon best-seller); Amazon page didn&#39;t render label so used FatSecret. 36g serving scales to ~167cal/38.9gC per 100g, close to our USDA data. BBQ sauce sugar content varies by brand.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Kraft-Original-Barbecue-Sauce-18/dp/B00VC5BIC6" target="_blank" rel="noopener">Kraft Original Slow-Simmered Barbecue BBQ Sauce, 18 oz (Amazon)</a><br><a href="https://www.amazon.com/Stubbs-Bar-Sauce-Original-Ounce/dp/B00FLM7Y38" target="_blank" rel="noopener">Stubb&#39;s Original BBQ Sauce, 36 oz (Amazon)</a><br><a href="https://www.amazon.com/BBQ-Sauce/s?k=BBQ+Sauce" target="_blank" rel="noopener">Amazon BBQ Sauce search results</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>160</td><td>36.7</td><td>1.3</td><td>0</td></tr>
+        <tr><th>Amazon (as labeled, 36 g serving)</th><td>60</td><td>14</td><td>0</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>166.7</td><td>38.9</td><td>0</td><td>0</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">6.7 <span class="pct">(+4.2%)</span></td><td class="warn">2.2 <span class="pct">(+6%)</span></td><td class="bad">-1.3 <span class="pct">(-100%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="BBQ Sauce">Decision:
+      <label><input type="radio" name="dec_23" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_23" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-23">
+    <h3><span class="badge bad">max 178.4%</span> Cherry Sauce <span class="cat">Condiments &amp; Oils</span></h3>
+    <div class="meta">
+      <span class="tag tag-mixed">source: mixed</span>
+      <span class="tag">confidence: low</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Sephra Cherry Topping Sauce (Amazon B08KFHV5VD); label is per-100g only (252kcal/61.9C/0.16P/0.05F), scaled to a standard 30g topping serving. Commercial topping is sugar-heavy (252 vs our USDA 91 cal/100g) — major variance; cherry sauces vary widely by brand.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Sephra-Cherry-Topping-Sauce-2-2lb/dp/B08KFHV5VD" target="_blank" rel="noopener">Sephra Cherry Topping/Dessert Sauce 2.2lb (Amazon.com)</a><br><a href="https://www.sephrausa.com/sephra-cherry-topping-sauce" target="_blank" rel="noopener">Sephra USA Cherry Topping Sauce product page</a><br><a href="https://foods.fatsecret.com/calories-nutrition/dairy-queen/cherry-topping" target="_blank" rel="noopener">FatSecret: Dairy Queen Cherry Topping (28g serving reference)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>91</td><td>23.3</td><td>0.7</td><td>0.1</td></tr>
+        <tr><th>Amazon (as labeled, 30 g serving)</th><td>76</td><td>18.6</td><td>0.1</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>253.3</td><td>62</td><td>0.2</td><td>0.1</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">162.3 <span class="pct">(+178.4%)</span></td><td class="bad">38.7 <span class="pct">(+166.1%)</span></td><td class="bad">-0.5 <span class="pct">(-76.2%)</span></td><td class="bad">0 <span class="pct">(-33.3%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Cherry Sauce">Decision:
+      <label><input type="radio" name="dec_24" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_24" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-24">
+    <h3><span class="badge bad">max 100%</span> Hoisin Sauce <span class="cat">Condiments &amp; Oils</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">No Amazon Fresh store brand; chose Lee Kum Kee (mainstream Amazon product), label via FatSecret since Amazon page would not render; label protein rounds to 0g vs our USDA 3.3g/100g.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Lee-Kum-Kee-Hoisin-Sauce/dp/B00354T3MY" target="_blank" rel="noopener">Lee Kum Kee Hoisin Sauce 8.5 oz (Amazon)</a><br><a href="https://www.amazon.com/Sun-Luck-Traditional-Hoisin-Sauce/dp/B000SRMAOY" target="_blank" rel="noopener">Sun Luck Traditional Hoisin Sauce 8 oz (Amazon)</a><br><a href="https://www.amazon.com/hoisin-sauce/s?k=hoisin+sauce" target="_blank" rel="noopener">Amazon hoisin sauce search results</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>220</td><td>51</td><td>3.3</td><td>3.5</td></tr>
+        <tr><th>Amazon (as labeled, 42 g serving)</th><td>90</td><td>20</td><td>0</td><td>1</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>214.3</td><td>47.6</td><td>0</td><td>2.4</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-5.7 <span class="pct">(-2.6%)</span></td><td class="warn">-3.4 <span class="pct">(-6.6%)</span></td><td class="bad">-3.3 <span class="pct">(-100%)</span></td><td class="bad">-1.1 <span class="pct">(-32%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Hoisin Sauce">Decision:
+      <label><input type="radio" name="dec_25" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_25" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-25">
+    <h3><span class="badge ok">max 4.8%</span> Honey <span class="cat">Condiments &amp; Oils</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">365/Amazon honey is plain honey; per-tbsp (21g) label matches our USDA per-100g (304cal/82.4C) exactly, no caveat. Amazon page nutrition table not machine-readable, so used aggregator.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/365-Everyday-Value-Organic-Mountain/dp/B074JD6DSD" target="_blank" rel="noopener">365 by Whole Foods Market Organic Raw Wildflower Honey, 16 OZ (Amazon)</a><br><a href="https://us.amazon.com/365-Everyday-Value-Organic-Mountain/dp/B074MH4QLB" target="_blank" rel="noopener">365 by Whole Foods Market Organic Raw Honey, Mountain Forest, 16 OZ (Amazon)</a><br><a href="https://foods.fatsecret.com/calories-nutrition/usda/honey?portionid=40062&amp;portionamount=1.000" target="_blank" rel="noopener">FatSecret: Honey per 1 tbsp (21g)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>304</td><td>82.4</td><td>0.3</td><td>0</td></tr>
+        <tr><th>Amazon (as labeled, 21 g serving)</th><td>64</td><td>17.3</td><td>0.1</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>304.8</td><td>82.4</td><td>0.3</td><td>0</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0.8 <span class="pct">(+0.3%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(-4.8%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Honey">Decision:
+      <label><input type="radio" name="dec_26" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_26" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-26">
+    <h3><span class="badge bad">max 60.3%</span> Hummus <span class="cat">Condiments &amp; Oils</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Amazon Kitchen (Amazon Fresh store brand) Classic Hummus, 30g/2 tbsp serving; per-100g (~267cal/16.7g fat) is richer/fattier than our leaner USDA entry — hummus varies by brand. Amazon page wouldn&#39;t render label; numbers from aggregator citing the branded product.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://us.amazon.com/Amazon-Kitchen-Classic-Hummus/dp/B083SXGRD8" target="_blank" rel="noopener">Amazon Kitchen Classic Hummus, 8 Oz (Amazon Fresh store brand)</a><br><a href="https://www.eatthismuch.com/calories/classic-hummus-2685865" target="_blank" rel="noopener">Amazon Kitchen Classic Hummus nutrition - Eat This Much</a><br><a href="https://foods.fatsecret.com/calories-nutrition/amazon-kitchen/classic-hummus" target="_blank" rel="noopener">Amazon Kitchen Classic Hummus - FatSecret</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>177</td><td>16</td><td>8</td><td>10.4</td></tr>
+        <tr><th>Amazon (as labeled, 30 g serving)</th><td>80</td><td>6</td><td>2</td><td>5</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>266.7</td><td>20</td><td>6.7</td><td>16.7</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">89.7 <span class="pct">(+50.7%)</span></td><td class="bad">4 <span class="pct">(+25%)</span></td><td class="bad">-1.3 <span class="pct">(-16.7%)</span></td><td class="bad">6.3 <span class="pct">(+60.3%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Hummus">Decision:
+      <label><input type="radio" name="dec_27" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_27" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-27">
+    <h3><span class="badge bad">max 1090.5%</span> Kimchi <span class="cat">Condiments &amp; Oils</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Jongga Mat Kimchi (Amazon); Amazon page returned HTTP 500 so numbers are from Carb Manager/EatThisMuch referencing the Jongga branded product; kimchi varies widely by brand (this label shows ~1g fat/serving vs our near-zero USDA fat).</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Chongga-Mat-Kimchi-Certified-Probiotic/dp/B06XBLR2W8" target="_blank" rel="noopener">Jongga Mat Kimchi 88 oz Cut Cabbage Kimchi (Amazon)</a><br><a href="https://www.amazon.com/Chongga-Kimchi-52-9-1-5kg-Cabbage/dp/B077K4RT59" target="_blank" rel="noopener">Jongga Mat Kimchi 52.9 oz Cut Cabbage Kimchi (Amazon)</a><br><a href="https://www.amazon.com/JONGGA-Shelf-Stable-Kimchi-pack/dp/B0842D8JVS" target="_blank" rel="noopener">Jongga Spicy Fermented Kimchi Pouch Pack of 8 (Amazon)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>23</td><td>4.5</td><td>1.7</td><td>0.3</td></tr>
+        <tr><th>Amazon (as labeled, 28 g serving)</th><td>15</td><td>2</td><td>0.1</td><td>1</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>53.6</td><td>7.1</td><td>0.4</td><td>3.6</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">30.6 <span class="pct">(+132.9%)</span></td><td class="bad">2.6 <span class="pct">(+58.7%)</span></td><td class="bad">-1.3 <span class="pct">(-79%)</span></td><td class="bad">3.3 <span class="pct">(+1090.5%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Kimchi">Decision:
+      <label><input type="radio" name="dec_28" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_28" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-28">
+    <h3><span class="badge warn">max 5.8%</span> Maple Syrup <span class="cat">Condiments &amp; Oils</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">365 by Whole Foods Market (Amazon store brand); label 2 tbsp/30mL (~40g) = 110cal/27C/0P/0F, scales to ~275cal/67.5C per 100g — matches our USDA data well.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/365-Everyday-Value-Organic-Grade/dp/B074VBM1S2" target="_blank" rel="noopener">365 by Whole Foods Market, Organic Grade A Amber Maple Syrup, 32 Fl Oz (Amazon)</a><br><a href="https://www.amazon.com/365-Everyday-Value-Organic-Grade/dp/B074V3V186" target="_blank" rel="noopener">365 by Whole Foods Market, Organic Grade A Dark Maple Syrup, 32 Fl Oz (Amazon)</a><br><a href="https://www.amazon.com/365-Everyday-Value-Organic-Grade/dp/B074H5CN2X" target="_blank" rel="noopener">365 by Whole Foods Market, Organic Grade A Dark Maple Syrup, 12 Fl Oz (Amazon)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>260</td><td>67</td><td>0</td><td>0</td></tr>
+        <tr><th>Amazon (as labeled, 40 g serving)</th><td>110</td><td>27</td><td>0</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>275</td><td>67.5</td><td>0</td><td>0</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="warn">15 <span class="pct">(+5.8%)</span></td><td class="ok">0.5 <span class="pct">(+0.7%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Maple Syrup">Decision:
+      <label><input type="radio" name="dec_29" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_29" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-29">
+    <h3><span class="badge warn">max 9.9%</span> Miso Paste <span class="cat">Condiments &amp; Oils</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Roland White (shiro) Miso on Amazon, 1 Tbsp=16g label; white miso is lower-cal than USDA mixed-miso avg (35cal/16g ~ 219cal/100g vs our 199); varies by miso type.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Roland-White-Miso-Paste-Ounce/dp/B005258AZU" target="_blank" rel="noopener">Roland Foods White Miso Paste (Amazon)</a><br><a href="https://www.amazon.com/Hikari-Organic-Miso-Paste-White/dp/B00IBNZAEE" target="_blank" rel="noopener">Hikari Organic White Miso Paste (Amazon)</a><br><a href="https://www.amazon.com/Miso-Master-Mellow-White-Organic/dp/B078HTGHH2" target="_blank" rel="noopener">Miso Master Organic Mellow White Miso (Amazon)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>199</td><td>26.5</td><td>11.7</td><td>6</td></tr>
+        <tr><th>Amazon (as labeled, 16 g serving)</th><td>35</td><td>4</td><td>2</td><td>1</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>218.8</td><td>25</td><td>12.5</td><td>6.3</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="warn">19.8 <span class="pct">(+9.9%)</span></td><td class="warn">-1.5 <span class="pct">(-5.7%)</span></td><td class="warn">0.8 <span class="pct">(+6.8%)</span></td><td class="ok">0.3 <span class="pct">(+4.2%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Miso Paste">Decision:
+      <label><input type="radio" name="dec_30" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_30" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-30">
+    <h3><span class="badge ok">max 3%</span> Olive Oil <span class="cat">Condiments &amp; Oils</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Amazon Fresh Italian EVOO; standard label 1 Tbsp/14g = 120 cal, 14g fat, 0 carb/protein — matches our USDA per-100g (884 cal, 100g fat) exactly. Amazon page wouldn&#39;t render label; numbers from standard EVOO label confirmed across Amazon brands.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/AmazonFresh-Italian-Extra-Virgin-Olive/dp/B01N0SOZPK" target="_blank" rel="noopener">Amazon Fresh Italian Extra Virgin Olive Oil, First Cold Pressed, 16.9 Fl Oz</a><br><a href="https://www.amazon.com/AmazonFresh-Mediterranean-Extra-Virgin-Olive/dp/B01N3LCEDL" target="_blank" rel="noopener">AmazonFresh Mediterranean Extra Virgin Olive Oil, 68 Fl Oz (2L)</a><br><a href="https://www.amazon.com/AmazonFresh-Mediterranean-Blend-Extra-Virgin/dp/B01N2VRYNM" target="_blank" rel="noopener">Amazon Fresh Mediterranean Extra Virgin Olive Oil, 16.9 Fl Oz</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>884</td><td>0</td><td>0</td><td>100</td></tr>
+        <tr><th>Amazon (as labeled, 14 g serving)</th><td>120</td><td>0</td><td>0</td><td>14</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>857.1</td><td>0</td><td>0</td><td>100</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-26.9 <span class="pct">(-3%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Olive Oil">Decision:
+      <label><input type="radio" name="dec_31" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_31" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-31">
+    <h3><span class="badge bad">max 33.1%</span> Peanuts <span class="cat">Condiments &amp; Oils</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">365 by Whole Foods (sold on Amazon, ASIN B07QMW5Y77), dry-roasted unsalted; label values cross-confirmed via SmartLabel/CalorieKing. Per 100g (~571/21/25/50) tracks our USDA-raw data, with roasting slightly raising carbs.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/365-Everyday-Value-Peanuts-Roasted/dp/B07QMW5Y77" target="_blank" rel="noopener">365 by Whole Foods Market, Dry Roasted and Unsalted Peanuts, 16 oz (Amazon)</a><br><a href="https://www.amazon.com/Planters-Peanuts-Roasted-Salted-Ounce/dp/B0111K4XHS" target="_blank" rel="noopener">PLANTERS Dry Roasted Peanuts, 34.5 oz (Amazon)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>567</td><td>16.1</td><td>25.8</td><td>49.2</td></tr>
+        <tr><th>Amazon (as labeled, 28 g serving)</th><td>160</td><td>6</td><td>7</td><td>14</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>571.4</td><td>21.4</td><td>25</td><td>50</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">4.4 <span class="pct">(+0.8%)</span></td><td class="bad">5.3 <span class="pct">(+33.1%)</span></td><td class="ok">-0.8 <span class="pct">(-3.1%)</span></td><td class="ok">0.8 <span class="pct">(+1.6%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Peanuts">Decision:
+      <label><input type="radio" name="dec_32" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_32" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-32">
+    <h3><span class="badge bad">max 123.9%</span> Pesto Sauce <span class="cat">Condiments &amp; Oils</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">No Amazon Fresh store-brand pesto exists; used Kirkland Signature (sold on Amazon) label per FatSecret: 60g serving = 330cal/9C/6P/30F, i.e. ~550cal/15C/10P/50F per 100g vs our 400/6.7/6.7/40 — our entry runs notably low on cal/fat/carbs. Pesto varies widely by brand.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/ROI-Italian-Pesto-Sauce-6-3oz/dp/B0033PYYXS" target="_blank" rel="noopener">ROI Vegan Basil Pesto Sauce 6.3 oz (Amazon)</a><br><a href="https://www.amazon.com/Pesto-Sauces/b?ie=UTF8&amp;node=6502789011" target="_blank" rel="noopener">Amazon Pesto Sauces category</a><br><a href="https://androidembeddedregional.fatsecret.com/calories-nutrition/kirkland-signature/pesto-sauce" target="_blank" rel="noopener">Kirkland Signature Pesto label (FatSecret)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>400</td><td>6.7</td><td>6.7</td><td>40</td></tr>
+        <tr><th>Amazon (as labeled, 60 g serving)</th><td>330</td><td>9</td><td>6</td><td>30</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>550</td><td>15</td><td>10</td><td>50</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">150 <span class="pct">(+37.5%)</span></td><td class="bad">8.3 <span class="pct">(+123.9%)</span></td><td class="bad">3.3 <span class="pct">(+49.3%)</span></td><td class="bad">10 <span class="pct">(+25%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Pesto Sauce">Decision:
+      <label><input type="radio" name="dec_33" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_33" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-33">
+    <h3><span class="badge ok">max 3%</span> Sesame Oil <span class="cat">Condiments &amp; Oils</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Amazon product pages wouldn&#39;t render nutrition labels; used standard 1 tbsp (14g) oil label, which matches our USDA data exactly (884 cal/100g, 100% fat). No variance concern for pure oil.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Deep-Oil-Sesame-500-ml/dp/B00XU9MM2M" target="_blank" rel="noopener">Deep Sesame Oil 16.9oz (Amazon)</a><br><a href="https://www.amazon.com/Organic-Sesame-100-Pressed-Artisan/dp/B00014FJWE" target="_blank" rel="noopener">Flora Organic Sesame Oil 8.5 fl oz (Amazon)</a><br><a href="https://www.eatthismuch.com/calories/sesame-oil-268" target="_blank" rel="noopener">Sesame Oil nutrition (Eat This Much)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>884</td><td>0</td><td>0</td><td>100</td></tr>
+        <tr><th>Amazon (as labeled, 14 g serving)</th><td>120</td><td>0</td><td>0</td><td>14</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>857.1</td><td>0</td><td>0</td><td>100</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-26.9 <span class="pct">(-3%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Sesame Oil">Decision:
+      <label><input type="radio" name="dec_34" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_34" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-34">
+    <h3><span class="badge bad">max 100%</span> Soy Sauce <span class="cat">Condiments &amp; Oils</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: low</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Amazon store brand Happy Belly soy sauce (~10 cal/1 tbsp); Amazon page wouldn&#39;t render the label so macros are from MyNetDiary/EatThisMuch; soy sauce calories/carbs vary by brand and low-sodium vs regular formulation.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Amazon-Brand-Happy-Belly-Sodium/dp/B08CJ5RBVK" target="_blank" rel="noopener">Amazon Brand - Happy Belly Low Sodium Soy Sauce, 15 fl oz</a><br><a href="https://www.amazon.com/Amazon-Brand-Happy-Belly-Sauce/dp/B08CJ5P2NP" target="_blank" rel="noopener">Amazon Brand - Happy Belly Soy Sauce, 15 fl oz</a><br><a href="https://www.mynetdiary.com/food/calories-in-happy-belly-soy-sauce-by-amazon-tablespoon-29987619-0.html" target="_blank" rel="noopener">Happy Belly Soy Sauce by Amazon - MyNetDiary</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>53</td><td>4.9</td><td>8.1</td><td>0.6</td></tr>
+        <tr><th>Amazon (as labeled, 16 g serving)</th><td>10</td><td>1</td><td>1</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>62.5</td><td>6.3</td><td>6.3</td><td>0</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">9.5 <span class="pct">(+17.9%)</span></td><td class="bad">1.3 <span class="pct">(+27.6%)</span></td><td class="bad">-1.8 <span class="pct">(-22.8%)</span></td><td class="bad">-0.6 <span class="pct">(-100%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Soy Sauce">Decision:
+      <label><input type="radio" name="dec_35" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_35" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-35">
+    <h3><span class="badge bad">max 26.1%</span> Tahini <span class="cat">Condiments &amp; Oils</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">365 by Whole Foods Market (Amazon-owned) tahini; per-28g label scales to ~607cal/100g, closely matching our USDA 593; Amazon page nutrition panel not fetchable so used aggregator referencing the brand.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/365-Everyday-Value-Organic-Tahini/dp/B074H5LWYM" target="_blank" rel="noopener">365 by Whole Foods Market Organic Tahini, 16 oz (Amazon)</a><br><a href="https://www.eatthismuch.com/calories/tahini-162105" target="_blank" rel="noopener">365 Everyday Value Tahini nutrition (Eat This Much)</a><br><a href="https://www.amazon.com/Once-Again-Organic-Tahini-16/dp/B000VHLSCG" target="_blank" rel="noopener">Once Again Organic Tahini, 16 oz (Amazon)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>593</td><td>17</td><td>17</td><td>53.8</td></tr>
+        <tr><th>Amazon (as labeled, 28 g serving)</th><td>170</td><td>6</td><td>5</td><td>16</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>607.1</td><td>21.4</td><td>17.9</td><td>57.1</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">14.1 <span class="pct">(+2.4%)</span></td><td class="bad">4.4 <span class="pct">(+26.1%)</span></td><td class="warn">0.9 <span class="pct">(+5%)</span></td><td class="warn">3.3 <span class="pct">(+6.2%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Tahini">Decision:
+      <label><input type="radio" name="dec_36" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_36" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-36">
+    <h3><span class="badge bad">max 100%</span> Butter <span class="cat">Eggs &amp; Dairy</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Amazon Grocery (ex-Amazon Fresh) Salted Butter Sticks; standard butter, label per 1 tbsp (14g) matches our USDA per-100g (label-rounded). Amazon page nutrition didn&#39;t render; values confirmed via aggregator.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Amazon-Brand-Salted-Butter-Sticks/dp/B07VF6RXNL" target="_blank" rel="noopener">Amazon Grocery (formerly Amazon Fresh) Salted Butter Sticks, 16 oz</a><br><a href="https://us.amazon.com/Amazon-Brand-Unsalted-Butter-Sticks/dp/B07VHDXKRG" target="_blank" rel="noopener">Amazon Fresh Unsalted Butter Sticks, 16 oz</a><br><a href="https://foods.fatsecret.com/calories-nutrition/food/butter" target="_blank" rel="noopener">FatSecret salted butter nutrition</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>717</td><td>0</td><td>0.9</td><td>81.1</td></tr>
+        <tr><th>Amazon (as labeled, 14 g serving)</th><td>100</td><td>0</td><td>0</td><td>11</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>714.3</td><td>0</td><td>0</td><td>78.6</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-2.7 <span class="pct">(-0.4%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="bad">-0.9 <span class="pct">(-100%)</span></td><td class="ok">-2.5 <span class="pct">(-3.1%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Butter">Decision:
+      <label><input type="radio" name="dec_37" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_37" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-37">
+    <h3><span class="badge bad">max 174.7%</span> Cheddar Cheese <span class="cat">Eggs &amp; Dairy</span></h3>
+    <div class="meta">
+      <span class="tag tag-mixed">source: mixed</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Amazon Brand Shredded Sharp Cheddar (1/4 cup/28g serving); shredded cheese with anti-caking starch runs slightly lower per gram (~393cal/100g) than USDA block 403; as-sold, comparable.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Amazon-Brand-Shredded-Cheddar-Cheese/dp/B075Y87YJV" target="_blank" rel="noopener">Amazon Brand Shredded Sharp Cheddar Cheese, 8 oz</a><br><a href="https://www.amazon.com/Amazon-Brand-Happy-Shredded-Cheddar/dp/B07Z5FJ736" target="_blank" rel="noopener">Amazon Brand Finely Shredded Sharp Cheddar, 32 oz</a><br><a href="https://www.amazon.com/Cheddar-Cheese/s?k=Cheddar+Cheese" target="_blank" rel="noopener">Amazon search: Cheddar Cheese</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>403</td><td>1.3</td><td>25</td><td>33</td></tr>
+        <tr><th>Amazon (as labeled, 28 g serving)</th><td>110</td><td>1</td><td>6</td><td>9</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>392.9</td><td>3.6</td><td>21.4</td><td>32.1</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-10.1 <span class="pct">(-2.5%)</span></td><td class="bad">2.3 <span class="pct">(+174.7%)</span></td><td class="warn">-3.6 <span class="pct">(-14.3%)</span></td><td class="ok">-0.9 <span class="pct">(-2.6%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Cheddar Cheese">Decision:
+      <label><input type="radio" name="dec_38" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_38" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-38">
+    <h3><span class="badge bad">max 100%</span> Egg <span class="cat">Eggs &amp; Dairy</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Amazon Fresh cage-free large eggs; 1 egg=50g raw shell egg. Label 70cal/0C/6P/5F matches our USDA raw scaled to 50g (~72cal/6.3P/5F); rounded label values, no discrepancy.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Amazon-Grocery-Cage-Free-Previously-Packaging/dp/B07ZS6WCZG" target="_blank" rel="noopener">Amazon Grocery Cage-Free Brown Eggs, Grade A, 18 Ct</a><br><a href="https://www.amazon.com/Amazon-Fresh-Cage-Free-Previously-Packaging/dp/B07ZS7B3VM" target="_blank" rel="noopener">Amazon Grocery Cage-Free Large White Eggs, Grade A, 18 Ct</a><br><a href="https://www.mynetdiary.com/food/calories-in-grade-a-large-cage-free-brown-eggs-by-amazon-fresh-egg-41284010-0.html" target="_blank" rel="noopener">Amazon Fresh Grade A Large Cage-Free Brown Eggs (MyNetDiary)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>144</td><td>0.8</td><td>12.6</td><td>10</td></tr>
+        <tr><th>Amazon (as labeled, 50 g serving)</th><td>70</td><td>0</td><td>6</td><td>5</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>140</td><td>0</td><td>12</td><td>10</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-4 <span class="pct">(-2.8%)</span></td><td class="bad">-0.8 <span class="pct">(-100%)</span></td><td class="ok">-0.6 <span class="pct">(-4.8%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Egg">Decision:
+      <label><input type="radio" name="dec_39" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_39" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-39">
+    <h3><span class="badge bad">max 74.2%</span> Feta Cheese <span class="cat">Eggs &amp; Dairy</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">365 by Whole Foods Market crumbled feta (sold on Amazon); per-100g recalc ~250cal/7C/21P/14F differs from our USDA which has fat/protein roughly swapped (21.3F/14.2P) — feta macros vary by brand.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/365-Everyday-Value-Cheese-Crumbles/dp/B074JD6HH5" target="_blank" rel="noopener">365 by Whole Foods Market Feta Crumbles, 6 oz (Amazon)</a><br><a href="https://www.amazon.com/365-Everyday-Value-Cheese-Block/dp/B074H61RV7" target="_blank" rel="noopener">365 by Whole Foods Market Feta Block, 16 oz (Amazon)</a><br><a href="https://www.amazon.com/Athenos-Crumbled-Feta-4-oz/dp/B0012FPTXU" target="_blank" rel="noopener">Athenos Traditional Crumbled Feta Cheese, 4 oz (Amazon)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>264</td><td>4.1</td><td>14.2</td><td>21.3</td></tr>
+        <tr><th>Amazon (as labeled, 28 g serving)</th><td>70</td><td>2</td><td>6</td><td>4</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>250</td><td>7.1</td><td>21.4</td><td>14.3</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="warn">-14 <span class="pct">(-5.3%)</span></td><td class="bad">3 <span class="pct">(+74.2%)</span></td><td class="bad">7.2 <span class="pct">(+50.9%)</span></td><td class="bad">-7 <span class="pct">(-32.9%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Feta Cheese">Decision:
+      <label><input type="radio" name="dec_40" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_40" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-40">
+    <h3><span class="badge bad">max 100%</span> Greek Yogurt <span class="cat">Eggs &amp; Dairy</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Amazon Fresh nonfat plain Greek yogurt (Amazon page 500&#39;d; numbers from SnapCalorie, cross-checked vs Kirkland nonfat); our USDA 10g protein/0.7g fat reflects whole/lowfat, so nonfat variant is higher protein, near-zero fat.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Amazon-Fresh-Nonfat-Previously-Packaging/dp/B07W5TD361" target="_blank" rel="noopener">Amazon Fresh, Greek Nonfat Plain Yogurt, 32 Oz</a><br><a href="https://us.amazon.com/Amazon-Brand-Happy-Belly-Yogurt/dp/B07W5TC5NB" target="_blank" rel="noopener">Happy Belly Greek Whole Milk Plain Yogurt, 32 Oz</a><br><a href="https://www.snapcalorie.com/nutrition/amazon_fresh_plain_greek_yogurt_nutrition.html" target="_blank" rel="noopener">SnapCalorie: Amazon Fresh Plain Greek Yogurt nutrition</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>97</td><td>6</td><td>10</td><td>0.7</td></tr>
+        <tr><th>Amazon (as labeled, 150 g serving)</th><td>100</td><td>6</td><td>18</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>66.7</td><td>4</td><td>12</td><td>0</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">-30.3 <span class="pct">(-31.3%)</span></td><td class="bad">-2 <span class="pct">(-33.3%)</span></td><td class="bad">2 <span class="pct">(+20%)</span></td><td class="bad">-0.7 <span class="pct">(-100%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Greek Yogurt">Decision:
+      <label><input type="radio" name="dec_41" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_41" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-41">
+    <h3><span class="badge bad">max 62.3%</span> Mozzarella Cheese <span class="cat">Eggs &amp; Dairy</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Amazon-brand store product is shredded low-moisture PART-SKIM (80cal/1C/7P/5F per 28g, ~286cal/100g); our USDA 280cal/21.6F figure is whole-milk mozzarella — part-skim is notably lower fat. Amazon page label wouldn&#39;t render; serving from aggregator matching the part-skim product.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Amazon-Brand-Shredded-Mozzarella-Part-Skim/dp/B075Y87ZGM" target="_blank" rel="noopener">Amazon Grocery Mozzarella Cheese, Shredded, 8 Oz (B075Y87ZGM)</a><br><a href="https://www.amazon.com/Amazon-Brand-Low-Moisture-Part-Skim-Mozzarella/dp/B07WQ2K3SS" target="_blank" rel="noopener">Amazon Grocery Mozzarella Cheese, Shredded, 16 Oz (B07WQ2K3SS)</a><br><a href="https://www.eatthismuch.com/calories/mozzarella-shredded-part-skim-558974" target="_blank" rel="noopener">Shredded Part-Skim Mozzarella nutrition (Eat This Much)</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>280</td><td>2.2</td><td>20</td><td>21.6</td></tr>
+        <tr><th>Amazon (as labeled, 28 g serving)</th><td>80</td><td>1</td><td>7</td><td>5</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>285.7</td><td>3.6</td><td>25</td><td>17.9</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">5.7 <span class="pct">(+2%)</span></td><td class="bad">1.4 <span class="pct">(+62.3%)</span></td><td class="bad">5 <span class="pct">(+25%)</span></td><td class="bad">-3.7 <span class="pct">(-17.3%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Mozzarella Cheese">Decision:
+      <label><input type="radio" name="dec_42" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_42" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-42">
+    <h3><span class="badge bad">max 25%</span> Paneer <span class="cat">Eggs &amp; Dairy</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Gopi Paneer (sold on Amazon); label via aggregator since Amazon page wouldn&#39;t render. Per 100g ~321cal/25f vs our USDA 260cal/20f — Gopi whole-milk is richer; paneer macros vary by brand.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Gopi-Paneer-Indian-Cooking-Cheese/dp/B076ZXXH79" target="_blank" rel="noopener">Gopi Paneer Indian Cooking Cheese, 8 oz (Amazon)</a><br><a href="https://us.amazon.com/Sach-Paneer-Original-Organic-Ounce/dp/B087DKMYT7" target="_blank" rel="noopener">Sach Organic Original Paneer, 6 oz (Amazon)</a><br><a href="https://www.amazon.com/paneer-cheese-fresh/s?k=paneer+cheese+fresh" target="_blank" rel="noopener">Amazon search: paneer cheese fresh</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>260</td><td>3</td><td>18.3</td><td>20</td></tr>
+        <tr><th>Amazon (as labeled, 28 g serving)</th><td>90</td><td>1</td><td>6</td><td>7</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>321.4</td><td>3.6</td><td>21.4</td><td>25</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">61.4 <span class="pct">(+23.6%)</span></td><td class="bad">0.6 <span class="pct">(+19%)</span></td><td class="bad">3.1 <span class="pct">(+17.1%)</span></td><td class="bad">5 <span class="pct">(+25%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Paneer">Decision:
+      <label><input type="radio" name="dec_43" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_43" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-43">
+    <h3><span class="badge bad">max 100%</span> Parmesan Cheese <span class="cat">Eggs &amp; Dairy</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: medium</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">365/Whole Foods grated parmesan (sold on Amazon); 5g label ~400cal/40P/30F per 100g, consistent with our USDA data. Amazon store-brand page (B09X173H5W) wouldn&#39;t render nutrition.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Amazon-Grocery-Grated-Parmesan-Cheese/dp/B09X173H5W" target="_blank" rel="noopener">Amazon Grocery Grated Parmesan Cheese, 5 Oz</a><br><a href="https://www.amazon.com/365-Everyday-Value-Grated-Parmesan/dp/B074H5SRZX" target="_blank" rel="noopener">365 by Whole Foods Market Grated Parmesan, 5 OZ</a><br><a href="https://www.amazon.com/Kraft-Grated-Parmesan-Cheese-Shaker/dp/B0014CSHM6" target="_blank" rel="noopener">Kraft Grated Parmesan Cheese, 16 Oz</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>392</td><td>3.2</td><td>28.4</td><td>29.7</td></tr>
+        <tr><th>Amazon (as labeled, 5 g serving)</th><td>20</td><td>0</td><td>2</td><td>1.5</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>400</td><td>0</td><td>40</td><td>30</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">8 <span class="pct">(+2%)</span></td><td class="bad">-3.2 <span class="pct">(-100%)</span></td><td class="bad">11.6 <span class="pct">(+40.8%)</span></td><td class="ok">0.3 <span class="pct">(+1%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Parmesan Cheese">Decision:
+      <label><input type="radio" name="dec_44" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_44" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+  <section class="card" id="detail-44">
+    <h3><span class="badge warn">max 6.1%</span> Whole Milk <span class="cat">Eggs &amp; Dairy</span></h3>
+    <div class="meta">
+      <span class="tag tag-aggregator">source: aggregator</span>
+      <span class="tag">confidence: high</span>
+      <span class="tag">form: as-sold</span>
+      
+    </div>
+    <p class="notes">Amazon Grocery (ex-Amazon Fresh) Whole Milk page exists but label didn&#39;t render; per-serving from FatSecret (1 cup = 240mL/244g). Per-100g matches our USDA data closely; milk is liquid as-sold, directly comparable.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Amazon-Grocery-Whole-Milk-Gallon/dp/B0D6TFZBF8" target="_blank" rel="noopener">Amazon Grocery (formerly Amazon Fresh) Whole Milk, 1 Gallon</a><br><a href="https://www.amazon.com/Amazon-Grocery-Whole-Milk-Gallon/dp/B0D6TLHBDX" target="_blank" rel="noopener">Amazon Grocery Whole Milk, Half Gallon, 64 Fl Oz</a><br><a href="https://foods.fatsecret.com/calories-nutrition/generic/milk-cows-fluid-whole" target="_blank" rel="noopener">FatSecret Whole Milk nutrition facts</a></div>
+    <table class="cmp">
+      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
+      <tbody>
+        <tr><th>Our data (USDA)</th><td>61</td><td>4.8</td><td>3.2</td><td>3.3</td></tr>
+        <tr><th>Amazon (as labeled, 244 g serving)</th><td>146</td><td>11</td><td>7.9</td><td>7.9</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>59.8</td><td>4.5</td><td>3.2</td><td>3.2</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-1.2 <span class="pct">(-1.9%)</span></td><td class="warn">-0.3 <span class="pct">(-6.1%)</span></td><td class="ok">0 <span class="pct">(+1.2%)</span></td><td class="ok">-0.1 <span class="pct">(-1.9%)</span></td></tr>
+      </tbody>
+    </table>
+    <div class="decision" data-ing="Whole Milk">Decision:
+      <label><input type="radio" name="dec_45" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_45" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
+    </div>
+  </section>
+</div>
+
+<script>
+function sortTable(th, col, type){
+  var table=document.getElementById('summaryTable');
+  var tbody=table.tBodies[0];
+  var rows=Array.prototype.slice.call(tbody.rows);
+  var dir=(th.getAttribute('data-dir')==='asc')?'desc':'asc';
+  Array.prototype.forEach.call(table.querySelectorAll('th'),function(t){
+    t.removeAttribute('data-dir');
+    var a=t.querySelector('.arrow'); if(a) a.textContent='↕';
+  });
+  th.setAttribute('data-dir',dir);
+  var ar=th.querySelector('.arrow'); if(ar) ar.textContent=(dir==='asc'?'↑':'↓');
+  rows.sort(function(a,b){
+    var x=a.cells[col], y=b.cells[col];
+    if(type==='num'){
+      var xv=parseFloat(x.getAttribute('data-sort')), yv=parseFloat(y.getAttribute('data-sort'));
+      var xn=isNaN(xv), yn=isNaN(yv);
+      if(xn&&yn) return 0; if(xn) return 1; if(yn) return -1;  // blanks always last
+      return dir==='asc'? xv-yv : yv-xv;
+    }
+    var xt=x.textContent.trim().toLowerCase(), yt=y.textContent.trim().toLowerCase();
+    return dir==='asc'? xt.localeCompare(yt) : yt.localeCompare(xt);
+  });
+  rows.forEach(function(r){ tbody.appendChild(r); });
+}
+</script>
+
+<script>
+(function(){
+  var KEY='mealprep_macro_audit_decisions';
+  function load(){ try { return JSON.parse(localStorage.getItem(KEY))||{}; } catch(e){ return {}; } }
+  function store(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+  function allIngredients(){ return Array.prototype.map.call(document.querySelectorAll('.decision'), function(el){ return el.getAttribute('data-ing'); }); }
+
+  window.setDec=function(input){
+    var ing=input.closest('.decision').getAttribute('data-ing');
+    var d=load(); d[ing]=input.value; store(d); refresh();
+  };
+  window.clearDec=function(btn){
+    var ing=btn.closest('.decision').getAttribute('data-ing');
+    var d=load(); delete d[ing]; store(d);
+    Array.prototype.forEach.call(btn.closest('.decision').querySelectorAll('input[type=radio]'), function(r){ r.checked=false; });
+    refresh();
+  };
+  window.clearAll=function(){
+    if(!confirm('Clear all decisions?')) return;
+    localStorage.removeItem(KEY);
+    Array.prototype.forEach.call(document.querySelectorAll('.decision input[type=radio]'), function(r){ r.checked=false; });
+    refresh();
+  };
+  window.copyDec=function(){
+    var t=document.getElementById('decText'); t.select();
+    navigator.clipboard ? navigator.clipboard.writeText(t.value).then(function(){flash('Copied!');}) : document.execCommand('copy');
+  };
+  window.downloadDec=function(){
+    var d=load();
+    var payload={ tool:'macro-audit', date:'2026-06-07', decisions:d };
+    var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='macro-audit-decisions.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  };
+  function flash(msg){ var c=document.getElementById('decCounts'); var o=c.textContent; c.textContent=msg; setTimeout(function(){refresh();},1200); }
+
+  function refresh(){
+    var d=load(), all=allIngredients();
+    var adjust=[], keep=[], undecided=[];
+    all.forEach(function(ing){ var v=d[ing]; if(v==='adjust')adjust.push(ing); else if(v==='keep')keep.push(ing); else undecided.push(ing); });
+    // live badges in summary
+    Array.prototype.forEach.call(document.querySelectorAll('.deccell'), function(td){
+      var v=d[td.getAttribute('data-ing')];
+      td.className='deccell'+(v?(' '+v):'');
+      td.textContent=v?(v==='adjust'?'adjust':'keep'):'—';
+    });
+    // restore radios
+    Array.prototype.forEach.call(document.querySelectorAll('.decision'), function(el){
+      var v=d[el.getAttribute('data-ing')];
+      Array.prototype.forEach.call(el.querySelectorAll('input[type=radio]'), function(r){ r.checked=(r.value===v); });
+    });
+    document.getElementById('decCounts').textContent='— '+adjust.length+' adjust · '+keep.length+' keep · '+undecided.length+' undecided';
+    var lines=[];
+    lines.push('Macro audit decisions ('+adjust.length+' adjust / '+keep.length+' keep / '+undecided.length+' undecided)');
+    lines.push(''); lines.push('ADJUST toward Amazon:'); adjust.forEach(function(n){lines.push('  - '+n);}); if(!adjust.length)lines.push('  (none)');
+    lines.push(''); lines.push('KEEP ours:'); keep.forEach(function(n){lines.push('  - '+n);}); if(!keep.length)lines.push('  (none)');
+    if(undecided.length){ lines.push(''); lines.push('UNDECIDED:'); undecided.forEach(function(n){lines.push('  - '+n);}); }
+    document.getElementById('decText').value=lines.join('\n');
+  }
+  if(document.readyState!=='loading') refresh();
+  else document.addEventListener('DOMContentLoaded', refresh);
+})();
+</script>
+</body></html>

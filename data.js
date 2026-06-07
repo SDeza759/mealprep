@@ -28,7 +28,7 @@ var INGREDIENT_REGISTRY = {
   "Beef Sirloin": { calories: 165, carbs: 0, protein: 26.1, fat: 6.3 },
   "Bell Pepper": { calories: 30, carbs: 6.7, protein: 0.8, fat: 0.2 },
   "Black Pepper": { calories: 0, carbs: 0, protein: 0, fat: 0 },
-  "Black Beans": { calories: 132, carbs: 23.7, protein: 8.9, fat: 0.5 },
+  "Black Beans": { calories: 341, carbs: 62.4, protein: 21.6, fat: 1.4 },
   "Blueberries": { calories: 57, carbs: 14.5, protein: 0.7, fat: 0.3 },
   "Broccoli": { calories: 34, carbs: 7, protein: 2.8, fat: 0.4 },
   "Brown Rice": { calories: 370, carbs: 77.2, protein: 7.9, fat: 2.9 },
@@ -40,7 +40,7 @@ var INGREDIENT_REGISTRY = {
   "Cherry Sauce": { calories: 91, carbs: 23.3, protein: 0.7, fat: 0.1 },
   "Chicken Breast": { calories: 165, carbs: 0, protein: 31, fat: 3.6 },
   "Chicken Thigh": { calories: 177, carbs: 0, protein: 20, fat: 10.2 },
-  "Chickpeas": { calories: 164, carbs: 27.4, protein: 8.9, fat: 2.6 },
+  "Chickpeas": { calories: 378, carbs: 63, protein: 20.5, fat: 6 },
   "Cilantro": { calories: 23, carbs: 3.7, protein: 2.1, fat: 0.5 },
   "Coconut Milk": { calories: 154, carbs: 2.8, protein: 1.4, fat: 16 },
   "Cod": { calories: 82, carbs: 0, protein: 18, fat: 0.7 },
@@ -83,7 +83,7 @@ var INGREDIENT_REGISTRY = {
   "Paneer": { calories: 260, carbs: 3, protein: 18.3, fat: 20 },
   "Panko Breadcrumbs": { calories: 374, carbs: 73.4, protein: 10.7, fat: 2.3 },
   "Parmesan Cheese": { calories: 392, carbs: 3.2, protein: 28.4, fat: 29.7 },
-  "Pasta": { calories: 157, carbs: 30.9, protein: 5.8, fat: 0.9 },
+  "Pasta": { calories: 371, carbs: 74.7, protein: 13, fat: 1.5 },
   "Peanuts": { calories: 567, carbs: 16.1, protein: 25.8, fat: 49.2 },
   "Pesto Sauce": { calories: 400, carbs: 6.7, protein: 6.7, fat: 40 },
   "Pita Bread": { calories: 275, carbs: 55.7, protein: 9.1, fat: 1.2 },
@@ -91,9 +91,9 @@ var INGREDIENT_REGISTRY = {
   "Pork Loin": { calories: 143, carbs: 0, protein: 26, fat: 3.5 },
   "Pork Shoulder": { calories: 236, carbs: 0, protein: 17, fat: 18 },
   "Potato": { calories: 77, carbs: 17.5, protein: 2, fat: 0.1 },
-  "Red Lentils": { calories: 116, carbs: 20, protein: 9, fat: 0.4 },
+  "Red Lentils": { calories: 352, carbs: 63.4, protein: 24.6, fat: 1.1 },
   "Red Onion": { calories: 40, carbs: 9.3, protein: 1.1, fat: 0.1 },
-  "Rice Noodles": { calories: 109, carbs: 26.7, protein: 0.9, fat: 0.2 },
+  "Rice Noodles": { calories: 360, carbs: 80, protein: 6, fat: 0.6 },
   "Rolled Oats": { calories: 379, carbs: 67.7, protein: 13.2, fat: 6.5 },
   "Romaine Lettuce": { calories: 17, carbs: 3.3, protein: 1.2, fat: 0.3 },
   "Salmon Fillet": { calories: 208, carbs: 0, protein: 20, fat: 13.4 },
@@ -104,13 +104,13 @@ var INGREDIENT_REGISTRY = {
   "Spinach": { calories: 23, carbs: 3.6, protein: 2.9, fat: 0.4 },
   "Strawberries": { calories: 32, carbs: 7.7, protein: 0.7, fat: 0.3 },
   "Sweet Potato": { calories: 86, carbs: 20, protein: 1.6, fat: 0.1 },
-  "Sweet Potato Noodles": { calories: 110, carbs: 27, protein: 0.2, fat: 0.1 },
+  "Sweet Potato Noodles": { calories: 351, carbs: 86, protein: 0.2, fat: 0.1 },
   "Tahini": { calories: 593, carbs: 17, protein: 17, fat: 53.8 },
   "Thyme": { calories: 0, carbs: 0, protein: 0, fat: 0 },
   "Tomato Sauce": { calories: 29, carbs: 6.6, protein: 1, fat: 0.2 },
   "Turkey Breast": { calories: 135, carbs: 0, protein: 30, fat: 1 },
   "Water": { calories: 0, carbs: 0, protein: 0, fat: 0 },
-  "White Beans": { calories: 127, carbs: 22.3, protein: 8.7, fat: 0.5 },
+  "White Beans": { calories: 333, carbs: 60.3, protein: 23.4, fat: 0.9 },
   "White Rice": { calories: 365, carbs: 80, protein: 7.1, fat: 0.65 },
   "Whole Milk": { calories: 61, carbs: 4.8, protein: 3.2, fat: 3.3 },
   "Whole Wheat Bread": { calories: 259, carbs: 43.3, protein: 9, fat: 4 },
@@ -430,7 +430,7 @@ var RECIPES = [
   // Cherry Tomatoes consolidated to Tomato
   {name:"Avocado Toast with Egg",cuisine:"American",servingSize:"2 slices",tags:["breakfast","balanced"],ingredients:[{name:"Whole Wheat Bread",grams:60},{name:"Avocado",grams:80},{name:"Egg",grams:100}]},
   {name:"Protein Pancakes",cuisine:"American",servingSize:"3 pancakes",tags:["breakfast","high-protein"],ingredients:[{name:"Rolled Oats",grams:60},{name:"Egg",grams:100},{name:"Banana",grams:100},{name:"Greek Yogurt",grams:50},{name:"Maple Syrup",grams:20},{name:"Granola",grams:20},{name:"Blueberries",grams:40},{name:"Strawberries",grams:40},{name:"Whole Milk",grams:40}]},
-  {name:"Breakfast Burrito",cuisine:"Mexican",servingSize:"1 burrito",tags:["breakfast","high-protein"],ingredients:[{name:"Whole Wheat Tortilla",grams:70},{name:"Egg",grams:100},{name:"Black Beans",grams:60},{name:"Cheddar Cheese",grams:25},{name:"Avocado",grams:40}]},
+  {name:"Breakfast Burrito",cuisine:"Mexican",servingSize:"1 burrito",tags:["breakfast","high-protein"],ingredients:[{name:"Whole Wheat Tortilla",grams:70},{name:"Egg",grams:100},{name:"Black Beans",grams:23},{name:"Cheddar Cheese",grams:25},{name:"Avocado",grams:40}]},
   {name:"Shakshuka Breakfast",cuisine:"Middle Eastern",servingSize:"1 plate",tags:["breakfast","vegetarian"],ingredients:[{name:"Egg",grams:150},{name:"Tomato Sauce",grams:150},{name:"Bell Pepper",grams:60},{name:"Onion",grams:50},{name:"Feta Cheese",grams:30},{name:"Pita Bread",grams:60}]},
   {name:"Japanese Tamagoyaki",cuisine:"Japanese",servingSize:"1 plate",tags:["breakfast","high-protein"],ingredients:[{name:"Egg",grams:150},{name:"White Rice",grams:50},{name:"Soy Sauce",grams:8},{name:"Miso Paste",grams:15},{name:"Green Onion",grams:10}]},
   {name:"Smoothie Bowl",cuisine:"American",servingSize:"1 bowl",tags:["breakfast","vegetarian"],ingredients:[{name:"Banana",grams:100},{name:"Blueberries",grams:80},{name:"Greek Yogurt",grams:120},{name:"Granola",grams:40},{name:"Honey",grams:10},{name:"Mango",grams:50},{name:"Maple Syrup",grams:10},{name:"Strawberries",grams:40},{name:"Whole Milk",grams:40},{name:"Rolled Oats",grams:30}]},
@@ -438,45 +438,45 @@ var RECIPES = [
   {name:"Egg & Potato Paratha",cuisine:"Indian",servingSize:"1 plate",tags:["breakfast","high-protein"],ingredients:[{name:"Egg",grams:100},{name:"Potato",grams:120},{name:"Whole Wheat Tortilla",grams:70},{name:"Onion",grams:40},{name:"Butter",grams:10}]},
   {name:"Chilaquiles",cuisine:"Mexican",servingSize:"1 plate",tags:["breakfast","comfort-food"],ingredients:[{name:"Corn Tortillas",grams:90},{name:"Egg",grams:100},{name:"Tomato Sauce",grams:100},{name:"Avocado",grams:40},{name:"Feta Cheese",grams:25},{name:"Onion",grams:30}]},
   {name:"French Toast",cuisine:"American",servingSize:"2 slices",tags:["breakfast","comfort-food"],ingredients:[{name:"Whole Wheat Bread",grams:60},{name:"Egg",grams:50},{name:"Whole Milk",grams:60},{name:"Butter",grams:10},{name:"Maple Syrup",grams:25},{name:"Strawberries",grams:60},{name:"Granola",grams:20},{name:"Blueberries",grams:40},{name:"Banana",grams:50},{name:"Rolled Oats",grams:20}]},
-  {name:"Huevos Rancheros",cuisine:"Mexican",servingSize:"1 plate",tags:["breakfast","vegetarian"],ingredients:[{name:"Egg",grams:100},{name:"Corn Tortillas",grams:60},{name:"Black Beans",grams:80},{name:"Tomato Sauce",grams:80},{name:"Avocado",grams:40},{name:"Feta Cheese",grams:20}]},
+  {name:"Huevos Rancheros",cuisine:"Mexican",servingSize:"1 plate",tags:["breakfast","vegetarian"],ingredients:[{name:"Egg",grams:100},{name:"Corn Tortillas",grams:60},{name:"Black Beans",grams:31},{name:"Tomato Sauce",grams:80},{name:"Avocado",grams:40},{name:"Feta Cheese",grams:20}]},
   // Removed: Green Curry, Panang Curry, Massaman Curry, Coconut Shrimp Curry, Tom Yum Shrimp Soup, Prawn Laksa, Pad Thai, Bibimbap, Beef Pad See Ew
   // LUNCH/DINNER
   {name:"Grilled Chicken & Rice Bowl",cuisine:"American",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Thigh",grams:180},{name:"Brown Rice",grams:60},{name:"Broccoli",grams:100},{name:"Olive Oil",grams:10}]},
-  {name:"Spaghetti Bolognese",cuisine:"Italian",servingSize:"1 plate",tags:["comfort-food"],ingredients:[{name:"Ground Beef (80% lean)",grams:150},{name:"Pasta",grams:120},{name:"Tomato Sauce",grams:100},{name:"Parmesan Cheese",grams:15},{name:"Onion",grams:50},{name:"White Beans",grams:50}]},
-  {name:"Chicken Burrito Bowl",cuisine:"Mexican",servingSize:"1 bowl",tags:["high-protein","high-fiber"],ingredients:[{name:"Chicken Thigh",grams:150},{name:"Brown Rice",grams:52},{name:"Black Beans",grams:80},{name:"Avocado",grams:50},{name:"Bell Pepper",grams:60},{name:"Cilantro",grams:5},{name:"Corn",grams:40}]},
+  {name:"Spaghetti Bolognese",cuisine:"Italian",servingSize:"1 plate",tags:["comfort-food"],ingredients:[{name:"Ground Beef (80% lean)",grams:150},{name:"Pasta",grams:51},{name:"Tomato Sauce",grams:100},{name:"Parmesan Cheese",grams:15},{name:"Onion",grams:50},{name:"White Beans",grams:19}]},
+  {name:"Chicken Burrito Bowl",cuisine:"Mexican",servingSize:"1 bowl",tags:["high-protein","high-fiber"],ingredients:[{name:"Chicken Thigh",grams:150},{name:"Brown Rice",grams:52},{name:"Black Beans",grams:31},{name:"Avocado",grams:50},{name:"Bell Pepper",grams:60},{name:"Cilantro",grams:5},{name:"Corn",grams:40}]},
   {name:"Teriyaki Salmon Bowl",cuisine:"Japanese",servingSize:"1 bowl",tags:["high-protein","omega-3"],ingredients:[{name:"Cod",grams:170},{name:"White Rice",grams:50},{name:"Edamame",grams:60},{name:"Soy Sauce",grams:15},{name:"Honey",grams:10}]},
   // Chicken Tikka Masala: Brown Rice→Basmati Rice, added Cauliflower and Basmati Rice
   {name:"Chicken Tikka Masala",cuisine:"Indian",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Thigh",grams:170},{name:"Greek Yogurt",grams:60},{name:"Tomato Sauce",grams:100},{name:"Onion",grams:60},{name:"Basmati Rice",grams:56},{name:"Olive Oil",grams:8},{name:"Cauliflower",grams:60}]},
-  {name:"Falafel Plate",cuisine:"Middle Eastern",servingSize:"1 plate",tags:["vegetarian","high-fiber"],ingredients:[{name:"Chickpeas",grams:120},{name:"Tahini",grams:20},{name:"Cucumber",grams:80},{name:"Pita Bread",grams:60},{name:"Hummus",grams:40}]},
+  {name:"Falafel Plate",cuisine:"Middle Eastern",servingSize:"1 plate",tags:["vegetarian","high-fiber"],ingredients:[{name:"Chickpeas",grams:52},{name:"Tahini",grams:20},{name:"Cucumber",grams:80},{name:"Pita Bread",grams:60},{name:"Hummus",grams:40}]},
   {name:"Greek Chicken Salad",cuisine:"Mediterranean",servingSize:"1 bowl",tags:["high-protein","low-carb"],ingredients:[{name:"Chicken Breast",grams:150},{name:"Feta Cheese",grams:40},{name:"Cucumber",grams:100},{name:"Olive Oil",grams:12},{name:"Red Onion",grams:30},{name:"Romaine Lettuce",grams:60},{name:"Lemon",grams:15}]},
   {name:"Beef Stir Fry",cuisine:"American",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:160},{name:"Bell Pepper",grams:80},{name:"Broccoli",grams:100},{name:"Soy Sauce",grams:15},{name:"Brown Rice",grams:56},{name:"Sesame Oil",grams:5},{name:"Asparagus",grams:60},{name:"Cauliflower",grams:60}]},
   // Added pork loin — Flatbread con Salsiccia is a common Italian pizzeria offering
   {name:"Sausage Flatbread",cuisine:"Italian",servingSize:"1 flatbread",tags:["high-protein"],ingredients:[{name:"Pork Loin",grams:100},{name:"Flatbread",grams:90},{name:"Mozzarella Cheese",grams:60},{name:"Olive Oil",grams:8},{name:"Pesto Sauce",grams:15}]},
   {name:"Carnitas Tacos",cuisine:"Mexican",servingSize:"3 tacos",tags:["comfort-food"],ingredients:[{name:"Pork Loin",grams:150},{name:"Corn Tortillas",grams:90},{name:"Onion",grams:40},{name:"Cilantro",grams:10},{name:"Lime",grams:15},{name:"Coleslaw Mix",grams:40}]},
   // Pork Belly replaced with Pork Loin — fat drops ~30g, protein up ~25g
-  {name:"Miso Ramen",cuisine:"Japanese",servingSize:"1 bowl",tags:["comfort-food"],ingredients:[{name:"Rice Noodles",grams:130},{name:"Pork Belly",grams:60},{name:"Egg",grams:50},{name:"Miso Paste",grams:20},{name:"Spinach",grams:40},{name:"Green Onion",grams:15}]},
+  {name:"Miso Ramen",cuisine:"Japanese",servingSize:"1 bowl",tags:["comfort-food"],ingredients:[{name:"Rice Noodles",grams:39},{name:"Pork Belly",grams:60},{name:"Egg",grams:50},{name:"Miso Paste",grams:20},{name:"Spinach",grams:40},{name:"Green Onion",grams:15}]},
   {name:"Palak Paneer",cuisine:"Indian",servingSize:"1 bowl",tags:["vegetarian"],ingredients:[{name:"Paneer",grams:120},{name:"Spinach",grams:150},{name:"Onion",grams:50},{name:"Garlic",grams:10},{name:"Brown Rice",grams:52}]},
-  {name:"Shawarma Bowl",cuisine:"Middle Eastern",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Thigh",grams:160},{name:"White Rice",grams:47},{name:"Hummus",grams:50},{name:"Cucumber",grams:60},{name:"Chickpeas",grams:50},{name:"Lemon",grams:15},{name:"Greek Yogurt",grams:60}],variants:[{id:"chicken-breast",label:"with Chicken Breast",ingredients:[{name:"Chicken Breast",grams:160},{name:"White Rice",grams:47},{name:"Hummus",grams:50},{name:"Cucumber",grams:60},{name:"Chickpeas",grams:50},{name:"Lemon",grams:15},{name:"Greek Yogurt",grams:60}]},{id:"no-yogurt",label:"without Yogurt",ingredients:[{name:"Chicken Thigh",grams:160},{name:"White Rice",grams:47},{name:"Hummus",grams:50},{name:"Cucumber",grams:60},{name:"Chickpeas",grams:50},{name:"Lemon",grams:15}]}]},
+  {name:"Shawarma Bowl",cuisine:"Middle Eastern",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Thigh",grams:160},{name:"White Rice",grams:47},{name:"Hummus",grams:50},{name:"Cucumber",grams:60},{name:"Chickpeas",grams:22},{name:"Lemon",grams:15},{name:"Greek Yogurt",grams:60}],variants:[{id:"chicken-breast",label:"with Chicken Breast",ingredients:[{name:"Chicken Breast",grams:160},{name:"White Rice",grams:47},{name:"Hummus",grams:50},{name:"Cucumber",grams:60},{name:"Chickpeas",grams:22},{name:"Lemon",grams:15},{name:"Greek Yogurt",grams:60}]},{id:"no-yogurt",label:"without Yogurt",ingredients:[{name:"Chicken Thigh",grams:160},{name:"White Rice",grams:47},{name:"Hummus",grams:50},{name:"Cucumber",grams:60},{name:"Chickpeas",grams:22},{name:"Lemon",grams:15}]}]},
   // Pork Belly replaced with Pork Loin for lean protein — fat drops ~22g
   {name:"Kimchi Fried Rice",cuisine:"Korean",servingSize:"1 plate",tags:["comfort-food"],ingredients:[{name:"White Rice",grams:60},{name:"Kimchi",grams:80},{name:"Egg",grams:50},{name:"Pork Belly",grams:60},{name:"Sesame Oil",grams:5},{name:"Green Onion",grams:10}]},
   // Added ground lamb — Shorbet Adas (lamb & lentil soup) is a classic Middle Eastern dish
-  {name:"Lamb & Lentil Soup",cuisine:"Mediterranean",servingSize:"2 cups",tags:["high-protein","high-fiber"],ingredients:[{name:"Ground Lamb",grams:120},{name:"Red Lentils",grams:100},{name:"Carrot",grams:60},{name:"Onion",grams:60},{name:"Tomato Sauce",grams:40},{name:"Olive Oil",grams:10},{name:"Garlic",grams:8},{name:"Potato",grams:60}]},
+  {name:"Lamb & Lentil Soup",cuisine:"Mediterranean",servingSize:"2 cups",tags:["high-protein","high-fiber"],ingredients:[{name:"Ground Lamb",grams:120},{name:"Red Lentils",grams:33},{name:"Carrot",grams:60},{name:"Onion",grams:60},{name:"Tomato Sauce",grams:40},{name:"Olive Oil",grams:10},{name:"Garlic",grams:8},{name:"Potato",grams:60}]},
   // Renamed Turkey Club Wrap → Pork Club Wrap
   {name:"Pork Club Wrap",cuisine:"American",servingSize:"1 wrap",tags:["high-protein","low-fat"],ingredients:[{name:"Pork Loin",grams:120},{name:"Whole Wheat Tortilla",grams:70},{name:"Avocado",grams:50},{name:"Spinach",grams:30}]},
   // Added shrimp — Shrimp Primavera is a common Italian-American pasta dish
-  {name:"Shrimp Primavera",cuisine:"Italian",servingSize:"1 plate",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:140},{name:"Pasta",grams:120},{name:"Zucchini",grams:80},{name:"Bell Pepper",grams:60},{name:"Parmesan Cheese",grams:15},{name:"Olive Oil",grams:12}]},
+  {name:"Shrimp Primavera",cuisine:"Italian",servingSize:"1 plate",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:140},{name:"Pasta",grams:51},{name:"Zucchini",grams:80},{name:"Bell Pepper",grams:60},{name:"Parmesan Cheese",grams:15},{name:"Olive Oil",grams:12}]},
   // Renamed Fish Tacos → Shrimp Tacos
   {name:"Shrimp Tacos",cuisine:"Mexican",servingSize:"3 tacos",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:160},{name:"Corn Tortillas",grams:90},{name:"Cabbage",grams:60},{name:"Avocado",grams:40},{name:"Lime",grams:15},{name:"Coleslaw Mix",grams:40}]},
   {name:"Chicken Stir Fry",cuisine:"Japanese",servingSize:"1 bowl",tags:["high-protein","high-fiber"],ingredients:[{name:"Chicken Breast",grams:160},{name:"Broccoli",grams:100},{name:"Carrot",grams:50},{name:"Brown Rice",grams:56},{name:"Soy Sauce",grams:15},{name:"Sesame Oil",grams:5},{name:"Edamame",grams:40},{name:"Green Beans",grams:50}]},
   // Added White Rice 50g — kofta plates always served with rice or bread
   {name:"Lamb Kofta Plate",cuisine:"Middle Eastern",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Ground Lamb",grams:150},{name:"Hummus",grams:60},{name:"Pita Bread",grams:60},{name:"Red Onion",grams:30},{name:"Tahini",grams:15}]},
-  {name:"Japchae",cuisine:"Korean",servingSize:"1 plate",tags:["balanced"],ingredients:[{name:"Sweet Potato Noodles",grams:120},{name:"Beef Sirloin",grams:100},{name:"Spinach",grams:60},{name:"Bell Pepper",grams:50},{name:"Carrot",grams:40},{name:"Sesame Oil",grams:8},{name:"Soy Sauce",grams:10}]},
+  {name:"Japchae",cuisine:"Korean",servingSize:"1 plate",tags:["balanced"],ingredients:[{name:"Sweet Potato Noodles",grams:38},{name:"Beef Sirloin",grams:100},{name:"Spinach",grams:60},{name:"Bell Pepper",grams:50},{name:"Carrot",grams:40},{name:"Sesame Oil",grams:8},{name:"Soy Sauce",grams:10}]},
   // Quinoa replaced with Brown Rice — renamed accordingly
   {name:"Brown Rice Power Bowl",cuisine:"Mediterranean",servingSize:"1 bowl",tags:["high-protein","high-fiber"],ingredients:[{name:"Brown Rice",grams:60},{name:"Chicken Breast",grams:140},{name:"Sweet Potato",grams:100},{name:"Spinach",grams:40},{name:"Olive Oil",grams:8}]},
   {name:"BBQ Chicken Plate",cuisine:"American",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:170},{name:"Sweet Potato",grams:150},{name:"Coleslaw Mix",grams:80},{name:"BBQ Sauce",grams:30}]},
-  {name:"Chana Masala",cuisine:"Indian",servingSize:"1 bowl",tags:["vegetarian","high-fiber"],ingredients:[{name:"Chickpeas",grams:150},{name:"Tomato Sauce",grams:100},{name:"Onion",grams:60},{name:"Garlic",grams:8},{name:"Brown Rice",grams:52},{name:"Olive Oil",grams:8},{name:"Cauliflower",grams:60},{name:"Eggplant",grams:60},{name:"Paneer",grams:50},{name:"Red Lentils",grams:40}]},
+  {name:"Chana Masala",cuisine:"Indian",servingSize:"1 bowl",tags:["vegetarian","high-fiber"],ingredients:[{name:"Chickpeas",grams:65},{name:"Tomato Sauce",grams:100},{name:"Onion",grams:60},{name:"Garlic",grams:8},{name:"Brown Rice",grams:52},{name:"Olive Oil",grams:8},{name:"Cauliflower",grams:60},{name:"Eggplant",grams:60},{name:"Paneer",grams:50},{name:"Red Lentils",grams:13}]},
   {name:"Poke Bowl",cuisine:"Japanese",servingSize:"1 bowl",tags:["high-protein","low-fat"],ingredients:[{name:"Ahi Tuna",grams:150},{name:"White Rice",grams:50},{name:"Avocado",grams:50},{name:"Edamame",grams:50},{name:"Cucumber",grams:60},{name:"Soy Sauce",grams:10},{name:"Mango",grams:50},{name:"Miso Paste",grams:10},{name:"Salmon Fillet",grams:80},{name:"Sesame Oil",grams:5}]},
-  {name:"Bulgogi Rice Bowl",cuisine:"Korean",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:160},{name:"White Rice",grams:55},{name:"Carrot",grams:40},{name:"Green Onion",grams:15},{name:"Sesame Oil",grams:5},{name:"Soy Sauce",grams:12},{name:"Kimchi",grams:40},{name:"Sweet Potato Noodles",grams:60},{name:"Ginger",grams:5}]},
+  {name:"Bulgogi Rice Bowl",cuisine:"Korean",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:160},{name:"White Rice",grams:55},{name:"Carrot",grams:40},{name:"Green Onion",grams:15},{name:"Sesame Oil",grams:5},{name:"Soy Sauce",grams:12},{name:"Kimchi",grams:40},{name:"Sweet Potato Noodles",grams:19},{name:"Ginger",grams:5}]},
   {name:"Egg Fried Rice",cuisine:"American",servingSize:"1 plate",tags:["comfort-food"],ingredients:[{name:"White Rice",grams:55},{name:"Egg",grams:100},{name:"Green Peas",grams:50},{name:"Carrot",grams:40},{name:"Soy Sauce",grams:12},{name:"Sesame Oil",grams:5},{name:"Pork Belly",grams:70}]},
   {name:"Tuna Nicoise Salad",cuisine:"Mediterranean",servingSize:"1 plate",tags:["high-protein","balanced"],ingredients:[{name:"Ahi Tuna",grams:120},{name:"Egg",grams:50},{name:"Green Beans",grams:80},{name:"Potato",grams:120},{name:"Olive Oil",grams:12}]},
   {name:"Chicken Quesadilla",cuisine:"Mexican",servingSize:"1 quesadilla",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:130},{name:"Whole Wheat Tortilla",grams:70},{name:"Cheddar Cheese",grams:40},{name:"Bell Pepper",grams:50},{name:"Onion",grams:30},{name:"BBQ Sauce",grams:15}]},
@@ -491,35 +491,35 @@ var RECIPES = [
   {name:"Mediterranean Stuffed Peppers",cuisine:"Mediterranean",servingSize:"2 peppers",tags:["balanced"],ingredients:[{name:"Bell Pepper",grams:200},{name:"Brown Rice",grams:56},{name:"Ground Beef (80% lean)",grams:100},{name:"Feta Cheese",grams:30},{name:"Tomato Sauce",grams:30}]},
   {name:"Korean Chicken Wings",cuisine:"Korean",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:200},{name:"White Rice",grams:47},{name:"Soy Sauce",grams:12},{name:"Honey",grams:15},{name:"Garlic",grams:8},{name:"Sesame Oil",grams:5},{name:"BBQ Sauce",grams:15}]},
   // Replaced Cacio e Pepe (structurally incompatible: 33.4g fat from cheese+butter+oil, only 17.8g protein)
-  {name:"Spaghetti alle Vongole",cuisine:"Italian",servingSize:"1 plate",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:160},{name:"Pasta",grams:130},{name:"Garlic",grams:10},{name:"Olive Oil",grams:12},{name:"Lemon",grams:15}]},
+  {name:"Spaghetti alle Vongole",cuisine:"Italian",servingSize:"1 plate",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:160},{name:"Pasta",grams:55},{name:"Garlic",grams:10},{name:"Olive Oil",grams:12},{name:"Lemon",grams:15}]},
   // Added Brown Rice 45g — enchilada platters served with rice
   {name:"Chicken Enchiladas",cuisine:"Mexican",servingSize:"2 enchiladas",tags:["high-protein","comfort-food"],ingredients:[{name:"Chicken Thigh",grams:150},{name:"Corn Tortillas",grams:90},{name:"Cheddar Cheese",grams:40},{name:"Tomato Sauce",grams:100},{name:"Onion",grams:40},{name:"Mozzarella Cheese",grams:30},{name:"Brown Rice",grams:45}]},
   {name:"Sushi Bowl (Chirashi)",cuisine:"Japanese",servingSize:"1 bowl",tags:["high-protein","omega-3"],ingredients:[{name:"Salmon Fillet",grams:120},{name:"White Rice",grams:55},{name:"Cucumber",grams:50},{name:"Avocado",grams:40},{name:"Soy Sauce",grams:10},{name:"Edamame",grams:40},{name:"Ahi Tuna",grams:80}]},
   {name:"Aloo Gobi",cuisine:"Indian",servingSize:"1 bowl",tags:["vegetarian"],ingredients:[{name:"Potato",grams:150},{name:"Cauliflower",grams:150},{name:"Onion",grams:50},{name:"Tomato Sauce",grams:30},{name:"Olive Oil",grams:12},{name:"Brown Rice",grams:52}]},
   // Quinoa replaced with Brown Rice — tabbouleh-style grain salad
-  {name:"Tabbouleh with Grilled Chicken",cuisine:"Middle Eastern",servingSize:"1 plate",tags:["high-protein","high-fiber"],ingredients:[{name:"Chicken Breast",grams:150},{name:"Brown Rice",grams:52},{name:"Cucumber",grams:60},{name:"Olive Oil",grams:12},{name:"Lemon",grams:15},{name:"Chickpeas",grams:50}]},
+  {name:"Tabbouleh with Grilled Chicken",cuisine:"Middle Eastern",servingSize:"1 plate",tags:["high-protein","high-fiber"],ingredients:[{name:"Chicken Breast",grams:150},{name:"Brown Rice",grams:52},{name:"Cucumber",grams:60},{name:"Olive Oil",grams:12},{name:"Lemon",grams:15},{name:"Chickpeas",grams:22}]},
   {name:"Pork Tonkatsu",cuisine:"Japanese",servingSize:"1 plate",tags:["comfort-food"],ingredients:[{name:"Pork Loin",grams:150},{name:"Panko Breadcrumbs",grams:30},{name:"Flour",grams:10},{name:"Egg",grams:50},{name:"White Rice",grams:55},{name:"Cabbage",grams:60},{name:"Asparagus",grams:60}]},
   {name:"Thai Basil Chicken",cuisine:"Thai",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Thigh",grams:170},{name:"White Rice",grams:55},{name:"Bell Pepper",grams:60},{name:"Garlic",grams:10},{name:"Soy Sauce",grams:12},{name:"Sesame Oil",grams:5}]},
   // Added pork loin — Zuppa Toscana traditionally includes Italian sausage
-  {name:"Tuscan White Bean Soup",cuisine:"Italian",servingSize:"2 cups",tags:["high-fiber"],ingredients:[{name:"Pork Loin",grams:120},{name:"White Beans",grams:130},{name:"Spinach",grams:60},{name:"Tomato Sauce",grams:40},{name:"Garlic",grams:10},{name:"Olive Oil",grams:12},{name:"Whole Wheat Bread",grams:30}]},
+  {name:"Tuscan White Bean Soup",cuisine:"Italian",servingSize:"2 cups",tags:["high-fiber"],ingredients:[{name:"Pork Loin",grams:120},{name:"White Beans",grams:50},{name:"Spinach",grams:60},{name:"Tomato Sauce",grams:40},{name:"Garlic",grams:10},{name:"Olive Oil",grams:12},{name:"Whole Wheat Bread",grams:30}]},
   {name:"Mango Chicken Curry",cuisine:"Indian",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:150},{name:"Mango",grams:80},{name:"Coconut Milk",grams:60},{name:"Onion",grams:50},{name:"Brown Rice",grams:56}]},
   // Quinoa replaced with Brown Rice
   {name:"Grilled Salmon & Asparagus",cuisine:"American",servingSize:"1 plate",tags:["high-protein","omega-3"],ingredients:[{name:"Cod",grams:180},{name:"Asparagus",grams:120},{name:"Brown Rice",grams:56},{name:"Lemon",grams:15},{name:"Olive Oil",grams:10},{name:"Pesto Sauce",grams:15}]},
   {name:"Beef Tacos",cuisine:"Mexican",servingSize:"3 tacos",tags:["high-protein"],ingredients:[{name:"Ground Beef (80% lean)",grams:150},{name:"Corn Tortillas",grams:90},{name:"Onion",grams:40},{name:"Avocado",grams:40},{name:"Cilantro",grams:5},{name:"BBQ Sauce",grams:15},{name:"Corn",grams:40}]},
-  {name:"Chicken Pesto Pasta",cuisine:"Italian",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:140},{name:"Pasta",grams:120},{name:"Pesto Sauce",grams:30},{name:"Parmesan Cheese",grams:10},{name:"Mozzarella Cheese",grams:30}]},
+  {name:"Chicken Pesto Pasta",cuisine:"Italian",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:140},{name:"Pasta",grams:51},{name:"Pesto Sauce",grams:30},{name:"Parmesan Cheese",grams:10},{name:"Mozzarella Cheese",grams:30}]},
   {name:"Katsu Curry",cuisine:"Japanese",servingSize:"1 plate",tags:["comfort-food"],ingredients:[{name:"Chicken Breast",grams:150},{name:"Panko Breadcrumbs",grams:30},{name:"Flour",grams:10},{name:"Egg",grams:50},{name:"White Rice",grams:55},{name:"Carrot",grams:40},{name:"Onion",grams:50}]},
   {name:"Spicy Tuna Bowl",cuisine:"Japanese",servingSize:"1 bowl",tags:["high-protein","omega-3"],ingredients:[{name:"Ahi Tuna",grams:160},{name:"White Rice",grams:50},{name:"Avocado",grams:50},{name:"Cucumber",grams:50},{name:"Soy Sauce",grams:10},{name:"Sesame Oil",grams:5}]},
   {name:"Steak & Sweet Potato",cuisine:"American",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:180},{name:"Sweet Potato",grams:180},{name:"Broccoli",grams:100},{name:"Butter",grams:10}]},
   {name:"Chicken Lettuce Wraps with Rice",cuisine:"Thai",servingSize:"4 wraps",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:180},{name:"Romaine Lettuce",grams:80},{name:"Carrot",grams:50},{name:"Peanuts",grams:15},{name:"Soy Sauce",grams:12},{name:"Lime",grams:15},{name:"Coleslaw Mix",grams:40},{name:"White Rice",grams:55}]},
-  {name:"Dal Tadka",cuisine:"Indian",servingSize:"1 bowl",tags:["vegetarian","high-fiber"],ingredients:[{name:"Red Lentils",grams:120},{name:"Onion",grams:50},{name:"Tomato Sauce",grams:30},{name:"Garlic",grams:8},{name:"Butter",grams:12},{name:"Brown Rice",grams:56}]},
+  {name:"Dal Tadka",cuisine:"Indian",servingSize:"1 bowl",tags:["vegetarian","high-fiber"],ingredients:[{name:"Red Lentils",grams:40},{name:"Onion",grams:50},{name:"Tomato Sauce",grams:30},{name:"Garlic",grams:8},{name:"Butter",grams:12},{name:"Brown Rice",grams:56}]},
   {name:"Baba Ganoush Plate",cuisine:"Middle Eastern",servingSize:"1 plate",tags:["vegetarian"],ingredients:[{name:"Eggplant",grams:200},{name:"Tahini",grams:25},{name:"Pita Bread",grams:60},{name:"Cucumber",grams:60},{name:"Olive Oil",grams:10},{name:"Lemon",grams:15}]},
   // Chicken Thigh replaced with Chicken Breast — fat drops ~13g, protein up ~19g
-  {name:"Dakgalbi",cuisine:"Korean",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Thigh",grams:170},{name:"Sweet Potato",grams:100},{name:"Cabbage",grams:80},{name:"White Rice",grams:47},{name:"Sesame Oil",grams:5},{name:"Kimchi",grams:40},{name:"Sweet Potato Noodles",grams:60}]},
+  {name:"Dakgalbi",cuisine:"Korean",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Thigh",grams:170},{name:"Sweet Potato",grams:100},{name:"Cabbage",grams:80},{name:"White Rice",grams:47},{name:"Sesame Oil",grams:5},{name:"Kimchi",grams:40},{name:"Sweet Potato Noodles",grams:19}]},
   // Replaced Eggplant Parmesan (structurally incompatible: 30.9g fat + 53g carbs, only 24g protein)
   {name:"Pork Milanese",cuisine:"Italian",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Pork Loin",grams:180},{name:"Panko Breadcrumbs",grams:25},{name:"Flour",grams:10},{name:"Egg",grams:50},{name:"Tomato Sauce",grams:80},{name:"Spinach",grams:80},{name:"Lemon",grams:15},{name:"Olive Oil",grams:10}]},
-  {name:"Black Bean Bowl",cuisine:"Mexican",servingSize:"1 bowl",tags:["vegetarian","high-fiber"],ingredients:[{name:"Black Beans",grams:130},{name:"Brown Rice",grams:56},{name:"Avocado",grams:50},{name:"Corn",grams:60},{name:"Lime",grams:15}]},
+  {name:"Black Bean Bowl",cuisine:"Mexican",servingSize:"1 bowl",tags:["vegetarian","high-fiber"],ingredients:[{name:"Black Beans",grams:50},{name:"Brown Rice",grams:56},{name:"Avocado",grams:50},{name:"Corn",grams:60},{name:"Lime",grams:15}]},
   {name:"Salmon Teriyaki Bento",cuisine:"Japanese",servingSize:"1 box",tags:["high-protein","omega-3"],ingredients:[{name:"Cod",grams:150},{name:"White Rice",grams:47},{name:"Broccoli",grams:60},{name:"Edamame",grams:50},{name:"Soy Sauce",grams:10},{name:"Miso Paste",grams:10},{name:"Honey",grams:10}]},
-  {name:"Chicken Alfredo",cuisine:"Italian",servingSize:"1 plate",tags:["high-protein","comfort-food"],ingredients:[{name:"Chicken Thigh",grams:150},{name:"Pasta",grams:120},{name:"Parmesan Cheese",grams:25},{name:"Butter",grams:15},{name:"Garlic",grams:8},{name:"Asparagus",grams:60}]},
+  {name:"Chicken Alfredo",cuisine:"Italian",servingSize:"1 plate",tags:["high-protein","comfort-food"],ingredients:[{name:"Chicken Thigh",grams:150},{name:"Pasta",grams:51},{name:"Parmesan Cheese",grams:25},{name:"Butter",grams:15},{name:"Garlic",grams:8},{name:"Asparagus",grams:60}]},
   {name:"Lamb Biryani",cuisine:"Indian",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Ground Lamb",grams:130},{name:"Basmati Rice",grams:50},{name:"Onion",grams:60},{name:"Greek Yogurt",grams:40},{name:"Garlic",grams:8}]},
   // Added shrimp — grilled shrimp & halloumi salad is common on Mediterranean menus
   // Quinoa replaced with Brown Rice
@@ -529,14 +529,14 @@ var RECIPES = [
   {name:"Chicken Shawarma Plate",cuisine:"Middle Eastern",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:170},{name:"Pita Bread",grams:60},{name:"Hummus",grams:50},{name:"Cucumber",grams:60},{name:"Tahini",grams:15},{name:"Olive Oil",grams:12}]},
   // Replaced Tteokbokki (structurally incompatible: 93g carbs from rice cakes, only 17.6g protein)
   // Mushrooms removed — not essential to dish
-  {name:"Beef Japchae",cuisine:"Korean",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:150},{name:"Sweet Potato Noodles",grams:120},{name:"Spinach",grams:60},{name:"Carrot",grams:40},{name:"Bell Pepper",grams:50},{name:"Soy Sauce",grams:12},{name:"Sesame Oil",grams:8}]},
+  {name:"Beef Japchae",cuisine:"Korean",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:150},{name:"Sweet Potato Noodles",grams:38},{name:"Spinach",grams:60},{name:"Carrot",grams:40},{name:"Bell Pepper",grams:50},{name:"Soy Sauce",grams:12},{name:"Sesame Oil",grams:8}]},
   // Italian — Shrimp in spicy tomato sauce over pasta, replaces Shrimp & Mushroom Risotto
-  {name:"Shrimp Fra Diavolo",cuisine:"Italian",servingSize:"1 plate",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:180},{name:"Pasta",grams:120},{name:"Tomato Sauce",grams:120},{name:"Garlic",grams:10},{name:"Olive Oil",grams:10},{name:"Onion",grams:40}]},
+  {name:"Shrimp Fra Diavolo",cuisine:"Italian",servingSize:"1 plate",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:180},{name:"Pasta",grams:51},{name:"Tomato Sauce",grams:120},{name:"Garlic",grams:10},{name:"Olive Oil",grams:10},{name:"Onion",grams:40}]},
   {name:"Cobb Salad",cuisine:"American",servingSize:"1 bowl",tags:["high-protein","low-carb"],ingredients:[{name:"Chicken Breast",grams:140},{name:"Egg",grams:50},{name:"Avocado",grams:50},{name:"Romaine Lettuce",grams:100},{name:"Cheddar Cheese",grams:20},{name:"Olive Oil",grams:10}]},
   {name:"Veggie Sushi Wrap",cuisine:"Japanese",servingSize:"8 pieces",tags:["vegetarian"],ingredients:[{name:"White Rice",grams:60},{name:"Avocado",grams:50},{name:"Cucumber",grams:60},{name:"Carrot",grams:40},{name:"Whole Wheat Tortilla",grams:35},{name:"Soy Sauce",grams:10}]},
-  {name:"Chipotle Chicken Bowl",cuisine:"Mexican",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:160},{name:"Brown Rice",grams:52},{name:"Black Beans",grams:70},{name:"Corn",grams:50},{name:"Avocado",grams:40},{name:"Cilantro",grams:5}]},
+  {name:"Chipotle Chicken Bowl",cuisine:"Mexican",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:160},{name:"Brown Rice",grams:52},{name:"Black Beans",grams:27},{name:"Corn",grams:50},{name:"Avocado",grams:40},{name:"Cilantro",grams:5}]},
   // Added Italian pork sausage — Minestrone con Salsiccia is a traditional Italian variation
-  {name:"Minestrone Soup",cuisine:"Italian",servingSize:"2 cups",tags:["high-fiber"],ingredients:[{name:"Pork Loin",grams:120},{name:"White Beans",grams:80},{name:"Pasta",grams:50},{name:"Zucchini",grams:60},{name:"Carrot",grams:50},{name:"Tomato Sauce",grams:100},{name:"Spinach",grams:40},{name:"Olive Oil",grams:10},{name:"Eggplant",grams:60},{name:"Potato",grams:60},{name:"Red Lentils",grams:40}]},
+  {name:"Minestrone Soup",cuisine:"Italian",servingSize:"2 cups",tags:["high-fiber"],ingredients:[{name:"Pork Loin",grams:120},{name:"White Beans",grams:31},{name:"Pasta",grams:21},{name:"Zucchini",grams:60},{name:"Carrot",grams:50},{name:"Tomato Sauce",grams:100},{name:"Spinach",grams:40},{name:"Olive Oil",grams:10},{name:"Eggplant",grams:60},{name:"Potato",grams:60},{name:"Red Lentils",grams:13}]},
   {name:"Saag Chicken",cuisine:"Indian",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:160},{name:"Spinach",grams:150},{name:"Onion",grams:50},{name:"Greek Yogurt",grams:40},{name:"Basmati Rice",grams:56},{name:"Cauliflower",grams:60},{name:"Paneer",grams:50}]},
   {name:"Stuffed Grape Leaves",cuisine:"Middle Eastern",servingSize:"8 pieces",tags:["balanced"],ingredients:[{name:"White Rice",grams:40},{name:"Ground Lamb",grams:80},{name:"Onion",grams:40},{name:"Lemon",grams:15},{name:"Olive Oil",grams:10}]},
   // Added pork belly — traditional Korean doenjang jjigae commonly includes pork
@@ -544,7 +544,7 @@ var RECIPES = [
   {name:"Doenjang Jjigae",cuisine:"Korean",servingSize:"1 bowl",tags:["comfort-food"],ingredients:[{name:"Pork Belly",grams:80},{name:"Miso Paste",grams:25},{name:"Zucchini",grams:60},{name:"Onion",grams:40},{name:"White Rice",grams:55},{name:"Kimchi",grams:40}]},
   {name:"Chicken Souvlaki Plate",cuisine:"Mediterranean",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:170},{name:"Pita Bread",grams:60},{name:"Greek Yogurt",grams:50},{name:"Cucumber",grams:60},{name:"Red Onion",grams:20},{name:"Olive Oil",grams:12},{name:"Lemon",grams:15},{name:"Garlic",grams:5}]},
   {name:"Pulled Pork Sandwich",cuisine:"American",servingSize:"1 sandwich",tags:["high-protein","comfort-food"],ingredients:[{name:"Pork Loin",grams:150},{name:"Whole Wheat Bread",grams:75},{name:"BBQ Sauce",grams:30},{name:"Coleslaw Mix",grams:60}]},
-  {name:"Shrimp Scampi",cuisine:"Italian",servingSize:"1 plate",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:160},{name:"Pasta",grams:120},{name:"Butter",grams:15},{name:"Garlic",grams:10},{name:"Lemon",grams:15}]},
+  {name:"Shrimp Scampi",cuisine:"Italian",servingSize:"1 plate",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:160},{name:"Pasta",grams:51},{name:"Butter",grams:15},{name:"Garlic",grams:10},{name:"Lemon",grams:15}]},
   // Mushrooms removed — not essential to dish
   {name:"Shrimp & Veggie Stir Fry",cuisine:"Thai",servingSize:"1 plate",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:160},{name:"Bell Pepper",grams:70},{name:"Carrot",grams:50},{name:"Brown Rice",grams:60},{name:"Soy Sauce",grams:12},{name:"Sesame Oil",grams:5},{name:"Zucchini",grams:60}]},
   {name:"Chicken Fried Rice",cuisine:"American",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:140},{name:"White Rice",grams:60},{name:"Egg",grams:50},{name:"Green Peas",grams:40},{name:"Carrot",grams:40},{name:"Soy Sauce",grams:12},{name:"Sesame Oil",grams:5}]},
@@ -554,17 +554,17 @@ var RECIPES = [
   // Removed: Pork Dumpling Wraps. Pork Shoulder drops to 4 recipes (below 5 threshold — flagged).
   {name:"Chicken Korma",cuisine:"Indian",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:150},{name:"Greek Yogurt",grams:50},{name:"Coconut Milk",grams:50},{name:"Onion",grams:50},{name:"Basmati Rice",grams:47},{name:"Peanuts",grams:15}]},
   // Renamed Beef Bulgogi Lettuce Wraps → Beef Bulgogi Noodle Bowl: removed Romaine, added Rice Noodles
-  {name:"Beef Bulgogi Noodle Bowl",cuisine:"Korean",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:180},{name:"White Rice",grams:35},{name:"Carrot",grams:30},{name:"Soy Sauce",grams:12},{name:"Sesame Oil",grams:5},{name:"Rice Noodles",grams:80},{name:"Garlic",grams:8}]},
+  {name:"Beef Bulgogi Noodle Bowl",cuisine:"Korean",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:180},{name:"White Rice",grams:35},{name:"Carrot",grams:30},{name:"Soy Sauce",grams:12},{name:"Sesame Oil",grams:5},{name:"Rice Noodles",grams:24},{name:"Garlic",grams:8}]},
   {name:"Beef Meatballs & Zoodles",cuisine:"American",servingSize:"1 bowl",tags:["high-protein","low-carb"],ingredients:[{name:"Ground Beef (80% lean)",grams:170},{name:"Zucchini",grams:200},{name:"Tomato Sauce",grams:100},{name:"Parmesan Cheese",grams:15},{name:"Olive Oil",grams:8}]},
   // Replaced Moroccan Chickpea Stew (structurally incompatible: 84g carbs from triple carb stacking)
-  {name:"Lamb Tagine",cuisine:"Middle Eastern",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Ground Lamb",grams:160},{name:"Tomato Sauce",grams:50},{name:"Onion",grams:60},{name:"Carrot",grams:50},{name:"Chickpeas",grams:60},{name:"Olive Oil",grams:8},{name:"Garlic",grams:8},{name:"Eggplant",grams:60},{name:"White Beans",grams:50}]},
+  {name:"Lamb Tagine",cuisine:"Middle Eastern",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Ground Lamb",grams:160},{name:"Tomato Sauce",grams:50},{name:"Onion",grams:60},{name:"Carrot",grams:50},{name:"Chickpeas",grams:26},{name:"Olive Oil",grams:8},{name:"Garlic",grams:8},{name:"Eggplant",grams:60},{name:"White Beans",grams:19}]},
   // Added shrimp — Pesto Shrimp Gnocchi is a common restaurant/home dish
-  {name:"Pesto Shrimp Pasta",cuisine:"Italian",servingSize:"1 plate",tags:["seafood","comfort-food"],ingredients:[{name:"Shrimp",grams:140},{name:"Pasta",grams:130},{name:"Pesto Sauce",grams:35},{name:"Parmesan Cheese",grams:15}]},
+  {name:"Pesto Shrimp Pasta",cuisine:"Italian",servingSize:"1 plate",tags:["seafood","comfort-food"],ingredients:[{name:"Shrimp",grams:140},{name:"Pasta",grams:55},{name:"Pesto Sauce",grams:35},{name:"Parmesan Cheese",grams:15}]},
   {name:"Shrimp Ceviche Bowl",cuisine:"Mexican",servingSize:"1 bowl",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:160},{name:"Avocado",grams:60},{name:"Cucumber",grams:60},{name:"Lime",grams:15},{name:"Corn Tortillas",grams:60},{name:"Cilantro",grams:5},{name:"Mango",grams:50}]},
-  {name:"Asian Noodle Soup",cuisine:"Japanese",servingSize:"1 bowl",tags:["comfort-food"],ingredients:[{name:"Rice Noodles",grams:150},{name:"Chicken Breast",grams:100},{name:"Spinach",grams:40},{name:"Green Onion",grams:10},{name:"Egg",grams:50},{name:"Soy Sauce",grams:15}]},
-  {name:"Mediterranean Tuna Salad",cuisine:"Mediterranean",servingSize:"1 plate",tags:["high-protein","low-carb"],ingredients:[{name:"Ahi Tuna",grams:130},{name:"Cucumber",grams:80},{name:"Red Onion",grams:25},{name:"Olive Oil",grams:12},{name:"Whole Wheat Bread",grams:60},{name:"White Beans",grams:50}]},
+  {name:"Asian Noodle Soup",cuisine:"Japanese",servingSize:"1 bowl",tags:["comfort-food"],ingredients:[{name:"Rice Noodles",grams:45},{name:"Chicken Breast",grams:100},{name:"Spinach",grams:40},{name:"Green Onion",grams:10},{name:"Egg",grams:50},{name:"Soy Sauce",grams:15}]},
+  {name:"Mediterranean Tuna Salad",cuisine:"Mediterranean",servingSize:"1 plate",tags:["high-protein","low-carb"],ingredients:[{name:"Ahi Tuna",grams:130},{name:"Cucumber",grams:80},{name:"Red Onion",grams:25},{name:"Olive Oil",grams:12},{name:"Whole Wheat Bread",grams:60},{name:"White Beans",grams:19}]},
   {name:"Beef & Broccoli",cuisine:"American",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:170},{name:"Broccoli",grams:150},{name:"White Rice",grams:50},{name:"Soy Sauce",grams:15},{name:"Sesame Oil",grams:5}]},
-  {name:"Veggie Burrito",cuisine:"Mexican",servingSize:"1 burrito",tags:["vegetarian","high-fiber"],ingredients:[{name:"Whole Wheat Tortilla",grams:70},{name:"Black Beans",grams:100},{name:"Brown Rice",grams:40},{name:"Bell Pepper",grams:50},{name:"Avocado",grams:50},{name:"Cheddar Cheese",grams:20}]},
+  {name:"Veggie Burrito",cuisine:"Mexican",servingSize:"1 burrito",tags:["vegetarian","high-fiber"],ingredients:[{name:"Whole Wheat Tortilla",grams:70},{name:"Black Beans",grams:39},{name:"Brown Rice",grams:40},{name:"Bell Pepper",grams:50},{name:"Avocado",grams:50},{name:"Cheddar Cheese",grams:20}]},
   // Pork Belly replaced with Pork Loin — fat drops ~18g, protein up ~17g
   {name:"Okonomiyaki",cuisine:"Japanese",servingSize:"1 pancake",tags:["comfort-food"],ingredients:[{name:"Cabbage",grams:150},{name:"Panko Breadcrumbs",grams:30},{name:"Egg",grams:100},{name:"Pork Belly",grams:50},{name:"Green Onion",grams:15}]},
   {name:"Paneer Tikka Wrap",cuisine:"Indian",servingSize:"1 wrap",tags:["vegetarian","high-protein"],ingredients:[{name:"Paneer",grams:100},{name:"Whole Wheat Tortilla",grams:70},{name:"Bell Pepper",grams:50},{name:"Onion",grams:40},{name:"Greek Yogurt",grams:40}]},
@@ -578,7 +578,7 @@ var RECIPES = [
   // Caribbean — Chicken Thigh stew, Dominican Republic national comfort food
   {name:"Pollo Guisado",cuisine:"Caribbean",servingSize:"1 bowl",tags:["high-protein","comfort-food"],ingredients:[{name:"Chicken Breast",grams:170},{name:"Tomato Sauce",grams:100},{name:"Onion",grams:60},{name:"Bell Pepper",grams:60},{name:"Potato",grams:120},{name:"Olive Oil",grams:8},{name:"Lime",grams:15},{name:"Coconut Milk",grams:40},{name:"Green Beans",grams:60},{name:"Garlic",grams:5}]},
   // Brazilian — Pork Shoulder black bean stew, Brazil's national dish
-  {name:"Feijoada",cuisine:"Brazilian",servingSize:"1 bowl",tags:["high-protein","comfort-food"],ingredients:[{name:"Pork Loin",grams:150},{name:"Black Beans",grams:120},{name:"White Rice",grams:55},{name:"Onion",grams:60},{name:"Garlic",grams:8},{name:"Olive Oil",grams:8},{name:"Lime",grams:15}]},
+  {name:"Feijoada",cuisine:"Brazilian",servingSize:"1 bowl",tags:["high-protein","comfort-food"],ingredients:[{name:"Pork Loin",grams:150},{name:"Black Beans",grams:46},{name:"White Rice",grams:55},{name:"Onion",grams:60},{name:"Garlic",grams:8},{name:"Olive Oil",grams:8},{name:"Lime",grams:15}]},
   // Brazilian — Shrimp coconut stew from Bahia
   {name:"Moqueca",cuisine:"Brazilian",servingSize:"1 bowl",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:180},{name:"Coconut Milk",grams:80},{name:"Tomato Sauce",grams:50},{name:"Onion",grams:60},{name:"Bell Pepper",grams:60},{name:"Lime",grams:15},{name:"White Rice",grams:50},{name:"Olive Oil",grams:8}]},
   // Spanish — Mixed seafood and chicken rice from Valencia
@@ -594,15 +594,15 @@ var RECIPES = [
   // Caribbean — Shredded beef in tomato sauce, Cuba's national dish
   {name:"Ropa Vieja",cuisine:"Caribbean",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:180},{name:"Tomato Sauce",grams:100},{name:"Onion",grams:60},{name:"Bell Pepper",grams:80},{name:"Garlic",grams:23},{name:"Olive Oil",grams:17},{name:"White Rice",grams:55},{name:"Eggplant",grams:60},{name:"Soy Sauce",grams:8},{name:"Lemon",grams:0.5}]},
   // Brazilian — Grilled steak, signature of every churrascaria
-  {name:"Picanha with Farofa",cuisine:"Brazilian",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:180},{name:"Onion",grams:40},{name:"Garlic",grams:8},{name:"Black Beans",grams:80},{name:"White Rice",grams:55},{name:"Lime",grams:15},{name:"Egg",grams:50}]},
+  {name:"Picanha with Farofa",cuisine:"Brazilian",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:180},{name:"Onion",grams:40},{name:"Garlic",grams:8},{name:"Black Beans",grams:31},{name:"White Rice",grams:55},{name:"Lime",grams:15},{name:"Egg",grams:50}]},
   // Spanish — Thick potato omelette, Spain's most iconic everyday dish
   {name:"Tortilla Espanola",cuisine:"Spanish",servingSize:"1 plate",tags:["breakfast","vegetarian"],ingredients:[{name:"Egg",grams:150},{name:"Potato",grams:150},{name:"Onion",grams:60},{name:"Olive Oil",grams:15},{name:"Spinach",grams:60}]},
   // Vietnamese — Beef Pho, Vietnam's national soup. ~42P, 10F, 33C
-  {name:"Beef Pho",cuisine:"Vietnamese",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:150},{name:"Rice Noodles",grams:100},{name:"Onion",grams:30},{name:"Spinach",grams:40},{name:"Lime",grams:15},{name:"Garlic",grams:5},{name:"Soy Sauce",grams:10},{name:"Ginger",grams:5}]},
+  {name:"Beef Pho",cuisine:"Vietnamese",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Beef Sirloin",grams:150},{name:"Rice Noodles",grams:30},{name:"Onion",grams:30},{name:"Spinach",grams:40},{name:"Lime",grams:15},{name:"Garlic",grams:5},{name:"Soy Sauce",grams:10},{name:"Ginger",grams:5}]},
   // Vietnamese — Chicken Pho (Pho Ga), lighter version of beef pho. ~55P, 7F, 30C
-  {name:"Chicken Pho",cuisine:"Vietnamese",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:170},{name:"Rice Noodles",grams:100},{name:"Onion",grams:30},{name:"Spinach",grams:40},{name:"Lime",grams:15},{name:"Garlic",grams:5}]},
+  {name:"Chicken Pho",cuisine:"Vietnamese",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Chicken Breast",grams:170},{name:"Rice Noodles",grams:30},{name:"Onion",grams:30},{name:"Spinach",grams:40},{name:"Lime",grams:15},{name:"Garlic",grams:5}]},
   // Vietnamese — Bun Tom (shrimp noodle bowl), cold noodle dish. ~38P, 5F, 32C
-  {name:"Bun Tom",cuisine:"Vietnamese",servingSize:"1 bowl",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:180},{name:"Rice Noodles",grams:80},{name:"Cucumber",grams:60},{name:"Carrot",grams:40},{name:"Lime",grams:15},{name:"Romaine Lettuce",grams:60}]},
+  {name:"Bun Tom",cuisine:"Vietnamese",servingSize:"1 bowl",tags:["seafood","high-protein"],ingredients:[{name:"Shrimp",grams:180},{name:"Rice Noodles",grams:24},{name:"Cucumber",grams:60},{name:"Carrot",grams:40},{name:"Lime",grams:15},{name:"Romaine Lettuce",grams:60}]},
   // Japanese — Tuna Tataki (seared tuna) over rice. ~48P, 4F, 46C
   {name:"Tuna Tataki Bowl",cuisine:"Japanese",servingSize:"1 bowl",tags:["high-protein","seafood"],ingredients:[{name:"Ahi Tuna",grams:170},{name:"White Rice",grams:50},{name:"Cucumber",grams:50},{name:"Edamame",grams:40},{name:"Soy Sauce",grams:10},{name:"Miso Paste",grams:8}]},
   // Japanese — Chicken Yakitori (grilled skewers) over rice. ~55P, 7F, 44C
@@ -632,7 +632,7 @@ var RECIPES = [
   // Japanese — Turkey Stir Fry with Rice, lean stir-fry bowl. ~53P, 3F, 44C
   {name:"Turkey Stir Fry with Rice",cuisine:"Japanese",servingSize:"1 bowl",tags:["high-protein"],ingredients:[{name:"Turkey Breast",grams:170},{name:"White Rice",grams:50},{name:"Broccoli",grams:80},{name:"Bell Pepper",grams:50},{name:"Soy Sauce",grams:10},{name:"Sesame Oil",grams:3},{name:"Garlic",grams:5},{name:"Ginger",grams:5}]},
   // Mexican — Turkey Burrito Bowl, lean Chipotle-style bowl. ~55P, 5F, 48C
-  {name:"Turkey Burrito Bowl",cuisine:"Mexican",servingSize:"1 bowl",tags:["high-protein","high-fiber"],ingredients:[{name:"Turkey Breast",grams:170},{name:"Brown Rice",grams:45},{name:"Black Beans",grams:60},{name:"Corn",grams:30},{name:"Cilantro",grams:5},{name:"Lime",grams:15},{name:"Onion",grams:30}]},
+  {name:"Turkey Burrito Bowl",cuisine:"Mexican",servingSize:"1 bowl",tags:["high-protein","high-fiber"],ingredients:[{name:"Turkey Breast",grams:170},{name:"Brown Rice",grams:45},{name:"Black Beans",grams:23},{name:"Corn",grams:30},{name:"Cilantro",grams:5},{name:"Lime",grams:15},{name:"Onion",grams:30}]},
   // Mexican — Lean Beef Tacos, 90% lean ground beef for fitness prep. ~37P, 9F, 44C
   {name:"Lean Beef Tacos",cuisine:"Mexican",servingSize:"3 tacos",tags:["high-protein"],ingredients:[{name:"Ground Beef (lean)",grams:150},{name:"Corn Tortillas",grams:90},{name:"Onion",grams:30},{name:"Cilantro",grams:5},{name:"Lime",grams:15}]},
   // Chinese — Five-Spice Duck Stir Fry, weeknight wok dish with five-spice powder.
@@ -640,7 +640,7 @@ var RECIPES = [
   // Chinese — Peking-Style Duck Wraps, hoisin-glazed duck in tortilla wraps.
   {name:"Peking-Style Duck Wraps",cuisine:"Chinese",servingSize:"1 wrap",tags:["high-protein"],ingredients:[{name:"Duck Leg",grams:150},{name:"Whole Wheat Tortilla",grams:70},{name:"Cucumber",grams:60},{name:"Green Onion",grams:20},{name:"Hoisin Sauce",grams:25},{name:"Garlic",grams:5},{name:"Ginger",grams:5}]},
   // French — Duck Confit with Lentils, slow-cooked weekend dish.
-  {name:"Duck Confit with Lentils",cuisine:"French",servingSize:"1 bowl",tags:["high-protein","comfort-food"],ingredients:[{name:"Duck Leg",grams:130},{name:"Red Lentils",grams:60},{name:"Carrot",grams:50},{name:"Onion",grams:30},{name:"Garlic",grams:5}]},
+  {name:"Duck Confit with Lentils",cuisine:"French",servingSize:"1 bowl",tags:["high-protein","comfort-food"],ingredients:[{name:"Duck Leg",grams:130},{name:"Red Lentils",grams:20},{name:"Carrot",grams:50},{name:"Onion",grams:30},{name:"Garlic",grams:5}]},
   // French — Pan-Seared Duck Breast with Cherry Sauce, classic bistro plate.
   {name:"Pan-Seared Duck Breast with Cherry Sauce & Brown Rice",cuisine:"French",servingSize:"1 plate",tags:["high-protein"],ingredients:[{name:"Duck Breast",grams:150},{name:"Brown Rice",grams:50},{name:"Cherry Sauce",grams:30},{name:"Asparagus",grams:80},{name:"Garlic",grams:5},{name:"Onion",grams:20}]},
   // Mexican — Duck Confit Tacos, fusion taco with shredded confit.

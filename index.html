@@ -191,6 +191,7 @@
   .grocery-item .gi-qty { color: #2d6a4f; font-weight: 600; text-align: center; min-width: 70px; }
   .grocery-item .gi-alt { color: #5a7a6f; font-size: 0.82rem; text-align: center; min-width: 70px; }
   .grocery-item .gi-usage { color: #6b7f7a; font-size: 0.78rem; }
+  .grocery-item .gi-serving { grid-column: 1 / -1; color: #2d6a4f; font-size: 0.8rem; font-weight: 500; padding-left: 2px; }
   .grocery-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
   .copy-feedback { font-size: 0.82rem; color: #2d6a4f; font-weight: 600; }
   .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; }
@@ -1322,7 +1323,7 @@ function App() {
     if (plan) {
       var shakeScoops = 0;
       plan.forEach(function(day) { if (day && day.proteinShake) shakeScoops += day.proteinShake.scoops; });
-      if (shakeScoops > 0) text += "\nSupplements\n-----------\n  Protein Powder - " + shakeScoops + " scoops (~" + (shakeScoops*30) + "g)\n";
+      if (shakeScoops > 0) text += "\nSupplements\n-----------\n  Protein Powder - " + shakeScoops + " scoops (~" + (shakeScoops*30) + "g)\n      serving 1 scoop (~30g): 120 cal · 3g C · 25g P · 1g F\n";
     }
     navigator.clipboard.writeText(text).then(function() { setCopyMsg("Copied!"); setTimeout(function() { setCopyMsg(""); }, 2000); });
   }
@@ -1711,6 +1712,7 @@ function App() {
                   <span className="gi-qty">{groceryQtyText(item)}</span>
                   <span className="gi-alt"></span>
                   <span className="gi-usage">{[...new Set(item.appearances)].join(", ")}</span>
+                  {groceryServingText(item) && <span className="gi-serving">{groceryServingText(item)}</span>}
                 </div>);
               })}
             </div>);
@@ -1725,6 +1727,7 @@ function App() {
                 <span className="gi-qty">{shakeScoops} {shakeScoops === 1 ? "scoop" : "scoops"}</span>
                 <span className="gi-alt">~{shakeScoops * 30}g</span>
                 <span className="gi-usage">Protein shake supplement ({shakeScoops} {shakeScoops === 1 ? "day" : "days"} this week)</span>
+                <span className="gi-serving">serving 1 scoop (~30g): 120 cal · 3g C · 25g P · 1g F</span>
               </div>
             </div>);
           })()}

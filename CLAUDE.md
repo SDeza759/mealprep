@@ -1,15 +1,17 @@
 # CLAUDE.md — Project Context
 
 ## Last Updated
-2026-06-07 — Session 9. Grocery tab category revamp: replaced the 7 buckets with a 9-category
-store-walk taxonomy (Produce, Fruit, Meat & Seafood, Eggs & Dairy, Bakery & Bread, Grains & Pasta,
-Canned & Legumes, Condiments & Oils, Spices & Seasonings) + kept "Other" as the unmapped fallback.
-Mapped the 7 previously-unmapped ingredients (Cod, Ground Beef (80% lean), Flour, Ginger, Adobo,
-Bay Leaves) — only Water now falls to Other. Split fruit out of the old overloaded "Other". Counts:
-Produce 24, Fruit 6, Meat & Seafood 16, Eggs & Dairy 9, Bakery & Bread 6, Grains & Pasta 9,
-Canned & Legumes 7, Condiments & Oils 14, Spices & Seasonings 27 (Kimchi sits in Condiments & Oils
-as a fermented side, not Produce). All in `data.js` (`INGREDIENT_CATEGORIES`) + `grocery.js` (render
-`order`, `cat === "Meat & Seafood"` for oz formatting). No algorithm/recipe data changes. Validator 700/700.
+2026-06-07 — Session 10. Two changes. (1) **Cooked→raw data fix**: 7 registry entries were stored as
+COOKED macros paired with COOKED recipe grams (internally consistent, but violating the "always USDA
+raw" convention that Rice/Flour/Oats follow). Converted Pasta, Rice Noodles, Sweet Potato Noodles,
+Red Lentils, Black Beans, White Beans, Chickpeas to USDA raw macros AND proportionally rescaled every
+recipe's grams by the calorie density ratio (grams ÷ k, k=cooked/raw cal) so each dish keeps its exact
+nutrition — 45 recipe gram edits across ~35 recipes + 7 registry edits in `data.js`. Validator 700/700,
+simulator 7000/7000. Surfaced by an Amazon-Fresh-vs-USDA audit (see `audit/macro-audit.html`, a
+review-only HTML report; not app code). (2) **Per-serving macros in grocery list**: `grocery.js` now
+tracks `totalServings` and exposes `groceryServingMacros()`/`groceryServingText()` (avg portion =
+totalGrams÷totalServings, registry-scaled); shown as a `gi-serving` sub-row in the Grocery tab and in
+the Copy List text (notes-app friendly). Protein powder gets a per-scoop line. Spices/zero-cal skipped.
 
 ## Project Overview
 Multi-file HTML meal-prep optimizer ("Actual Size Optimizer"). Weekly plans vs macro targets
@@ -91,6 +93,10 @@ combos until one solves to [95%,105%] on all 4 macros) → add protein shake if 
 - **Mobile UX**: weekly table + modal untested ≤600px; columns may be too narrow. Isolated to `index.html`.
 - **Swap false negatives** (since S4): solver non-determinism flags workable recipes incompatible. Add
   seeded-RNG mode + A/B the dry-run zone width ([95,105] vs [93,107]).
+- **Pending audit review**: `audit/macro-audit.html` (S10) compares 45 packaged ingredients vs Amazon
+  Fresh; user is reviewing keep/adjust per item (decisions persist in localStorage, exportable). Open
+  brand-variance candidates flagged: Pesto Sauce, Cheddar/Mozzarella (whole vs part-skim), Chickpeas
+  (~17% cal), nonfat Greek Yogurt. Apply approved adjustments to `INGREDIENT_REGISTRY` then validate.
 - **Backlog**: UI warn when `4C+4P+9F > cal`;
   add `Wild Rice`/`Shallots` to registry (Pan-Seared Duck uses fallbacks); raise below-5-recipe ingredients
   (Cherry Sauce, Duck Breast/Leg, Hoisin, Salmon, Cod, Flatbread, Flour, Kimchi, Paneer, etc.); optional
@@ -118,3 +124,9 @@ combos until one solves to [95%,105%] on all 4 macros) → add protein shake if 
   fallback; mapped the 7 unmapped ingredients (only Water → Other now); fruit split out of the old
   overloaded "Other"; Kimchi placed in Condiments & Oils (not Produce). `INGREDIENT_CATEGORIES`
   (`data.js`) + `grocery.js` render `order` / oz-format key. No algorithm/recipe changes. 700/700.
+- **Session 10**: (a) Cooked→raw fix for 7 legume/pasta/noodle entries (Pasta, Rice Noodles, Sweet
+  Potato Noodles, Red Lentils, Black/White Beans, Chickpeas): USDA raw macros + proportional gram
+  rescale (k=cooked/raw cal) across 45 recipe occurrences so dish nutrition is preserved; 700/700 +
+  7000/7000. Found via Amazon-Fresh-vs-USDA audit (`audit/macro-audit.html`, sortable review report,
+  not app code). (b) Per-serving macros in grocery list (`grocery.js` `groceryServingMacros`/
+  `groceryServingText`, `totalServings`; `gi-serving` row + Copy List text in `index.html`).

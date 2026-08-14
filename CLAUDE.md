@@ -116,6 +116,9 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
   checks found the Beef Japchae duplicate, the cod-labelled-as-salmon bug, and 3 orphaned ingredients in S11.
 
 ## What to Do Next
+- **S11 is on an unmerged branch** — `s11-meal-editing-and-peruvian-overhaul`, pushed to origin. It also
+  carries the S9 and S10 commits, which had never been pushed. `main` on GitHub is still 3 commits behind.
+  Merge or PR it, then delete this bullet.
 - **Nut-adjacent composites** (user decision pending): `Pesto Sauce` traditionally contains pine nuts (3
   recipes) and `Granola` commonly contains nuts (3 breakfasts). Single registry rows for packaged products,
   so the app can't tell if a given jar/bag has nuts. If the no-nuts rule is an allergy, these need nut-free
@@ -148,7 +151,9 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
 - **Session 11**: Large multi-part session. **UI**: manual edits made group-aware (reversing S7's per-day
   divergence); meals-per-day exposed to the user (was hardcoded to day-index parity, which pinned any
   Mon-starting group to 3 meals forever); add-meal built on the swap modal, since a removed meal previously
-  could not be replaced without regenerating; weekly table given horizontal scroll for 4–6 meal days.
+  could not be replaced without regenerating; weekly table given horizontal scroll for 4–6 meal days;
+  a day can now be emptied (remove its last meal) and refilled, including one that was excluded when the
+  plan was generated — which surfaced the sparse-array `map` bug now recorded in Fragile Areas.
   **Data** (141→139 recipes, registry 104): merged the Beef Japchae/Japchae duplicate; fixed three "salmon"
   recipes that were made of cod; removed Sausage Flatbread, Caprese Panini, Shrimp Ceviche Bowl; deleted all
   nuts app-wide; dropped 3 orphaned ingredients; rebuilt the 6 Peruvian dishes from researched sources and

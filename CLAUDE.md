@@ -1,9 +1,9 @@
 # CLAUDE.md — Project Context
 
 ## Last Updated
-2026-08-14 — Session 11. UI: group-aware manual edits, user-set meals/day, add-meal. Data: recipe-pool
-cleanup (141→139), all nuts removed, Peruvian dishes rebuilt from researched traditional recipes.
-700/700 + 7000/7000, 139/139 reachable. Details in Key Decisions / Fragile Areas / Session History.
+2026-08-14 — Session 12. S9–S11 merged to `main` and pushed. Mobile pass on the weekly table +
+detail modal (sticky day column, stepper no longer covers the meal name / favorite star,
+spice row spans full width). Nut composites resolved as nut-free-brand-only. 700/700 + 7000/7000.
 
 ## Project Overview
 Multi-file HTML meal-prep optimizer ("Actual Size Optimizer"). Weekly plans vs macro targets
@@ -29,7 +29,12 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
 ## User Constraints (non-negotiable)
 - **No nuts, anywhere.** `Peanuts` was removed from the registry and from 5 recipes in S11. Do not
   reintroduce any nut — including pecans/walnuts, which are otherwise traditional in Aji de Gallina and
-  Tallarines Verdes. `Pesto Sauce` (pine nuts) and `Granola` are unresolved composites — see What to Do Next.
+  Tallarines Verdes.
+- **`Pesto Sauce` and `Granola` are nut-free-brand-only** (S12, user's call): both stay in the registry,
+  each carrying a comment on its line saying so — nut-free pesto (no pine nuts) and oat/seed granola.
+  They are single registry rows for packaged products, so the data cannot express "this jar has nuts";
+  the constraint lives in the shopping decision. Don't drop the comments and don't swap in macros from a
+  pine-nut pesto or a nut granola.
 
 ## Key Decisions (don't reverse)
 - **Combo-first**: evaluate full-day combos, not sequential picks — avoids structural incompatibility.
@@ -95,6 +100,21 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
   skip `meals.length === 0` the same way.
 - **Plans store stale data**: cloned to localStorage at gen time; recipe edits show only after regenerating.
 - **Day-group colors snapshot at gen time**: regrouping after generation doesn't recolor the current plan.
+- **`.wk-narrow` is measured, not a breakpoint** (S12): the weekly table adds it when the scroller
+  actually overflows (`scrollWidth > clientWidth`), re-checked every render plus a `ResizeObserver`.
+  Whether meal columns sit at their `WK_MEAL_COL_W` (190px) floor depends on the day's meal count as
+  much as on screen width — 6 meals bottoms out even on a wide desktop — so a `max-width` media query
+  gets it wrong in both directions. Don't "simplify" it back into the `@media (max-width: 600px)` block.
+- **Never set `display:flex` on `.wk-meal-cell`**: it is a `<td>`; changing its display drops it out of
+  the table layout and every row collapses into a vertical stack. The narrow-mode stepper is repositioned
+  with `top/bottom/left/right` on the existing absolute positioning for exactly this reason.
+- **The weekly table frame lives on `.wk-table-scroll`, not `.wk-table`** (S12): `overflow:hidden` on the
+  table (previously there to clip the border-radius) makes the table its own scrollport, which silently
+  kills `position:sticky` on the day column. Border + radius + background belong to the scroller.
+- **`.wk-name-row` reserves 56px on the right** for the absolutely-positioned stepper. Without it, long
+  meal names and the favorite star render *underneath* the stepper: the star stops being tappable and a
+  tap where it appears hits the stepper's "−" instead (silently changing servings). Verified by
+  hit-testing `elementFromPoint` at the star's centre — 10/14 cells were unreachable before the fix.
 
 ## Conventions
 - **New ingredient**: add to `INGREDIENT_REGISTRY` (USDA raw/100g); reference `{name,grams}`; add to
@@ -116,14 +136,11 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
   checks found the Beef Japchae duplicate, the cod-labelled-as-salmon bug, and 3 orphaned ingredients in S11.
 
 ## What to Do Next
-- **S11 is on an unmerged branch** — `s11-meal-editing-and-peruvian-overhaul`, pushed to origin. It also
-  carries the S9 and S10 commits, which had never been pushed. `main` on GitHub is still 3 commits behind.
-  Merge or PR it, then delete this bullet.
-- **Nut-adjacent composites** (user decision pending): `Pesto Sauce` traditionally contains pine nuts (3
-  recipes) and `Granola` commonly contains nuts (3 breakfasts). Single registry rows for packaged products,
-  so the app can't tell if a given jar/bag has nuts. If the no-nuts rule is an allergy, these need nut-free
-  brands or removal.
-- **Mobile UX**: weekly table + modal untested ≤600px; columns may be too narrow. Isolated to `index.html`.
+- **Verify the mobile pass on a real phone.** Everything in S12 was checked at 375/768/1280px in the
+  in-app browser, but `ResizeObserver` callbacks are not delivered there (the pane is hidden), so the
+  *live re-check on rotate/resize* is the one path never exercised — only the measure-on-render path was.
+  Rotate a phone with a 5–6 meal day and confirm `.wk-narrow` toggles. Also untested: real touch
+  scrolling of the weekly table, and whether the pinned day column feels right under a thumb.
 - **Swap false negatives** (since S4): solver non-determinism flags workable recipes incompatible. Add
   seeded-RNG mode + A/B the dry-run zone width ([95,105] vs [93,107]).
 - **Pending audit review**: `audit/macro-audit.html` (S10) compares 45 packaged ingredients vs Amazon
@@ -158,3 +175,15 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
   recipes that were made of cod; removed Sausage Flatbread, Caprese Panini, Shrimp Ceviche Bowl; deleted all
   nuts app-wide; dropped 3 orphaned ingredients; rebuilt the 6 Peruvian dishes from researched sources and
   added Causa Limena + Tallarines Verdes con Bistec. 700/700 + 7000/7000 throughout.
+- **Session 12**: Merged S9–S11 into `main` and pushed (`main` had been 3 commits behind). Resolved the
+  nut composites as nut-free-brand-only. Mobile pass, driven by measuring the live page at 375/768/1280px
+  rather than eyeballing: found the serving stepper was covering meal names and — worse — the favorite
+  star, making 10/14 stars untappable and turning a tap on the star into a serving decrement; the day
+  column scrolled out of view, leaving rows unidentifiable; and the detail modal's spice row was crushed
+  into the narrow name column (8 wrapped lines). Fixed all three, plus the g/oz qty breaking mid-
+  parenthetical. Narrow-mode is keyed on measured overflow after a viewport breakpoint proved wrong at
+  tablet width with 6 meals (14 names still clipped). Two traps recorded in Fragile Areas along the way:
+  `display:flex` on a `<td>` collapses the table, and `overflow:hidden` on the table kills sticky.
+  For testing, the app was served over http via a throwaway `.claude/serve.js` + `launch.json` — note
+  `.claude/` is gitignored, so those are local-only and a fresh clone will need them recreated (a
+  no-deps Node static server on :8777; `file://` won't do, the modules need an http origin).

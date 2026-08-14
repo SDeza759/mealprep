@@ -64,7 +64,7 @@ var INGREDIENT_REGISTRY = {
   "Flour": { calories: 364, carbs: 76.3, protein: 10.3, fat: 1.0 },
   "Garlic": { calories: 149, carbs: 33.1, protein: 6.4, fat: 0.5 },
   "Ginger": { calories: 80, carbs: 17.8, protein: 1.8, fat: 0.8 },
-  "Granola": { calories: 450, carbs: 66, protein: 10, fat: 18 },
+  "Granola": { calories: 450, carbs: 66, protein: 10, fat: 18 }, // NUT-FREE granola only (oat/seed based) — no-nuts rule. Macros: typical nut-free brand.
   "Greek Yogurt": { calories: 97, carbs: 6, protein: 10, fat: 0.7 },
   "Green Beans": { calories: 31, carbs: 7, protein: 1.8, fat: 0.2 },
   "Green Onion": { calories: 32, carbs: 7.3, protein: 1.8, fat: 0.2 },
@@ -90,7 +90,7 @@ var INGREDIENT_REGISTRY = {
   "Panko Breadcrumbs": { calories: 374, carbs: 73.4, protein: 10.7, fat: 2.3 },
   "Parmesan Cheese": { calories: 392, carbs: 3.2, protein: 28.4, fat: 29.7 },
   "Pasta": { calories: 371, carbs: 74.7, protein: 13, fat: 1.5 },
-  "Pesto Sauce": { calories: 400, carbs: 6.7, protein: 6.7, fat: 40 },
+  "Pesto Sauce": { calories: 400, carbs: 6.7, protein: 6.7, fat: 40 }, // NUT-FREE pesto only (basil/oil/parmesan, no pine nuts) — no-nuts rule. Macros: typical jarred brand.
   "Pita Bread": { calories: 275, carbs: 55.7, protein: 9.1, fat: 1.2 },
   "Pork Belly": { calories: 518, carbs: 0, protein: 9.3, fat: 53 },
   "Pork Loin": { calories: 143, carbs: 0, protein: 26, fat: 3.5 },

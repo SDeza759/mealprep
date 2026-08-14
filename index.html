@@ -59,13 +59,19 @@
   .sd-saved-item .sp-name { font-weight: 600; font-size: 0.82rem; }
   .sd-saved-item .sp-meta { font-size: 0.72rem; color: #6b7f7a; margin-left: 6px; }
   .sd-saved-item .sp-actions { display: flex; gap: 4px; flex-shrink: 0; }
-  /* Scrolls sideways once the day has enough meals that fixed columns would crush the names.
-     Below ~4 meals the min-width stays under the container, so nothing changes visually. */
-  .wk-table-scroll { overflow-x: auto; margin-bottom: 16px; }
-  .wk-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #d8e0dc; border-radius: 12px; overflow: hidden; background: #fff; table-layout: fixed; }
+  /* Scrolls sideways once the meal columns would be squeezed below WK_MEAL_COL_W — on a desktop
+     that takes ~4 meals, on a phone it is always. When it does scroll, the App tags this element
+     .wk-narrow and the meal cells switch to their stacked layout (see .wk-narrow rules below).
+     The frame (border + radius + background) lives here rather than on the table: `overflow:hidden`
+     on the table would make the table its own scrollport and the sticky day column never sticks. */
+  .wk-table-scroll { overflow-x: auto; margin-bottom: 16px; border: 1px solid #d8e0dc; border-radius: 12px; background: #fff; }
+  .wk-table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; table-layout: fixed; }
   .wk-table th { font-size: 0.78rem; font-weight: 700; color: #5a7a6f; padding: 8px 10px; text-align: left; background: #f0f4f3; border-bottom: 1px solid #d8e0dc; }
   .wk-table th:not(:last-child) { border-right: 0.5px solid #e0e8e4; }
-  .wk-table th:first-child, .wk-table td:first-child { width: 56px; }
+  /* Day column pins while the meal columns scroll under it. On a phone the table is always
+     scrolled sideways, and an unpinned day label leaves the row you are reading unidentifiable.
+     Both cells are opaque (see .wk-day-cell / .wk-table th) so scrolled content passes behind. */
+  .wk-table th:first-child, .wk-table td:first-child { width: 56px; position: sticky; left: 0; z-index: 2; }
   .wk-day-cell { background: #f7faf8; padding: 8px 6px; text-align: center; vertical-align: middle; font-size: 0.82rem; font-weight: 700; color: #2d6a4f; border-right: 0.5px solid #e0e8e4; }
   .wk-day-cell .wk-glabel { font-size: 0.65rem; font-weight: 600; margin-top: 2px; padding: 1px 6px; border-radius: 8px; display: inline-block; }
   .wk-regen-check { display: block; margin: 0 auto 3px; cursor: pointer; line-height: 1; }
@@ -75,7 +81,23 @@
   .wk-meal-cell:hover { background: #f0f7f3; }
   .wk-row:not(:last-child) td { border-bottom: 0.5px solid #e0e8e4; }
   .wk-row:not(:last-child) th { border-bottom: 0.5px solid #e0e8e4; }
-  .wk-name-row { display: flex; align-items: center; gap: 5px; }
+  /* Reserve the absolutely-positioned stepper's footprint (56px wide, inset 6px from the cell
+     edge). Without this the name row spans the full cell and long names — plus the favorite
+     star that follows them — slide UNDER the stepper: the star becomes untappable and a tap
+     where it appears hits the stepper's "−" instead. Only row 1 needs it; the stepper is 21px
+     tall, so the meta row below keeps the full width. */
+  .wk-name-row { display: flex; align-items: center; gap: 5px; padding-right: 56px; }
+  .wk-shake-cell .wk-name-row { padding-right: 0; } /* shake rows have no stepper */
+  /* Narrow columns (see .wk-narrow in the App): the table has hit its horizontal-scroll floor,
+     so every meal column is exactly WK_MEAL_COL_W. Spending 56px of that on the stepper leaves
+     ~70px for the name and ellipsises nearly every dish, so the stepper drops to its own line
+     and the name takes the full width. The stepper stays absolutely positioned on purpose — the
+     cell must remain display:table-cell (flex on a <td> drops it out of the table layout and the
+     columns collapse into a stack), and it precedes the name in source order, so normal flow
+     would put it above the name. padding-bottom reserves the line it moves into. */
+  .wk-narrow .wk-meal-cell { padding-bottom: 34px; }
+  .wk-narrow .wk-meal-cell .wk-stepper { top: auto; bottom: 7px; right: auto; left: 10px; }
+  .wk-narrow .wk-name-row { padding-right: 0; }
   .wk-eaten-circle { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #c8d6d0; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; transition: all 0.15s; flex-shrink: 0; color: transparent; }
   .wk-eaten-circle.checked { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
   .wk-meal-name { font-size: 13px; font-weight: 500; color: #1a2e2a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: block; }
@@ -122,6 +144,8 @@
   .md-ing-table td { padding: 5px 0; border-bottom: 1px solid #f5f5f5; }
   .md-ing-table td:not(:first-child) { text-align: right; color: #5a7a6f; font-size: 13px; padding-left: 8px; }
   .md-spice-row { font-style: italic; color: #9b8b6e; }
+  .md-spice-row td { text-align: left; }
+  .md-qty-alt { white-space: nowrap; }
   .md-adj-note { color: #e67e22; font-size: 0.72rem; padding: 1px 0 3px; }
   .md-instr-toggle { background: none; border: none; color: #2d6a4f; cursor: pointer; font-size: 0.85rem; font-weight: 600; padding: 8px 0 4px; }
   .md-instr-toggle:hover { text-decoration: underline; }
@@ -796,6 +820,22 @@ function App() {
     }
     updateCols();
     var ro = new ResizeObserver(updateCols);
+    ro.observe(el);
+    return function() { ro.disconnect(); };
+  });
+  // Meal columns bottom out at WK_MEAL_COL_W; past that the table scrolls sideways rather than
+  // shrinking further. At that floor a column cannot fit a meal name AND the serving stepper on
+  // one line, so the cell switches to a stacked layout (.wk-narrow). Keyed on measured overflow
+  // rather than a viewport breakpoint, because whether columns are at the floor depends on the
+  // day's meal count as much as on screen width — 6 meals bottoms out even on a wide desktop.
+  var wkScrollRef = React.useRef(null);
+  var [wkNarrow, setWkNarrow] = React.useState(false);
+  React.useLayoutEffect(function() {
+    var el = wkScrollRef.current;
+    if (!el) return;
+    function updateNarrow() { setWkNarrow(el.scrollWidth > el.clientWidth + 1); }
+    updateNarrow();
+    var ro = new ResizeObserver(updateNarrow);
     ro.observe(el);
     return function() { ro.disconnect(); };
   });
@@ -1711,7 +1751,9 @@ function App() {
     var ud = getUnitDisplay(ing.name, ing.grams);
     if (ud) return ud;
     if (MEAT_INGREDIENTS.has(ing.name)) {
-      return ing.grams + "g (" + round1(ing.grams / 28.3495) + " oz)";
+      // Keep the oz conversion as one unbreakable piece: a narrow column should break between
+      // the two units ("307g" / "(10.8 oz)"), not inside the parenthetical ("(10.8" / "oz)").
+      return <React.Fragment>{ing.grams}g <span className="md-qty-alt">({round1(ing.grams / 28.3495)} oz)</span></React.Fragment>;
     }
     return ing.grams + "g";
   }
@@ -1886,8 +1928,8 @@ function App() {
             // One extra column so a day already at the widest row still has somewhere to grow.
             // It is pinned narrow: an unsized column would be dealt a full meal slot's width.
             var totalCols = maxMeals + (anyCanAdd ? 1 : 0);
-            var WK_ADD_COL_W = 40;
-            return (<div className="wk-table-scroll"><table className="wk-table" style={{minWidth: (56 + maxMeals * 190 + (anyCanAdd ? WK_ADD_COL_W : 0)) + "px"}}>
+            var WK_ADD_COL_W = 40, WK_MEAL_COL_W = 190;
+            return (<div className={"wk-table-scroll" + (wkNarrow ? " wk-narrow" : "")} ref={wkScrollRef}><table className="wk-table" style={{minWidth: (56 + maxMeals * WK_MEAL_COL_W + (anyCanAdd ? WK_ADD_COL_W : 0)) + "px"}}>
               <thead><tr><th></th>{Array.from({length: totalCols}, function(_, i) {
                 var isAddCol = i >= maxMeals;
                 return <th key={i} style={isAddCol ? {width: WK_ADD_COL_W} : null}>{isAddCol ? "" : "Meal " + (i + 1)}</th>;
@@ -2345,7 +2387,10 @@ function App() {
                       {ing.adjustment && <tr><td colSpan={6}><div className="md-adj-note">{"\u26A0\uFE0F"} {ing.adjustment}</div></td></tr>}
                     </React.Fragment>);
                   })}
-                  {spiceIngs.length > 0 && <tr className="md-spice-row"><td>{spiceIngs.map(function(s){return s.name;}).join(", ")}</td><td>{"\u2014"}</td><td>{"\u2014"}</td><td>{"\u2014"}</td><td>{"\u2014"}</td><td>{"\u2014"}</td></tr>}
+                  {/* Spices are zero-macro by definition, so the five em-dash cells carried no
+                      information and squeezed the name list into the narrow first column \u2014
+                      eight wrapped lines on a phone. One full-width cell instead. */}
+                  {spiceIngs.length > 0 && <tr className="md-spice-row"><td colSpan={6}>{spiceIngs.map(function(s){return s.name;}).join(", ")}</td></tr>}
                 </tbody>
               </table>
               {cookData && cookData.steps && (<>

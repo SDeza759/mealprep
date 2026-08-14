@@ -13,7 +13,7 @@ Entry: `index.html`. Path: `/Users/sebas/Desktop/MealPrep/`.
 
 ## File Map
 - `index.html` — React App: all UI, weekly table, meal/swap modals, settings, stats; `MEAT_INGREDIENTS` Set.
-- `data.js` — pure data: `INGREDIENT_REGISTRY` (104, USDA raw/100g), `RECIPES` (139, grams-only),
+- `data.js` — pure data: `INGREDIENT_REGISTRY` (103, USDA raw/100g), `RECIPES` (139, grams-only),
   `RECIPE_SPICE_OVERRIDES`, `RECIPE_COOKING_DATA`, `UNIT_INGREDIENTS`, `INGREDIENT_CATEGORIES`, `DAYS_NAMES`.
 - `algorithm.js` — `generatePlan`, `adjustDayMeals` (solver), nested `selectVariant`/`comboFeasible`,
   `initializeData`, exported mutable `state` (`solverDiagnostics`, `recipeRotation`).
@@ -31,6 +31,14 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
 - **No nuts, anywhere.** `Peanuts` was removed from the registry and from 5 recipes in S11. Do not
   reintroduce any nut — including pecans/walnuts, which are otherwise traditional in Aji de Gallina and
   Tallarines Verdes.
+- **No olives.** `Black Olives` was removed from the registry, from `INGREDIENT_CATEGORIES`, and from
+  the 2 recipes that used it (Aji de Gallina, Causa Limena — 15g garnish each) in S13. User dislikes
+  them. `Olive Oil` is unrelated and stays — don't let a careless grep take it out.
+- **These preferences outrank authenticity.** Both removals hit the same two research-backed Peruvian
+  dishes, where walnuts and black olives are genuinely traditional garnishes. That is expected and
+  correct: the "Peruvian recipes are research-backed" decision below governs how a dish is built, not
+  whether a banned ingredient survives. Drop the ingredient, keep everything else about the dish, and
+  edit the affected `RECIPE_COOKING_DATA` step so it doesn't name what is no longer in the recipe.
 - **`Pesto Sauce` and `Granola` are nut-free-brand-only** (S12, user's call): both stay in the registry,
   each carrying a comment on its line saying so — nut-free pesto (no pine nuts) and oat/seed granola.
   They are single registry rows for packaged products, so the data cannot express "this jar has nuts";
@@ -221,3 +229,8 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
   variant selection into `handleSwap`, and rendered `variantLabel` in the detail modal — it had been
   stored on every meal since S6 and displayed nowhere. Verified swap, add-meal, the variant path and
   group propagation in-browser; 700/700 + 7000/7000, 139/139.
+  Backlog pass: dropped the dead `UNIT_INGREDIENTS` keys (10→8); found the `4C+4P+9F > cal` warning
+  already implemented and stricter than specified (warns on any pct sum ≠ 100 and disables Generate)
+  — and wrong as literally written, since fat rounds to 1dp and the shipped defaults give 2000.4 > 2000.
+  Removed `Black Olives` app-wide per user preference (registry 104→103; garnish in the 2 Peruvian
+  dishes, ~17 cal each, so no macro impact). `--seed=N` deferred with reasoning recorded.

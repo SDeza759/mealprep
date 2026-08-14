@@ -38,6 +38,19 @@
   .sd-dpill.dp-selected { border-color: #2d6a4f; box-shadow: 0 0 0 2px rgba(45,106,79,0.3); }
   .sd-dpill.dp-excluded { opacity: 0.45; background: #f3f3f3; border-color: #e0e0e0; }
   .sd-dpill.dp-excluded .dp-name { color: #999; }
+  /* Meals-per-day: one card per planning unit (a group, or a single ungrouped day) */
+  .sd-mealrow { border-top: 1px solid #e0e8e4; margin-top: 12px; padding-top: 10px; }
+  .sd-label-hint { font-size: 0.68rem; font-weight: 500; color: #8a9a95; text-transform: none; letter-spacing: 0; margin-left: 6px; }
+  .sd-mc-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .mc-card { display: flex; align-items: center; gap: 8px; padding: 5px 7px 5px 6px; border-radius: 8px; border: 1.5px solid #d8f3dc; background: #f7faf8; min-width: 0; }
+  .mc-tag { display: flex; flex-direction: column; min-width: 0; }
+  .mc-tag-name { font-size: 0.75rem; font-weight: 700; color: #2d6a4f; line-height: 1.15; }
+  .mc-tag-days { font-size: 0.58rem; font-weight: 600; color: #8a9a95; line-height: 1.15; margin-top: 1px; white-space: nowrap; }
+  .mc-stepper { display: flex; align-items: center; gap: 1px; background: #fff; border: 1px solid #d8e6e0; border-radius: 6px; overflow: hidden; }
+  .mc-stepper button { width: 20px; height: 22px; border: none; background: #fff; color: #2d6a4f; font-size: 0.85rem; font-weight: 700; line-height: 1; cursor: pointer; padding: 0; transition: background 0.12s; }
+  .mc-stepper button:hover:not(:disabled) { background: #e8f5e9; }
+  .mc-stepper button:disabled { color: #cbd5d1; cursor: default; }
+  .mc-stepper .mc-val { min-width: 15px; text-align: center; font-size: 0.76rem; font-weight: 700; color: #1b4332; }
   .sd-row2 { border-top: 1px solid #e0e8e4; margin-top: 12px; padding-top: 10px; }
   .sd-save-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .sd-save-row input { padding: 4px 8px; height: 30px; font-size: 13px; border: 1.5px solid #c8d6d0; border-radius: 6px; outline: none; flex: 1; min-width: 120px; }
@@ -46,7 +59,10 @@
   .sd-saved-item .sp-name { font-weight: 600; font-size: 0.82rem; }
   .sd-saved-item .sp-meta { font-size: 0.72rem; color: #6b7f7a; margin-left: 6px; }
   .sd-saved-item .sp-actions { display: flex; gap: 4px; flex-shrink: 0; }
-  .wk-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #d8e0dc; border-radius: 12px; overflow: hidden; background: #fff; margin-bottom: 16px; table-layout: fixed; }
+  /* Scrolls sideways once the day has enough meals that fixed columns would crush the names.
+     Below ~4 meals the min-width stays under the container, so nothing changes visually. */
+  .wk-table-scroll { overflow-x: auto; margin-bottom: 16px; }
+  .wk-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #d8e0dc; border-radius: 12px; overflow: hidden; background: #fff; table-layout: fixed; }
   .wk-table th { font-size: 0.78rem; font-weight: 700; color: #5a7a6f; padding: 8px 10px; text-align: left; background: #f0f4f3; border-bottom: 1px solid #d8e0dc; }
   .wk-table th:not(:last-child) { border-right: 0.5px solid #e0e8e4; }
   .wk-table th:first-child, .wk-table td:first-child { width: 56px; }
@@ -70,6 +86,14 @@
   .wk-stepper button:hover { background: #d8e0dc; }
   .wk-stepper .wk-sv { padding: 1px 4px; font-weight: 600; color: #2d6a4f; min-width: 16px; text-align: center; background: #fff; font-size: 11px; }
   .wk-empty-cell { text-align: center; color: #c8d6d0; font-size: 1.1rem; vertical-align: middle; }
+  .wk-noday-cell { color: #a8b8b2; font-size: 0.78rem; font-style: italic; vertical-align: middle; }
+  /* "+ Add meal" occupies the day's next free slot — a dashed outline reads as an open slot
+     rather than competing with the filled meal cells next to it. */
+  /* The add affordance gets its own narrow, fixed-width column (see WK_ADD_COL_W) so it never
+     consumes a full meal slot — table-layout:fixed would otherwise size it like a meal column. */
+  .wk-add-cell { padding: 4px; vertical-align: middle; text-align: center; border-right: none; }
+  .wk-add-btn { width: 26px; height: 26px; padding: 0; line-height: 1; border: 1px dashed #cbdcd5; border-radius: 6px; background: transparent; color: #9aada7; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .wk-add-btn:hover { border-color: #2d6a4f; color: #2d6a4f; background: #f0f7f3; }
   .wk-shake-cell { background: linear-gradient(135deg, #EEEDFE, #E6F1FB); border: 1.5px solid #AFA9EC; border-radius: 0; cursor: default; }
   .wk-shake-cell:hover { background: linear-gradient(135deg, #EEEDFE, #E6F1FB); }
   .wk-shake-cell .wk-meal-name { color: #5b21b6; }
@@ -383,7 +407,7 @@ function spiceDisplay(grams) {
 var MEAT_INGREDIENTS = new Set([
   "Chicken Breast", "Chicken Thigh", "Turkey Breast", "Duck Breast", "Duck Leg",
   "Ground Beef (lean)", "Ground Beef (80% lean)", "Beef Sirloin",
-  "Pork Shoulder", "Pork Loin", "Pork Belly",
+  "Pork Loin", "Pork Belly",
   "Ground Lamb",
   "Salmon Fillet", "Cod", "Ahi Tuna", "Shrimp"
 ]);
@@ -1092,13 +1116,35 @@ function App() {
   var [excludedDays, setExcludedDays] = React.useState(function() {
     try { var saved = JSON.parse(localStorage.getItem("mealprep_daygroups") || "null"); return saved && saved.excluded ? saved.excluded : []; } catch(e) { return []; }
   });
+  // Meals to generate, keyed by DAY index (not group index — group indices shift when groups
+  // merge/split, day indices never do). Grouped days are kept in sync so a group reads as one value.
+  var [mealCounts, setMealCounts] = React.useState(function() {
+    try { var saved = JSON.parse(localStorage.getItem("mealprep_daygroups") || "null"); return saved && saved.mealCounts ? saved.mealCounts : {}; } catch(e) { return {}; }
+  });
   var [expandedDays, setExpandedDays] = React.useState({});
   var [expandedMeals, setExpandedMeals] = React.useState({});
   var [expandedInstructions, setExpandedInstructions] = React.useState({});
 
-  // Persist day grouping config to localStorage
-  function saveDayGroupConfig(groups, excluded) {
-    localStorage.setItem("mealprep_daygroups", JSON.stringify({ groups: groups, excluded: excluded }));
+  var DEFAULT_MEALS = 2, MIN_MEALS = 1, MAX_MEALS = 6;
+  // Stand-in for a day with no plan entry (excluded when the plan was generated) or one the
+  // user emptied. Read-only — never mutate it.
+  var EMPTY_DAY = { meals: [], totals: { calories: 0, carbs: 0, protein: 0, fat: 0 }, proteinShake: null };
+  function mealCountFor(d) { return mealCounts[d] || DEFAULT_MEALS; }
+
+  // `mealCounts` is sparse — it only holds days the user actually touched. generatePlan falls back
+  // to its legacy heuristic for any day it doesn't find, which would silently contradict the "2"
+  // the UI shows for untouched days. Densify before generating so what you see is what you get.
+  function resolvedMealCounts() {
+    var out = {};
+    for (var d = 0; d < 7; d++) out[d] = mealCountFor(d);
+    return out;
+  }
+
+  // Persist day grouping config to localStorage. `counts` is optional — omit to keep the current value.
+  function saveDayGroupConfig(groups, excluded, counts) {
+    localStorage.setItem("mealprep_daygroups", JSON.stringify({
+      groups: groups, excluded: excluded, mealCounts: counts === undefined ? mealCounts : counts
+    }));
   }
 
   // Day grouping helpers
@@ -1151,6 +1197,66 @@ function App() {
     return -1;
   }
 
+  // Days that share di's group in the CURRENT plan (includes di). Based on planGroups,
+  // the snapshot captured at generation time — matches the G-badges shown in the table, so
+  // a manual edit propagates to exactly the days the user sees grouped. Returns [di] when
+  // di is ungrouped or has no plan entry.
+  function planGroupMembers(di) {
+    var entry = planGroups && planGroups[di];
+    if (!entry || !plan) return [di];
+    var members = [];
+    for (var d = 0; d < 7; d++) {
+      var e = planGroups[d];
+      if (e && e.groupIndex === entry.groupIndex && plan[d]) members.push(d);
+    }
+    return members.length ? members : [di];
+  }
+
+  // Every day in a group must show one meal count. When groups form or merge, the members can
+  // disagree — the group's lowest day index wins (it's the one the user sees leftmost). Applying
+  // this to all groups is a no-op for groups that already agree, so it doubles as self-healing.
+  function normalizedCounts(groups) {
+    var next = Object.assign({}, mealCounts);
+    (groups || []).forEach(function(g) {
+      if (!g.length) return;
+      var lead = g.slice().sort(function(a, b) { return a - b; })[0];
+      var val = next[lead] || DEFAULT_MEALS;
+      g.forEach(function(d) { next[d] = val; });
+    });
+    return next;
+  }
+
+  // The units the user actually plans against: one entry per group, plus each ungrouped day.
+  // Excluded days are dropped (and a group with every member excluded disappears entirely).
+  function planningUnits() {
+    var units = [], seen = {};
+    dayGroups.forEach(function(g, gi) {
+      var active = g.filter(function(d) { return excludedDays.indexOf(d) === -1; });
+      if (!active.length) return;
+      active.forEach(function(d) { seen[d] = true; });
+      var lead = active.slice().sort(function(a, b) { return a - b; })[0];
+      units.push({ key: "g" + gi, name: "G" + (gi + 1), days: active, lead: lead,
+        daysLabel: active.map(function(d) { return DAYS_NAMES[d].slice(0, 3); }).join(" · "),
+        color: getGroupColor(gi) });
+    });
+    for (var d = 0; d < 7; d++) {
+      if (seen[d] || excludedDays.indexOf(d) !== -1) continue;
+      // No sub-label for a single day — the name already says everything.
+      units.push({ key: "d" + d, name: DAYS_NAMES[d].slice(0, 3), days: [d], lead: d, daysLabel: null, color: null });
+    }
+    units.sort(function(a, b) { return a.lead - b.lead; });
+    return units;
+  }
+
+  // Set a unit's meal count, applied to every day in the unit so a group stays one value.
+  function changeMealCount(unit, delta) {
+    var val = Math.max(MIN_MEALS, Math.min(MAX_MEALS, mealCountFor(unit.lead) + delta));
+    var next = Object.assign({}, mealCounts);
+    unit.days.forEach(function(d) { next[d] = val; });
+    setMealCounts(next);
+    saveDayGroupConfig(dayGroups, excludedDays, next);
+  }
+
   function handlePillClick(d) {
     if (excludedDays.indexOf(d) !== -1) return;
     if (selectedDay === null) {
@@ -1175,7 +1281,8 @@ function App() {
       } else {
         next = dayGroups.concat([[selectedDay, d].sort()]);
       }
-      setDayGroups(next); saveDayGroupConfig(next, excludedDays);
+      var nc = normalizedCounts(next);
+      setDayGroups(next); setMealCounts(nc); saveDayGroupConfig(next, excludedDays, nc);
       setSelectedDay(null);
     }
   }
@@ -1203,7 +1310,7 @@ function App() {
 
   function handleGenerate() {
     if (!pctValid || allDaysExcluded) return;
-    var p = generatePlan(calories, carbGrams, proteinGrams, fatGrams, ingredientOverrides, dayGroups, excludedDays);
+    var p = generatePlan(calories, carbGrams, proteinGrams, fatGrams, ingredientOverrides, dayGroups, excludedDays, null, resolvedMealCounts());
     var gs = {};
     for (var gdi = 0; gdi < 7; gdi++) {
       var gi = findDayGroup(gdi);
@@ -1263,8 +1370,11 @@ function App() {
       });
     });
 
-    var p = generatePlan(calories, carbGrams, proteinGrams, fatGrams, ingredientOverrides, dayGroups, excludedForCall, seed);
-    var newPlan = plan.map(function(day, di) { return regenSet[di] ? p[di] : day; });
+    var p = generatePlan(calories, carbGrams, proteinGrams, fatGrams, ingredientOverrides, dayGroups, excludedForCall, seed, resolvedMealCounts());
+    // Build explicitly over all 7 indices: generatePlan leaves excluded days as array HOLES, and
+    // Array.prototype.map skips holes — so regenerating a day that was previously excluded would
+    // silently drop the new day on the floor.
+    var newPlan = Array.from({length: 7}, function(_, di) { return regenSet[di] ? p[di] : plan[di]; });
     setPlan(newPlan);
     setRegenSel({});
     // Clear eaten/servings for regenerated days (their meals changed).
@@ -1335,30 +1445,57 @@ function App() {
     var scoreEntry = swapScores && swapScores[newRecipe.name];
     var swapIngs = (scoreEntry && scoreEntry.variantIngs) ? scoreEntry.variantIngs : newRecipe.ingredients;
     var swapVariantLabel = scoreEntry ? scoreEntry.variantLabel : null;
-    var newPlan = plan.map(function(day, dayI) {
-      if (dayI !== di) return day;
-      var newMeals = day.meals.map(function(meal, mealI) {
-        if (mealI !== mi) return { ...meal, ingredients: meal.ingredients.map(function(i) { return { ...i }; }) };
-        return { originalName: newRecipe.name, name: newRecipe.name, cuisine: newRecipe.cuisine, isBreakfast: newRecipe.tags.indexOf("breakfast") !== -1,
-          variantLabel: swapVariantLabel,
-          ingredients: swapIngs.map(function(i) { return Object.assign({}, i, { adjustment: null }); }), totalMacros: { ...newRecipe.totalMacros } };
-      });
-      var mealData = newMeals.map(function(m) {
-        var ings = m.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
-        applyIngredientOverrides(ings, ingredientOverrides);
-        return { recipe: { name: m.name, tags: m.isBreakfast ? ["breakfast"] : [], selectedVariant: m.variantLabel ? { label: m.variantLabel } : null }, ingredients: ings };
-      });
-      adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams);
-      var dayTotals = { calories:0, carbs:0, protein:0, fat:0 };
-      var rebuilt = mealData.map(function(md, idx) {
-        var mt = md.ingredients.filter(function(i){return !i.isSpice;}).reduce(function(a, i) { return { calories:a.calories+i.calories, carbs:a.carbs+i.carbs, protein:a.protein+i.protein, fat:a.fat+i.fat }; }, { calories:0, carbs:0, protein:0, fat:0 });
-        dayTotals.calories += mt.calories; dayTotals.carbs += mt.carbs; dayTotals.protein += mt.protein; dayTotals.fat += mt.fat;
-        return { originalName: idx === mi ? newRecipe.name : newMeals[idx].name, name: idx === mi ? newRecipe.name : newMeals[idx].name,
-          cuisine: idx === mi ? newRecipe.cuisine : newMeals[idx].cuisine, isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1,
-          variantLabel: idx === mi ? swapVariantLabel : (newMeals[idx].variantLabel || null),
-          ingredients: md.ingredients, totalMacros: mt };
-      });
-      return { ...day, meals: rebuilt, totals: { calories: round1(dayTotals.calories), carbs: round1(dayTotals.carbs), protein: round1(dayTotals.protein), fat: round1(dayTotals.fat) } };
+
+    // Grouped days must stay identical: build the swapped + re-solved day ONCE from the
+    // interacted day (di), then write a deep clone of it to every member of di's group.
+    // This also heals a group that had already diverged from earlier per-day edits.
+    var members = planGroupMembers(di);
+    var memberSet = {}; members.forEach(function(d) { memberSet[d] = true; });
+    var srcDay = plan[di] || EMPTY_DAY; // adding into a day that has no plan entry yet
+    var isAdd = !!swapTarget.isAdd;
+
+    var newMealObj = { originalName: newRecipe.name, name: newRecipe.name, cuisine: newRecipe.cuisine,
+      isBreakfast: newRecipe.tags.indexOf("breakfast") !== -1, variantLabel: swapVariantLabel,
+      ingredients: swapIngs.map(function(i) { return Object.assign({}, i, { adjustment: null }); }), totalMacros: { ...newRecipe.totalMacros } };
+    var cloneMeal = function(meal) { return { ...meal, ingredients: meal.ingredients.map(function(i) { return { ...i }; }) }; };
+    // Add appends at mi (== current length); swap replaces the meal at mi. Either way newMeals[mi]
+    // ends up holding the chosen recipe, so everything downstream is shared.
+    var newMeals = isAdd
+      ? srcDay.meals.map(cloneMeal).concat([newMealObj])
+      : srcDay.meals.map(function(meal, mealI) { return mealI === mi ? newMealObj : cloneMeal(meal); });
+    var mealData = newMeals.map(function(m) {
+      var ings = m.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
+      applyIngredientOverrides(ings, ingredientOverrides);
+      return { recipe: { name: m.name, tags: m.isBreakfast ? ["breakfast"] : [], selectedVariant: m.variantLabel ? { label: m.variantLabel } : null }, ingredients: ings };
+    });
+    adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams);
+    var dayTotals = { calories:0, carbs:0, protein:0, fat:0 };
+    var rebuilt = mealData.map(function(md, idx) {
+      var mt = md.ingredients.filter(function(i){return !i.isSpice;}).reduce(function(a, i) { return { calories:a.calories+i.calories, carbs:a.carbs+i.carbs, protein:a.protein+i.protein, fat:a.fat+i.fat }; }, { calories:0, carbs:0, protein:0, fat:0 });
+      dayTotals.calories += mt.calories; dayTotals.carbs += mt.carbs; dayTotals.protein += mt.protein; dayTotals.fat += mt.fat;
+      // newMeals[mi] already holds the chosen recipe on both paths, so read everything from it.
+      return { originalName: newMeals[idx].originalName || newMeals[idx].name, name: newMeals[idx].name,
+        cuisine: newMeals[idx].cuisine, isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1,
+        variantLabel: newMeals[idx].variantLabel || null,
+        ingredients: md.ingredients, totalMacros: mt };
+    });
+    // Re-evaluate the protein shake from scratch (mirrors generatePlan and handleRemoveMeal).
+    // Adding or swapping a meal moves protein a lot, so a stale shake would leave the day's
+    // displayed totals and its shake column disagreeing.
+    var proteinShake = null;
+    if (proteinGrams - dayTotals.protein > proteinGrams * 0.10) {
+      proteinShake = { scoops: 1, protein: 25, carbs: 3, fat: 1, calories: 120 };
+      dayTotals.calories += 120; dayTotals.carbs += 3; dayTotals.protein += 25; dayTotals.fat += 1;
+    }
+    var computedDay = Object.assign({}, srcDay, { meals: rebuilt, totals: { calories: round1(dayTotals.calories), carbs: round1(dayTotals.carbs), protein: round1(dayTotals.protein), fat: round1(dayTotals.fat) }, proteinShake: proteinShake });
+
+    // Array.from over all 7 indices, not plan.map — plan can be sparse (excluded days are holes)
+    // and map skips holes, which would drop the written day.
+    var newPlan = Array.from({length: 7}, function(_, dayI) {
+      if (!memberSet[dayI]) return plan[dayI];
+      var cloned = JSON.parse(JSON.stringify(computedDay));
+      cloned.day = dayI;
+      return cloned;
     });
     // Check if solver result is in zone
     var newDay = newPlan[di];
@@ -1366,43 +1503,73 @@ function App() {
       var t = newDay.totals;
       var cp = t.calories / calories * 100, bp = t.carbs / carbGrams * 100, pp = t.protein / proteinGrams * 100, fp = t.fat / fatGrams * 100;
       if (cp < 95 || cp > 105 || bp < 95 || bp > 105 || pp < 95 || pp > 105 || fp < 95 || fp > 105) {
-        setSwapWarning("This day's macros are outside the 95-105% target range. Consider swapping again or regenerating.");
+        setSwapWarning("This day's macros are outside the 95-105% target range" + (isAdd ? " after adding a meal." : ".") + " Consider swapping again or regenerating.");
         setTimeout(function() { setSwapWarning(null); }, 5000);
       }
     }
     setPlan(newPlan); setSwapTarget(null);
   }
 
+  // Open the recipe picker in "append" mode for day di. Reuses the swap modal + its solver-ranked
+  // scoring; handleSwap does the actual append. Capped at MAX_MEALS to match the generator's range.
+  function openAddMeal(di) {
+    if (!plan) return;
+    var count = plan[di] ? plan[di].meals.length : 0; // a day with no plan entry starts at 0
+    if (count >= MAX_MEALS) return;
+    setDetailModal(null); setDetailInstrOpen(false);
+    setSwapTarget({ dayIdx: di, mealIdx: count, isAdd: true });
+    setSwapSearch("");
+  }
+
   // Remove a meal from a day and re-solve the remaining meals to hit the daily targets.
+  // Removing the LAST meal is allowed and empties the day: no solve, zero totals, no shake.
+  // An empty day still renders its row (with the "+" affordance) and is skipped by the
+  // weekly averages, so clearing one day leaves the other six untouched.
   function handleRemoveMeal(di, mi) {
-    if (!plan || !plan[di] || plan[di].meals.length <= 1) return;
-    var newPlan = plan.map(function(day, dayI) {
-      if (dayI !== di) return day;
-      var remaining = day.meals.filter(function(_, idx) { return idx !== mi; });
-      var mealData = remaining.map(function(m) {
-        var ings = m.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
-        applyIngredientOverrides(ings, ingredientOverrides);
-        return { recipe: { name: m.name, tags: m.isBreakfast ? ["breakfast"] : [], selectedVariant: m.variantLabel ? { label: m.variantLabel } : null }, ingredients: ings };
-      });
-      adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams);
-      var dayTotals = { calories:0, carbs:0, protein:0, fat:0 };
-      var rebuilt = mealData.map(function(md, idx) {
-        var mt = md.ingredients.filter(function(i){return !i.isSpice;}).reduce(function(a, i) { return { calories:a.calories+i.calories, carbs:a.carbs+i.carbs, protein:a.protein+i.protein, fat:a.fat+i.fat }; }, { calories:0, carbs:0, protein:0, fat:0 });
-        dayTotals.calories += mt.calories; dayTotals.carbs += mt.carbs; dayTotals.protein += mt.protein; dayTotals.fat += mt.fat;
-        return { originalName: remaining[idx].name, name: remaining[idx].name, cuisine: remaining[idx].cuisine,
-          isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1, variantLabel: remaining[idx].variantLabel || null,
-          ingredients: md.ingredients, totalMacros: mt };
-      });
-      // Re-evaluate protein shake from scratch (mirrors generatePlan).
-      var proteinShake = null;
-      if (proteinGrams - dayTotals.protein > proteinGrams * 0.10) {
-        proteinShake = { scoops: 1, protein: 25, carbs: 3, fat: 1, calories: 120 };
-        dayTotals.calories += 120; dayTotals.carbs += 3; dayTotals.protein += 25; dayTotals.fat += 1;
-      }
-      return Object.assign({}, day, { meals: rebuilt, totals: { calories: round1(dayTotals.calories), carbs: round1(dayTotals.carbs), protein: round1(dayTotals.protein), fat: round1(dayTotals.fat) }, proteinShake: proteinShake });
+    if (!plan || !plan[di] || plan[di].meals.length < 1) return;
+
+    // Grouped days stay identical: remove + re-solve ONCE from the interacted day (di),
+    // then copy the result to every member of di's group (healing any prior divergence).
+    var members = planGroupMembers(di);
+    var memberSet = {}; members.forEach(function(d) { memberSet[d] = true; });
+    var srcDay = plan[di];
+
+    var remaining = srcDay.meals.filter(function(_, idx) { return idx !== mi; });
+    var mealData = remaining.map(function(m) {
+      var ings = m.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
+      applyIngredientOverrides(ings, ingredientOverrides);
+      return { recipe: { name: m.name, tags: m.isBreakfast ? ["breakfast"] : [], selectedVariant: m.variantLabel ? { label: m.variantLabel } : null }, ingredients: ings };
     });
+    var isNowEmpty = remaining.length === 0;
+    if (!isNowEmpty) adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams);
+    var dayTotals = { calories:0, carbs:0, protein:0, fat:0 };
+    var rebuilt = mealData.map(function(md, idx) {
+      var mt = md.ingredients.filter(function(i){return !i.isSpice;}).reduce(function(a, i) { return { calories:a.calories+i.calories, carbs:a.carbs+i.carbs, protein:a.protein+i.protein, fat:a.fat+i.fat }; }, { calories:0, carbs:0, protein:0, fat:0 });
+      dayTotals.calories += mt.calories; dayTotals.carbs += mt.carbs; dayTotals.protein += mt.protein; dayTotals.fat += mt.fat;
+      return { originalName: remaining[idx].name, name: remaining[idx].name, cuisine: remaining[idx].cuisine,
+        isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1, variantLabel: remaining[idx].variantLabel || null,
+        ingredients: md.ingredients, totalMacros: mt };
+    });
+    // Re-evaluate protein shake from scratch (mirrors generatePlan) — but never bolt a shake
+    // onto a day the user just emptied.
+    var proteinShake = null;
+    if (!isNowEmpty && proteinGrams - dayTotals.protein > proteinGrams * 0.10) {
+      proteinShake = { scoops: 1, protein: 25, carbs: 3, fat: 1, calories: 120 };
+      dayTotals.calories += 120; dayTotals.carbs += 3; dayTotals.protein += 25; dayTotals.fat += 1;
+    }
+    var computedDay = Object.assign({}, srcDay, { meals: rebuilt, totals: { calories: round1(dayTotals.calories), carbs: round1(dayTotals.carbs), protein: round1(dayTotals.protein), fat: round1(dayTotals.fat) }, proteinShake: proteinShake });
+
+    // Array.from over all 7 indices, not plan.map — plan can be sparse (excluded days are holes)
+    // and map skips holes, which would drop the written day.
+    var newPlan = Array.from({length: 7}, function(_, dayI) {
+      if (!memberSet[dayI]) return plan[dayI];
+      var cloned = JSON.parse(JSON.stringify(computedDay));
+      cloned.day = dayI;
+      return cloned;
+    });
+    // An emptied day is intentional, not off-target — don't nag about its zero macros.
     var newDay = newPlan[di];
-    if (newDay) {
+    if (newDay && !isNowEmpty) {
       var t = newDay.totals;
       var cp = t.calories / calories * 100, bp = t.carbs / carbGrams * 100, pp = t.protein / proteinGrams * 100, fp = t.fat / fatGrams * 100;
       if (cp < 95 || cp > 105 || bp < 95 || bp > 105 || pp < 95 || pp > 105 || fp < 95 || fp > 105) {
@@ -1410,30 +1577,67 @@ function App() {
         setTimeout(function() { setSwapWarning(null); }, 5000);
       }
     }
-    // Clear eaten/servings for this day (meal indices shifted).
+    // Clear eaten/servings for every affected day (meal indices shifted on all of them).
     var ne = Object.assign({}, eatenMeals), nsv = Object.assign({}, mealServings);
-    Object.keys(ne).forEach(function(key) { if (parseInt(key, 10) === di) delete ne[key]; });
-    Object.keys(nsv).forEach(function(key) { if (parseInt(key, 10) === di) delete nsv[key]; });
+    Object.keys(ne).forEach(function(key) { if (memberSet[parseInt(key, 10)]) delete ne[key]; });
+    Object.keys(nsv).forEach(function(key) { if (memberSet[parseInt(key, 10)]) delete nsv[key]; });
     setEatenMeals(ne); setMealServings(nsv);
     setDetailModal(null); setDetailInstrOpen(false); setPlan(newPlan);
   }
 
-  // Score swap candidates async when modal opens
+  // Set slot `si`'s serving count, propagated to every day in di's group so grouped days
+  // keep identical servings. `delta` is +1/-1 from di's current value; result is clamped ≥1.
+  function changeServing(di, si, delta) {
+    var members = planGroupMembers(di);
+    var base = mealServings[di + "-" + si] || 1;
+    var val = Math.max(1, base + delta);
+    var n = Object.assign({}, mealServings);
+    members.forEach(function(d) {
+      var k = d + "-" + si;
+      if (val === 1) delete n[k]; else n[k] = val;
+    });
+    setMealServings(n);
+  }
+
+  // Score swap candidates async when modal opens.
+  // Also powers "add meal": swapTarget.isAdd means mealIdx points one past the last meal, so the
+  // candidate is APPENDED rather than replacing a meal — every existing meal counts toward the
+  // day's used budget, and the solver re-balances all of them together with the newcomer.
   React.useEffect(function() {
     if (!swapTarget || !plan) { setSwapScores(null); setSwapShowIncompat(false); return; }
-    var di = swapTarget.dayIdx, mi = swapTarget.mealIdx;
-    var day = plan[di];
-    if (!day) return;
+    var di = swapTarget.dayIdx, mi = swapTarget.mealIdx, isAdd = !!swapTarget.isAdd;
+    var day = plan[di] || EMPTY_DAY;
+    if (!isAdd && !plan[di]) return; // only the add path is meaningful on a day with no entry
+    var slotCount = isAdd ? day.meals.length + 1 : day.meals.length;
     setSwapScores(null); setSwapShowIncompat(false);
     var results = {};
     var queue = RECIPES.slice();
     var BATCH = 4;
     var cancelled = false;
+    // Build a fresh solver input where slot `mi` holds the candidate. Called once per solver
+    // attempt so each attempt gets its own clones (the solver mutates in place).
+    function buildMealData(useIngs, candidate) {
+      var out = [];
+      for (var k = 0; k < slotCount; k++) {
+        var isTarget = (k === mi);
+        var ings = (isTarget ? useIngs : day.meals[k].ingredients).map(function(i) { return Object.assign({}, i, { adjustment: null }); });
+        applyIngredientOverrides(ings, ingredientOverrides);
+        out.push({
+          recipe: {
+            name: isTarget ? candidate.name : day.meals[k].name,
+            tags: isTarget ? candidate.tags : (day.meals[k].isBreakfast ? ["breakfast"] : [])
+          },
+          ingredients: ings
+        });
+      }
+      return out;
+    }
     function runBatch() {
       if (cancelled) return;
       var batch = queue.splice(0, BATCH);
       if (batch.length === 0) { setSwapScores(Object.assign({}, results)); return; }
-      // Compute remaining budget once per batch (same for all candidates)
+      // Compute remaining budget once per batch (same for all candidates).
+      // On the add path mi is out of range, so nothing is skipped — all meals count as "other".
       var otherCal = 0, otherCarbs = 0, otherPro = 0, otherFat = 0;
       day.meals.forEach(function(m, mealI) {
         if (mealI === mi) return;
@@ -1453,17 +1657,7 @@ function App() {
             selectVariant(temp, remCal, remCarbs, remPro, remFat);
             if (temp.selectedVariant) { useIngs = temp.selectedVariant.ingredients; variantLabel = temp.selectedVariant.label; }
           }
-          var mealData = day.meals.map(function(m, mealI) {
-            var ings;
-            if (mealI === mi) {
-              ings = useIngs.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
-            } else {
-              ings = m.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
-            }
-            applyIngredientOverrides(ings, ingredientOverrides);
-            var tags = mealI === mi ? candidate.tags : (m.isBreakfast ? ["breakfast"] : []);
-            return { recipe: { name: mealI === mi ? candidate.name : m.name, tags: tags }, ingredients: ings };
-          });
+          var mealData = buildMealData(useIngs, candidate);
           // Run solver twice — best of two attempts to reduce random-restart variance
           adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams, true);
           var totals1 = { calories: 0, carbs: 0, protein: 0, fat: 0 };
@@ -1473,17 +1667,7 @@ function App() {
             });
           });
           // Second attempt with fresh clones
-          var mealData2 = day.meals.map(function(m, mealI) {
-            var ings2;
-            if (mealI === mi) {
-              ings2 = useIngs.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
-            } else {
-              ings2 = m.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
-            }
-            applyIngredientOverrides(ings2, ingredientOverrides);
-            var tags2 = mealI === mi ? candidate.tags : (m.isBreakfast ? ["breakfast"] : []);
-            return { recipe: { name: mealI === mi ? candidate.name : m.name, tags: tags2 }, ingredients: ings2 };
-          });
+          var mealData2 = buildMealData(useIngs, candidate);
           adjustDayMeals(mealData2, calories, carbGrams, proteinGrams, fatGrams, true);
           var totals2 = { calories: 0, carbs: 0, protein: 0, fat: 0 };
           mealData2.forEach(function(md) {
@@ -1515,7 +1699,7 @@ function App() {
     return function() { cancelled = true; };
   }, [swapTarget]);
 
-  var groceryList = plan ? buildGroceryList(plan.map(function(day, di) { return excludedDays.indexOf(di) !== -1 ? null : day; }), mealServings) : [];
+  var groceryList = plan ? buildGroceryList(Array.from({length: 7}, function(_, di) { return excludedDays.indexOf(di) !== -1 ? null : (plan[di] || null); }), mealServings) : [];
   var filteredRecipes = RECIPES.filter(function(r) {
     var ms = !recipeSearch || r.name.toLowerCase().indexOf(recipeSearch.toLowerCase()) !== -1 || r.ingredients.some(function(i) { return i.name.toLowerCase().indexOf(recipeSearch.toLowerCase()) !== -1; });
     return ms && (recipeCuisine === "All" || r.cuisine === recipeCuisine);
@@ -1581,6 +1765,44 @@ function App() {
               {allDaysExcluded && <div className="warning" style={{marginTop:6,fontSize:'0.72rem',padding:'3px 8px'}}>All days excluded</div>}
             </div>
           </div>
+          {!allDaysExcluded && (function() {
+            var units = planningUnits();
+            if (!units.length) return null;
+            return (<div className="sd-mealrow">
+              <div className="sd-label">Meals Per Day<span className="sd-label-hint">grouped days share one setting</span></div>
+              <div className="sd-mc-list">
+                {units.map(function(u) {
+                  var val = mealCountFor(u.lead);
+                  var cardStyle = u.color ? { background: u.color.bg, borderColor: u.color.border } : {};
+                  return (<div className="mc-card" key={u.key} style={cardStyle}>
+                    <div className="mc-tag">
+                      <span className="mc-tag-name" style={u.color ? {color: u.color.text} : {}}>{u.name}</span>
+                      {u.daysLabel && <span className="mc-tag-days">{u.daysLabel}</span>}
+                    </div>
+                    <div className="mc-stepper">
+                      <button onClick={function(){changeMealCount(u, -1);}} disabled={val <= MIN_MEALS} title="Fewer meals">−</button>
+                      <span className="mc-val">{val}</span>
+                      <button onClick={function(){changeMealCount(u, 1);}} disabled={val >= MAX_MEALS} title="More meals">+</button>
+                    </div>
+                  </div>);
+                })}
+              </div>
+              {(function() {
+                // A single calm heads-up instead of per-card noise: at extreme counts the day's
+                // calories-per-meal falls outside what any recipe can scale to, so the solver
+                // can't land in [95%,105%] no matter which recipes it picks.
+                var strained = units.filter(function(u) {
+                  var per = calories / mealCountFor(u.lead);
+                  return per > 1100 || per < 350;
+                });
+                if (!strained.length) return null;
+                var names = strained.map(function(u) { return u.name + " (" + Math.round(calories / mealCountFor(u.lead)) + " cal/meal)"; });
+                return (<div className="warning" style={{marginTop:8,fontSize:'0.72rem',padding:'4px 8px'}}>
+                  {names.join(", ")} {"—"} that's a lot to ask of one sitting, so these days may land off-target.
+                </div>);
+              })()}
+            </div>);
+          })()}
           <div className="sd-row2">
             <div className="sd-save-row">
               <div className="sd-label" style={{marginBottom:0}}>Saved Plans</div>
@@ -1625,7 +1847,9 @@ function App() {
             <button onClick={function(){setSwapWarning(null);}} style={{background:'none',border:'none',color:'#856404',fontWeight:700,cursor:'pointer',fontSize:'1.1rem',lineHeight:1,padding:'0 4px'}}>{"\u00D7"}</button>
           </div>}
           {(function() {
-            var activeDays = plan.filter(function(day, di) { return day && excludedDays.indexOf(di) === -1; });
+            // Emptied days are skipped like excluded ones — otherwise a day the user cleared
+            // would divide the weekly averages down as if it were a 0-calorie day they ate.
+            var activeDays = plan.filter(function(day, di) { return day && day.meals.length > 0 && excludedDays.indexOf(di) === -1; });
             var nDays = activeDays.length;
             if (nDays === 0) return null;
             var sum = { cal: 0, carbs: 0, pro: 0, fat: 0 };
@@ -1645,14 +1869,32 @@ function App() {
             </div>);
           })()}
           {(function() {
-            var maxMeals = 0;
-            plan.forEach(function(day, di) { if (day && excludedDays.indexOf(di) === -1) { var total = day.meals.length + (day.proteinShake ? 1 : 0); if (total > maxMeals) maxMeals = total; } });
-            if (maxMeals === 0) return null;
-            return (<table className="wk-table">
-              <thead><tr><th></th>{Array.from({length: maxMeals}, function(_, i) { return <th key={i}>Meal {i + 1}</th>; })}</tr></thead>
+            // Every non-excluded day gets a row, even one with no plan entry (a day that was
+            // excluded when the plan was generated). Otherwise re-including it later leaves it
+            // invisible — no checkbox to regenerate, no "+" to fill it.
+            var activeDayIdx = [];
+            for (var ad = 0; ad < 7; ad++) if (excludedDays.indexOf(ad) === -1) activeDayIdx.push(ad);
+            if (activeDayIdx.length === 0) return null;
+            var maxMeals = 0, anyCanAdd = false;
+            activeDayIdx.forEach(function(di) {
+              var day = plan[di] || EMPTY_DAY;
+              var total = day.meals.length + (day.proteinShake ? 1 : 0);
+              if (total > maxMeals) maxMeals = total;
+              if (day.meals.length < MAX_MEALS) anyCanAdd = true;
+            });
+            if (maxMeals === 0) maxMeals = 1; // keep one meal column so empty rows still have structure
+            // One extra column so a day already at the widest row still has somewhere to grow.
+            // It is pinned narrow: an unsized column would be dealt a full meal slot's width.
+            var totalCols = maxMeals + (anyCanAdd ? 1 : 0);
+            var WK_ADD_COL_W = 40;
+            return (<div className="wk-table-scroll"><table className="wk-table" style={{minWidth: (56 + maxMeals * 190 + (anyCanAdd ? WK_ADD_COL_W : 0)) + "px"}}>
+              <thead><tr><th></th>{Array.from({length: totalCols}, function(_, i) {
+                var isAddCol = i >= maxMeals;
+                return <th key={i} style={isAddCol ? {width: WK_ADD_COL_W} : null}>{isAddCol ? "" : "Meal " + (i + 1)}</th>;
+              })}</tr></thead>
               <tbody>
-                {plan.map(function(day, di) {
-                  if (!day || excludedDays.indexOf(di) !== -1) return null;
+                {activeDayIdx.map(function(di) {
+                  var day = plan[di] || EMPTY_DAY;
                   var pgEntry = planGroups && planGroups[di];
                   var dgc = pgEntry ? pgEntry.color : null;
                   var dgi = pgEntry ? pgEntry.groupIndex : -1;
@@ -1666,9 +1908,21 @@ function App() {
                       <div>{DAYS_NAMES[di].slice(0, 3)}</div>
                       {dgc && <div className="wk-glabel" style={{background: dgc.bg, color: dgc.text, border: '1px solid ' + dgc.border}}>G{dgi + 1}</div>}
                     </td>
-                    {Array.from({length: maxMeals}, function(_, si) {
+                    {Array.from({length: totalCols}, function(_, si) {
+                      // Every row's "+" lives in the same trailing narrow column, so the buttons
+                      // line up and a short row never spends a full meal column on one.
+                      if (si >= maxMeals) {
+                        return (<td className="wk-add-cell" key={si}>
+                          {day.meals.length < MAX_MEALS &&
+                            <button className="wk-add-btn" title={"Add a meal to " + DAYS_NAMES[di]} onClick={function(e){e.stopPropagation();openAddMeal(di);}}>+</button>}
+                        </td>);
+                      }
                       var slot = allSlots[si];
-                      if (!slot) return <td className="wk-meal-cell wk-empty-cell" key={si}>{"\u2014"}</td>;
+                      // First cell of an empty day says so, rather than reading as a broken row.
+                      if (!slot && si === 0 && day.meals.length === 0) {
+                        return <td className="wk-meal-cell wk-noday-cell" key={si}>No meals — select the day and regenerate, or use +</td>;
+                      }
+                      if (!slot) return <td className="wk-meal-cell wk-empty-cell" key={si}></td>;
                       if (slot._isShake) {
                         return (<td className="wk-meal-cell wk-shake-cell" key={si}>
                           <div className="wk-name-row"><span className="wk-meal-name">{slot.name}</span></div>
@@ -1679,9 +1933,9 @@ function App() {
                       var isEaten = !!eatenMeals[mealKey];
                       return (<td className="wk-meal-cell" key={si} onClick={function(){setDetailModal({dayIdx:di,mealIdx:si});setDetailInstrOpen(false);}}>
                         <div className="wk-stepper" onClick={function(e){e.stopPropagation();}}>
-                          <button onClick={function(){var k=di+"-"+si;var cur=mealServings[k]||1;if(cur>1){var n=Object.assign({},mealServings);n[k]=cur-1;if(n[k]===1)delete n[k];setMealServings(n);}}}>−</button>
+                          <button onClick={function(){changeServing(di, si, -1);}}>−</button>
                           <span className="wk-sv">{mealServings[mealKey] || 1}</span>
-                          <button onClick={function(){var k=di+"-"+si;var n=Object.assign({},mealServings);n[k]=(mealServings[k]||1)+1;setMealServings(n);}}>+</button>
+                          <button onClick={function(){changeServing(di, si, 1);}}>+</button>
                         </div>
                         <div className="wk-name-row">
                           <span className={"wk-eaten-circle" + (isEaten ? " checked" : "")} onClick={function(e){e.stopPropagation();toggleEaten(di, si);}}>{isEaten ? "\u2713" : ""}</span>
@@ -1697,7 +1951,7 @@ function App() {
                   </tr>);
                 })}
               </tbody>
-            </table>);
+            </table></div>);
           })()}
         </>)}
 
@@ -2069,9 +2323,9 @@ function App() {
                 <span className="md-macrobar-detail">C: {Math.round(meal.totalMacros.carbs)}g {"  "} P: {Math.round(meal.totalMacros.protein)}g {"  "} F: {Math.round(meal.totalMacros.fat)}g</span>
               </div>
               <span className="servings-ctrl">
-                <button onClick={function(){var k=di+"-"+mi;var cur=mealServings[k]||1;if(cur>1){var n=Object.assign({},mealServings);n[k]=cur-1;if(n[k]===1)delete n[k];setMealServings(n);}}}>−</button>
+                <button onClick={function(){changeServing(di, mi, -1);}}>−</button>
                 <span className="sv-val">{servings}</span>
-                <button onClick={function(){var k=di+"-"+mi;var n=Object.assign({},mealServings);n[k]=(mealServings[k]||1)+1;setMealServings(n);}}>+</button>
+                <button onClick={function(){changeServing(di, mi, 1);}}>+</button>
               </span>
             </div>
             <div className="md-body">
@@ -2101,7 +2355,7 @@ function App() {
             </div>
             <div className="md-actions">
               <button className="md-btn-swap" onClick={function(){setDetailModal(null);setDetailInstrOpen(false);setSwapTarget({dayIdx:di,mealIdx:mi});setSwapSearch("");}}>Swap meal</button>
-              {day.meals.length > 1 && <button className="md-btn-remove" onClick={function(){handleRemoveMeal(di, mi);}}>Remove meal</button>}
+              <button className="md-btn-remove" onClick={function(){handleRemoveMeal(di, mi);}}>Remove meal</button>
               <button className={"md-btn-fav" + (favorites[meal.originalName] ? " active" : "")} onClick={function(){toggleFavorite(meal.originalName);}}>{favorites[meal.originalName] ? "\u2605 Favorited" : "\u2606 Favorite"}</button>
               <button className={"md-btn-eaten" + (isEaten ? " active" : "")} onClick={function(){toggleEaten(di, mi);}}>{isEaten ? "Unmark eaten" : "Mark eaten \u2713"}</button>
             </div>
@@ -2122,8 +2376,8 @@ function App() {
         }
         return (<div className="modal-overlay" onClick={function(e){if(e.target===e.currentTarget)setSwapTarget(null);}}>
         <div className="modal">
-          <h3>Swap Recipe — {DAYS_NAMES[swapTarget.dayIdx]}, Meal {swapTarget.mealIdx+1}</h3>
-          <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:8}}>{swapScores ? "Ranked by macro fit. Solved macros show the full day's totals after swapping." : "Ranking recipes by macro fit..."}</p>
+          <h3>{swapTarget.isAdd ? "Add Meal" : "Swap Recipe"} — {DAYS_NAMES[swapTarget.dayIdx]}, Meal {swapTarget.mealIdx+1}</h3>
+          <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:8}}>{swapScores ? ("Ranked by macro fit. Solved macros show the full day's totals after " + (swapTarget.isAdd ? "adding, with every meal rescaled to fit." : "swapping.")) : "Ranking recipes by macro fit..."}</p>
           <input className="modal-search" placeholder="Search recipes..." value={swapSearch} onChange={function(e){setSwapSearch(e.target.value);}} autoFocus />
           {!swapScores && <div style={{textAlign:'center',padding:'24px 0',color:'#6b7f7a',fontSize:'0.9rem'}}>Scoring {RECIPES.length} recipes against day targets...</div>}
           {swapScores && <div style={{maxHeight:'50vh',overflowY:'auto'}}>

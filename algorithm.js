@@ -400,7 +400,10 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
 // macro fit + rotation, then one is selected via weighted random draw (τ=0.3).
 // This eliminates failure modes from sequential selection (two ultra-lean recipes,
 // two low-calorie recipes, etc.) because the FULL day is evaluated as a unit.
-function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, overrides, dayGroups, excludedDays, seed) {
+// mealCounts (optional): { dayIndex: n } — explicit meals-per-day chosen by the user in the UI.
+// When a slot's day has no entry (or the arg is omitted, as the Node harness does), the legacy
+// calorie/parity heuristic below is used instead, so harness results stay unchanged.
+function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, overrides, dayGroups, excludedDays, seed, mealCounts) {
   var days = new Array(7);
   var excluded = excludedDays || [];
 
@@ -710,8 +713,12 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
   for (var si = 0; si < slots.length; si++) {
     var slot = slots[si];
     var d = slot[0];
-    // Step 1: meals per day unchanged
-    var mealsPerDay = targetCal > 2200 ? 3 : (targetCal < 1500 ? 2 : (d % 2 === 0 ? 3 : 2));
+    // Step 1: meals per day — user's explicit choice wins; otherwise the legacy heuristic.
+    // A slot is a whole group, so mealCounts[d] (d = the group's first day) sets the group.
+    var userCount = mealCounts && mealCounts[d];
+    var mealsPerDay = (userCount && userCount >= 1)
+      ? Math.min(6, Math.floor(userCount))
+      : (targetCal > 2200 ? 3 : (targetCal < 1500 ? 2 : (d % 2 === 0 ? 3 : 2)));
 
     // Step 2: Generate 100 candidate combos (increased from 50 for better hard-rejection survival)
     var COMBO_COUNT = 100;
@@ -747,11 +754,13 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
 
     // FIX 2: Fallback quality floor. If best fallback is below 65% calories or
     // 55% protein, don't use it — force 3-meal retry instead. One retry only.
+    // Skipped when the user set the count explicitly: silently returning 3 meals to someone
+    // who asked for 2 reads as a bug. Those days surface via the off-target macro warning.
     if (scored.length === 0 && bestFallback) {
       var fbCal = bestFallback.macros.calories;
       var fbPro = bestFallback.macros.protein;
       var belowFloor = (targetCal > 0 && fbCal < targetCal * 0.65) || (targetProtein > 0 && fbPro < targetProtein * 0.55);
-      if (belowFloor && mealsPerDay < 3) {
+      if (belowFloor && mealsPerDay < 3 && !userCount) {
         // Re-run as 3-meal day
         mealsPerDay = 3;
         combos = [];

@@ -5,11 +5,9 @@ var UNIT_INGREDIENTS = {
   "Whole Wheat Tortilla": { unit: "tortilla", plural: "tortillas", gPerUnit: 35 },
   "Pita Bread": { unit: "pita", plural: "pitas", gPerUnit: 60 },
   "Whole Wheat Bread": { unit: "slice", plural: "slices", gPerUnit: 30 },
-  "Sub Roll": { unit: "roll", plural: "rolls", gPerUnit: 75 },
   "Lime": { unit: "lime", plural: "limes", gPerUnit: 15 },
   "Lemon": { unit: "lemon", plural: "lemons", gPerUnit: 15 },
-  "Banana": { unit: "banana", plural: "bananas", gPerUnit: 100 },
-  "Nori Seaweed": { unit: "sheet", plural: "sheets", gPerUnit: 2.5 }
+  "Banana": { unit: "banana", plural: "bananas", gPerUnit: 100 }
 };
 
 // ===== SHARED INGREDIENT REGISTRY =====

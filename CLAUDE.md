@@ -163,9 +163,15 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
 - **Pending audit review**: `audit/macro-audit.html` (S10) compares 45 packaged ingredients vs Amazon
   Fresh; user is reviewing keep/adjust per item. Open brand-variance candidates: Pesto Sauce,
   Cheddar/Mozzarella (whole vs part-skim), Chickpeas (~17% cal), nonfat Greek Yogurt.
-- **Backlog**: UI warn when `4C+4P+9F > cal`; add `Wild Rice`/`Shallots` (Pan-Seared Duck uses fallbacks);
-  raise below-5-recipe ingredients (Cherry Sauce, Duck Breast/Leg, Hoisin, Cod, Flour, Kimchi, Paneer);
-  drop dead `UNIT_INGREDIENTS` keys `Sub Roll`/`Nori Seaweed`; optional `--seed=N` harness flag.
+- **Backlog** (data): add `Wild Rice`/`Shallots` (Pan-Seared Duck uses fallbacks); raise below-5-recipe
+  ingredients (Cherry Sauce, Duck Breast/Leg, Hoisin, Cod, Flour, Kimchi, Paneer). Both mean authoring
+  new recipes — agree the dish list with the user first, and mind the no-nuts rule.
+- **`--seed=N` harness flag — deferred, on purpose.** Only two `Math.random()` sites in `algorithm.js`
+  (solver restarts ~:273, recipe sampling ~:478), so it stays cheap to add. But its original motivation
+  (A/B-ing the swap dry-run zone) died with the dry run in S13, and the harness has returned 7000/7000
+  for many sessions — it is insurance against a failure that isn't happening, in the file where changes
+  ripple furthest. Add it the first time the harness drops below 100% and a week needs reproducing.
+  Note `generatePlan`'s existing `seed` arg is the partial-regen dedup seed, so pick another name.
 
 ## Session History
 - **Sessions 1–2**: Built app from scratch (combo-first algorithm, day grouping, stats). Data-integrity

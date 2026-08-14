@@ -1,9 +1,10 @@
 # CLAUDE.md — Project Context
 
 ## Last Updated
-2026-08-14 — Session 12. S9–S11 merged to `main` and pushed. Mobile pass on the weekly table +
-detail modal (sticky day column, stepper no longer covers the meal name / favorite star,
-spice row spans full width). Nut composites resolved as nut-free-brand-only. 700/700 + 7000/7000.
+2026-08-14 — Sessions 12–13. S9–S11 merged to `main` and pushed. Mobile pass on the weekly table +
+detail modal. Nut composites resolved as nut-free-brand-only. Swap modal's compatible/incompatible
+scoring removed entirely — plain searchable list, which retires the S4 false-negative bug and
+uncovered that `selectVariant` had been throwing there all along. 700/700 + 7000/7000.
 
 ## Project Overview
 Multi-file HTML meal-prep optimizer ("Actual Size Optimizer"). Weekly plans vs macro targets
@@ -53,6 +54,17 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
   No cuisine-default spice system (removed S5).
 - **No swap guardrails**: swap modal does NOT enforce dedup or cuisine limit — manual swaps are free.
   Cuisine ≤2/wk and recipe dedup apply only during generation.
+- **The swap picker is an unranked list** (S13, user's call — reversed from S4): no macro-fit ranking,
+  no compatible/incompatible split, no per-candidate solver dry run. It shows every recipe, favorites
+  first then A–Z, searchable by name or cuisine, with each recipe's own macros. Any recipe is pickable;
+  the day re-solves after the pick and `swapWarning` reports afterwards if it lands outside [95,105].
+  This is what retired the S4 false-negative bug — the dry run's non-determinism was the cause, so the
+  fix was deleting the dry run, not seeding it. Don't reintroduce pre-filtering into this modal.
+- **`selectVariant` is module-scope in `algorithm.js` and exported** (S13). It used to be nested inside
+  `generatePlan` while `index.html` called it anyway; the ReferenceError was swallowed by the scoring
+  loop's try/catch, so Shawarma Bowl — the only variant recipe — silently scored "incompatible" in
+  every swap for ~9 sessions. It's pure (closes over nothing), so module scope is safe. Keep it there:
+  `handleSwap` needs it, because a recipe with a `variants` array has no usable base.
 - **Partial regen** (`handleRegenerateSelected`): calls `generatePlan` with `excludedDays`=all non-selected
   days, merges returned days. Optional `seed` ({recipeNames,cuisineCounts}) pre-seeds week trackers from kept
   days so rerolls don't duplicate them. Grouped days reroll as a unit.
@@ -80,8 +92,11 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
 - **Pre-filter is intentionally loose** (e.g. 110% cal ceiling on protein path). Too strict caused a S3
   regression to 91.9%. Run validator after touching it.
 - **Module `state`**: mutate in place (`arr.length=0`), never rebind from outside, or browser/harness diverge.
-- **Swap dry-run scoring**: clones data (must not mutate plan); runs solver 2× per candidate; failure → score
-  99 (incompatible). Known false negatives (see What to Do Next).
+- **A swallowed exception hid a bug for 9 sessions**: the S4 swap dry-run scored each candidate inside a
+  `try/catch` whose `catch` assigned score 99 — the same value meaning "incompatible". A plain
+  ReferenceError was therefore indistinguishable from a genuinely infeasible recipe, which is how
+  `selectVariant` being out of scope went unnoticed from S4 to S13. The scoring is gone, but the lesson
+  stands: never let a catch-all map "the code broke" onto a meaningful domain value.
 - **Add-meal rides on the swap modal**: `swapTarget.isAdd` sets `mealIdx = day.meals.length` (one past the
   end), so the candidate is appended and every existing meal counts as used budget. Both paths leave
   `newMeals[mi]` holding the chosen recipe — keep that invariant, everything downstream depends on it.
@@ -141,8 +156,10 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
   *live re-check on rotate/resize* is the one path never exercised — only the measure-on-render path was.
   Rotate a phone with a 5–6 meal day and confirm `.wk-narrow` toggles. Also untested: real touch
   scrolling of the weekly table, and whether the pinned day column feels right under a thumb.
-- **Swap false negatives** (since S4): solver non-determinism flags workable recipes incompatible. Add
-  seeded-RNG mode + A/B the dry-run zone width ([95,105] vs [93,107]).
+- **Variant labels now render only in the detail modal.** S13 surfaced `variantLabel` there (it had
+  been stored by both `generatePlan` and `handleSwap` since S6 but displayed nowhere). The weekly-table
+  cell and grocery list still don't show it — decide whether "Shawarma Bowl" needs its variant on the
+  table too, where horizontal space is already tight on a phone.
 - **Pending audit review**: `audit/macro-audit.html` (S10) compares 45 packaged ingredients vs Amazon
   Fresh; user is reviewing keep/adjust per item. Open brand-variance candidates: Pesto Sauce,
   Cheddar/Mozzarella (whole vs part-skim), Chickpeas (~17% cal), nonfat Greek Yogurt.
@@ -187,3 +204,14 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
   For testing, the app was served over http via a throwaway `.claude/serve.js` + `launch.json` — note
   `.claude/` is gitignored, so those are local-only and a fresh clone will need them recreated (a
   no-deps Node static server on :8777; `file://` won't do, the modules need an http origin).
+- **Session 13**: Gutted the swap modal's compatible/incompatible concept at the user's request —
+  no ranking, no dry run, just a searchable list (favorites first, then A–Z, each row showing the
+  recipe's own macros). This retires the S4 false-negative bug by deleting its cause rather than
+  seeding the RNG, and drops ~100 lines plus 278 solver runs per modal open, so the picker is now
+  instant instead of visibly "Scoring 139 recipes…". Removing the scoring exposed that its
+  `selectVariant` call had always thrown ReferenceError (the function was nested inside
+  `generatePlan`); the try/catch turned that into score 99, so Shawarma Bowl had been permanently
+  mislabelled incompatible since S4. Hoisted `selectVariant` to module scope and exported it, moved
+  variant selection into `handleSwap`, and rendered `variantLabel` in the detail modal — it had been
+  stored on every meal since S6 and displayed nowhere. Verified swap, add-meal, the variant path and
+  group propagation in-browser; 700/700 + 7000/7000, 139/139.

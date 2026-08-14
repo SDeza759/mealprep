@@ -800,8 +800,6 @@ function App() {
   var [detailModal, setDetailModal] = React.useState(null); // { dayIdx, mealIdx }
   var [detailInstrOpen, setDetailInstrOpen] = React.useState(false);
   var [swapSearch, setSwapSearch] = React.useState("");
-  var [swapScores, setSwapScores] = React.useState(null);
-  var [swapShowIncompat, setSwapShowIncompat] = React.useState(false);
   var [swapWarning, setSwapWarning] = React.useState(null);
   var [copyMsg, setCopyMsg] = React.useState("");
   var [saveName, setSaveName] = React.useState("");
@@ -1481,10 +1479,6 @@ function App() {
   function handleSwap(newRecipe) {
     if (!swapTarget || !plan) return;
     var di = swapTarget.dayIdx, mi = swapTarget.mealIdx;
-    // Use variant ingredients if scoring selected one
-    var scoreEntry = swapScores && swapScores[newRecipe.name];
-    var swapIngs = (scoreEntry && scoreEntry.variantIngs) ? scoreEntry.variantIngs : newRecipe.ingredients;
-    var swapVariantLabel = scoreEntry ? scoreEntry.variantLabel : null;
 
     // Grouped days must stay identical: build the swapped + re-solved day ONCE from the
     // interacted day (di), then write a deep clone of it to every member of di's group.
@@ -1493,6 +1487,27 @@ function App() {
     var memberSet = {}; members.forEach(function(d) { memberSet[d] = true; });
     var srcDay = plan[di] || EMPTY_DAY; // adding into a day that has no plan entry yet
     var isAdd = !!swapTarget.isAdd;
+
+    // Pick the variant here. The picker used to do this as a by-product of scoring every
+    // candidate; with scoring gone this is the only place it happens — and it is required, not an
+    // optimisation: selectVariant is variants-only, so a recipe carrying a `variants` array has no
+    // usable base and would otherwise be swapped in with placeholder ingredients.
+    // Budget = the day's targets minus what the other meals already spend. On the add path mi is
+    // one past the end, so nothing is skipped and every existing meal counts as used budget.
+    var swapIngs = newRecipe.ingredients, swapVariantLabel = null;
+    if (newRecipe.variants && newRecipe.variants.length > 0) {
+      var used = { cal: 0, carbs: 0, pro: 0, fat: 0 };
+      srcDay.meals.forEach(function(m, mealI) {
+        if (mealI === mi) return;
+        m.ingredients.forEach(function(i) {
+          if (!i.isSpice) { used.cal += i.calories; used.carbs += i.carbs; used.pro += i.protein; used.fat += i.fat; }
+        });
+      });
+      var tmp = { variants: newRecipe.variants, selectedVariant: null };
+      selectVariant(tmp, Math.max(1, calories - used.cal), Math.max(0.1, carbGrams - used.carbs),
+                         Math.max(0.1, proteinGrams - used.pro), Math.max(0.1, fatGrams - used.fat));
+      if (tmp.selectedVariant) { swapIngs = tmp.selectedVariant.ingredients; swapVariantLabel = tmp.selectedVariant.label; }
+    }
 
     var newMealObj = { originalName: newRecipe.name, name: newRecipe.name, cuisine: newRecipe.cuisine,
       isBreakfast: newRecipe.tags.indexOf("breakfast") !== -1, variantLabel: swapVariantLabel,
@@ -1550,8 +1565,8 @@ function App() {
     setPlan(newPlan); setSwapTarget(null);
   }
 
-  // Open the recipe picker in "append" mode for day di. Reuses the swap modal + its solver-ranked
-  // scoring; handleSwap does the actual append. Capped at MAX_MEALS to match the generator's range.
+  // Open the recipe picker in "append" mode for day di. Reuses the swap modal; handleSwap does the
+  // actual append. Capped at MAX_MEALS to match the generator's range.
   function openAddMeal(di) {
     if (!plan) return;
     var count = plan[di] ? plan[di].meals.length : 0; // a day with no plan entry starts at 0
@@ -1639,105 +1654,6 @@ function App() {
     setMealServings(n);
   }
 
-  // Score swap candidates async when modal opens.
-  // Also powers "add meal": swapTarget.isAdd means mealIdx points one past the last meal, so the
-  // candidate is APPENDED rather than replacing a meal — every existing meal counts toward the
-  // day's used budget, and the solver re-balances all of them together with the newcomer.
-  React.useEffect(function() {
-    if (!swapTarget || !plan) { setSwapScores(null); setSwapShowIncompat(false); return; }
-    var di = swapTarget.dayIdx, mi = swapTarget.mealIdx, isAdd = !!swapTarget.isAdd;
-    var day = plan[di] || EMPTY_DAY;
-    if (!isAdd && !plan[di]) return; // only the add path is meaningful on a day with no entry
-    var slotCount = isAdd ? day.meals.length + 1 : day.meals.length;
-    setSwapScores(null); setSwapShowIncompat(false);
-    var results = {};
-    var queue = RECIPES.slice();
-    var BATCH = 4;
-    var cancelled = false;
-    // Build a fresh solver input where slot `mi` holds the candidate. Called once per solver
-    // attempt so each attempt gets its own clones (the solver mutates in place).
-    function buildMealData(useIngs, candidate) {
-      var out = [];
-      for (var k = 0; k < slotCount; k++) {
-        var isTarget = (k === mi);
-        var ings = (isTarget ? useIngs : day.meals[k].ingredients).map(function(i) { return Object.assign({}, i, { adjustment: null }); });
-        applyIngredientOverrides(ings, ingredientOverrides);
-        out.push({
-          recipe: {
-            name: isTarget ? candidate.name : day.meals[k].name,
-            tags: isTarget ? candidate.tags : (day.meals[k].isBreakfast ? ["breakfast"] : [])
-          },
-          ingredients: ings
-        });
-      }
-      return out;
-    }
-    function runBatch() {
-      if (cancelled) return;
-      var batch = queue.splice(0, BATCH);
-      if (batch.length === 0) { setSwapScores(Object.assign({}, results)); return; }
-      // Compute remaining budget once per batch (same for all candidates).
-      // On the add path mi is out of range, so nothing is skipped — all meals count as "other".
-      var otherCal = 0, otherCarbs = 0, otherPro = 0, otherFat = 0;
-      day.meals.forEach(function(m, mealI) {
-        if (mealI === mi) return;
-        m.ingredients.forEach(function(i) { if (!i.isSpice) { otherCal += i.calories; otherCarbs += i.carbs; otherPro += i.protein; otherFat += i.fat; } });
-      });
-      var remCal = Math.max(1, calories - otherCal);
-      var remCarbs = Math.max(0.1, carbGrams - otherCarbs);
-      var remPro = Math.max(0.1, proteinGrams - otherPro);
-      var remFat = Math.max(0.1, fatGrams - otherFat);
-      for (var bi = 0; bi < batch.length; bi++) {
-        var candidate = batch[bi];
-        try {
-          // Select variant if available (use temp object to avoid mutating RECIPES)
-          var variantLabel = null, useIngs = candidate.ingredients;
-          if (candidate.variants && candidate.variants.length > 0) {
-            var temp = { variants: candidate.variants, selectedVariant: null };
-            selectVariant(temp, remCal, remCarbs, remPro, remFat);
-            if (temp.selectedVariant) { useIngs = temp.selectedVariant.ingredients; variantLabel = temp.selectedVariant.label; }
-          }
-          var mealData = buildMealData(useIngs, candidate);
-          // Run solver twice — best of two attempts to reduce random-restart variance
-          adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams, true);
-          var totals1 = { calories: 0, carbs: 0, protein: 0, fat: 0 };
-          mealData.forEach(function(md) {
-            md.ingredients.forEach(function(i) {
-              if (!i.isSpice) { totals1.calories += i.calories; totals1.carbs += i.carbs; totals1.protein += i.protein; totals1.fat += i.fat; }
-            });
-          });
-          // Second attempt with fresh clones
-          var mealData2 = buildMealData(useIngs, candidate);
-          adjustDayMeals(mealData2, calories, carbGrams, proteinGrams, fatGrams, true);
-          var totals2 = { calories: 0, carbs: 0, protein: 0, fat: 0 };
-          mealData2.forEach(function(md) {
-            md.ingredients.forEach(function(i) {
-              if (!i.isSpice) { totals2.calories += i.calories; totals2.carbs += i.carbs; totals2.protein += i.protein; totals2.fat += i.fat; }
-            });
-          });
-          // Pick best attempt (closest to targets)
-          var devOf = function(t) { return Math.pow((t.calories/calories-1),2) + Math.pow((t.carbs/carbGrams-1),2) + Math.pow((t.protein/proteinGrams-1),2) + Math.pow((t.fat/fatGrams-1),2); };
-          var totals = devOf(totals1) <= devOf(totals2) ? totals1 : totals2;
-          // Add protein shake if protein >10% below target (matches generatePlan safety net)
-          var proDeficit = proteinGrams - totals.protein;
-          if (proDeficit > proteinGrams * 0.10) {
-            totals = { calories: totals.calories + 120, carbs: totals.carbs + 3, protein: totals.protein + 25, fat: totals.fat + 1 };
-          }
-          totals = { calories: round1(totals.calories), carbs: round1(totals.carbs), protein: round1(totals.protein), fat: round1(totals.fat) };
-          var pcts = { cal: calories > 0 ? totals.calories / calories * 100 : 100, carbs: carbGrams > 0 ? totals.carbs / carbGrams * 100 : 100, pro: proteinGrams > 0 ? totals.protein / proteinGrams * 100 : 100, fat: fatGrams > 0 ? totals.fat / fatGrams * 100 : 100 };
-          var inZone = pcts.cal >= 95 && pcts.cal <= 105 && pcts.carbs >= 95 && pcts.carbs <= 105 && pcts.pro >= 95 && pcts.pro <= 105 && pcts.fat >= 95 && pcts.fat <= 105;
-          var devSum = Math.pow((pcts.cal - 100) / 100, 2) + Math.pow((pcts.carbs - 100) / 100, 2) + Math.pow((pcts.pro - 100) / 100, 2) + Math.pow((pcts.fat - 100) / 100, 2);
-          var addedShake = proDeficit > proteinGrams * 0.10;
-          results[candidate.name] = { totals: totals, pcts: pcts, inZone: inZone, score: devSum, variantLabel: variantLabel, variantIngs: variantLabel ? useIngs : null, shake: addedShake };
-        } catch(e) {
-          results[candidate.name] = { totals: { calories: 0, carbs: 0, protein: 0, fat: 0 }, pcts: { cal: 0, carbs: 0, pro: 0, fat: 0 }, inZone: false, score: 99, variantLabel: null, variantIngs: null };
-        }
-      }
-      setTimeout(runBatch, 0);
-    }
-    setTimeout(runBatch, 0);
-    return function() { cancelled = true; };
-  }, [swapTarget]);
 
   var groceryList = plan ? buildGroceryList(Array.from({length: 7}, function(_, di) { return excludedDays.indexOf(di) !== -1 ? null : (plan[di] || null); }), mealServings) : [];
   var filteredRecipes = RECIPES.filter(function(r) {
@@ -2353,6 +2269,11 @@ function App() {
               <div className="md-header-top">
                 <div className="md-header-left">
                   <span className="md-title">{meal.name}</span>
+                  {/* Variant recipes differ in ways that matter at the stove and in the cart
+                      (Shawarma Bowl: chicken breast + yogurt vs chicken thigh, no yogurt), so the
+                      name alone is ambiguous. Both generatePlan and handleSwap store this label;
+                      until now nothing rendered it. */}
+                  {meal.variantLabel && <span className="variant-tag">{meal.variantLabel}</span>}
                   <span className="cuisine-tag">{meal.cuisine}</span>
                 </div>
                 <button className="md-close" onClick={function(){setDetailModal(null);setDetailInstrOpen(false);}}>{"\u2715"}</button>
@@ -2409,51 +2330,51 @@ function App() {
       })()}
 
       {swapTarget && (function() {
-        var searched = RECIPES.filter(function(r) { return !swapSearch || r.name.toLowerCase().indexOf(swapSearch.toLowerCase()) !== -1 || r.cuisine.toLowerCase().indexOf(swapSearch.toLowerCase()) !== -1; });
-        var compatible = [], incompatible = [];
-        if (swapScores) {
-          searched.forEach(function(r) {
-            var s = swapScores[r.name];
-            if (s && s.inZone) compatible.push(r); else incompatible.push(r);
-          });
-          compatible.sort(function(a, b) { return (swapScores[a.name] ? swapScores[a.name].score : 99) - (swapScores[b.name] ? swapScores[b.name].score : 99); });
-          incompatible.sort(function(a, b) { return (swapScores[a.name] ? swapScores[a.name].score : 99) - (swapScores[b.name] ? swapScores[b.name].score : 99); });
-        }
+        // A plain, complete list. There is deliberately no macro-fit ranking and no compatible /
+        // incompatible split: that was a solver dry-run per candidate, and its non-determinism
+        // mislabelled workable recipes as incompatible (the S4 false-negative bug, removed S13).
+        // Every recipe is pickable, the day re-solves around the pick, and swapWarning reports
+        // afterwards if the result lands outside 95-105%. Favorites sort first, then alphabetical.
+        var q = swapSearch.toLowerCase();
+        var listed = RECIPES.filter(function(r) {
+          return !q || r.name.toLowerCase().indexOf(q) !== -1 || r.cuisine.toLowerCase().indexOf(q) !== -1;
+        }).slice().sort(function(a, b) {
+          var fa = favorites[a.name] ? 0 : 1, fb = favorites[b.name] ? 0 : 1;
+          return fa !== fb ? fa - fb : a.name.localeCompare(b.name);
+        });
+        var favCount = listed.filter(function(r) { return favorites[r.name]; }).length;
         return (<div className="modal-overlay" onClick={function(e){if(e.target===e.currentTarget)setSwapTarget(null);}}>
         <div className="modal">
           <h3>{swapTarget.isAdd ? "Add Meal" : "Swap Recipe"} — {DAYS_NAMES[swapTarget.dayIdx]}, Meal {swapTarget.mealIdx+1}</h3>
-          <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:8}}>{swapScores ? ("Ranked by macro fit. Solved macros show the full day's totals after " + (swapTarget.isAdd ? "adding, with every meal rescaled to fit." : "swapping.")) : "Ranking recipes by macro fit..."}</p>
-          <input className="modal-search" placeholder="Search recipes..." value={swapSearch} onChange={function(e){setSwapSearch(e.target.value);}} autoFocus />
-          {!swapScores && <div style={{textAlign:'center',padding:'24px 0',color:'#6b7f7a',fontSize:'0.9rem'}}>Scoring {RECIPES.length} recipes against day targets...</div>}
-          {swapScores && <div style={{maxHeight:'50vh',overflowY:'auto'}}>
-            {compatible.map(function(r, i) {
-              var s = swapScores[r.name];
-              return (<div className="modal-recipe" key={r.name} onClick={function(){handleSwap(r);}}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}>
-                  <span><span className="mr-name">{r.name}</span>{s.variantLabel && <span className="variant-tag" style={{marginLeft:6}}>{s.variantLabel}</span>} <span className="mr-cuisine">— {r.cuisine}</span></span>
-                  <span style={{color:'#2d6a4f',fontSize:'0.75rem',fontWeight:600,whiteSpace:'nowrap'}}>{"\u2713"} Fits</span>
-                </div>
-                <div className="mr-macros">Day totals: Cal: {round1(s.totals.calories)} ({Math.round(s.pcts.cal)}%) | C: {round1(s.totals.carbs)}g ({Math.round(s.pcts.carbs)}%) | P: {round1(s.totals.protein)}g ({Math.round(s.pcts.pro)}%) | F: {round1(s.totals.fat)}g ({Math.round(s.pcts.fat)}%){s.shake && <span style={{color:'#5b21b6',marginLeft:6}}>+ shake</span>}</div>
-              </div>);
-            })}
-            {incompatible.length > 0 && <div style={{marginTop:12}}>
-              <button className="btn btn-sm btn-secondary" style={{width:'100%',fontSize:'0.8rem'}} onClick={function(){setSwapShowIncompat(!swapShowIncompat);}}>
-                {swapShowIncompat ? "Hide" : "Show"} {incompatible.length} incompatible recipe{incompatible.length !== 1 ? "s" : ""}
-              </button>
-              {swapShowIncompat && incompatible.map(function(r) {
-                var s = swapScores[r.name];
-                return (<div className="modal-recipe" key={r.name} style={{opacity:0.55,cursor:'pointer',marginTop:8}} onClick={function(){handleSwap(r);}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}>
-                    <span><span className="mr-name">{r.name}</span>{s && s.variantLabel && <span className="variant-tag" style={{marginLeft:6,opacity:0.7}}>{s.variantLabel}</span>} <span className="mr-cuisine">— {r.cuisine}</span></span>
-                    <span style={{color:'#e67e22',fontSize:'0.72rem',fontWeight:600,whiteSpace:'nowrap'}}>May miss targets</span>
+          <p style={{fontSize:'0.82rem',color:'#6b7f7a',marginBottom:8}}>
+            {"Pick any recipe — the day re-solves around it" + (swapTarget.isAdd ? ", rescaling every meal to fit." : ".")}
+          </p>
+          <input className="modal-search" placeholder="Search by name or cuisine..." value={swapSearch} onChange={function(e){setSwapSearch(e.target.value);}} autoFocus />
+          <div style={{maxHeight:'50vh',overflowY:'auto'}}>
+            {listed.map(function(r, i) {
+              var isFav = !!favorites[r.name];
+              // One divider at the favorites/rest boundary, and only when both sides are non-empty.
+              var showDivider = favCount > 0 && i === favCount && favCount < listed.length;
+              return (<React.Fragment key={r.name}>
+                {showDivider && <div style={{borderTop:'1px solid #e0e8e4',margin:'10px 0 8px'}}></div>}
+                <div className="modal-recipe" onClick={function(){handleSwap(r);}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',gap:8}}>
+                    <span>
+                      {isFav && <span style={{color:'#f5c518',marginRight:4}}>{"★"}</span>}
+                      <span className="mr-name">{r.name}</span> <span className="mr-cuisine">— {r.cuisine}</span>
+                    </span>
+                    <span className="mr-cuisine" style={{whiteSpace:'nowrap'}}>{Math.round(r.totalMacros.calories)} cal</span>
                   </div>
-                  {s && <div className="mr-macros">Day totals: Cal: {round1(s.totals.calories)} ({Math.round(s.pcts.cal)}%) | C: {round1(s.totals.carbs)}g ({Math.round(s.pcts.carbs)}%) | P: {round1(s.totals.protein)}g ({Math.round(s.pcts.pro)}%) | F: {round1(s.totals.fat)}g ({Math.round(s.pcts.fat)}%)</div>}
-                </div>);
-              })}
-            </div>}
-            {compatible.length === 0 && incompatible.length === 0 && <div style={{padding:'16px 0',color:'#6b7f7a',textAlign:'center',fontSize:'0.88rem'}}>No recipes match your search.</div>}
-          </div>}
-          <div style={{marginTop:12,textAlign:'right'}}><button className="btn btn-sm btn-secondary" onClick={function(){setSwapTarget(null);}}>Cancel</button></div>
+                  <div className="mr-macros">C: {round1(r.totalMacros.carbs)}g | P: {round1(r.totalMacros.protein)}g | F: {round1(r.totalMacros.fat)}g</div>
+                </div>
+              </React.Fragment>);
+            })}
+            {listed.length === 0 && <div style={{padding:'16px 0',color:'#6b7f7a',textAlign:'center',fontSize:'0.88rem'}}>No recipes match your search.</div>}
+          </div>
+          <div style={{marginTop:12,display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}>
+            <span style={{fontSize:'0.78rem',color:'#9aa8a3'}}>{listed.length} of {RECIPES.length} recipes</span>
+            <button className="btn btn-sm btn-secondary" onClick={function(){setSwapTarget(null);}}>Cancel</button>
+          </div>
         </div>
       </div>);
       })()}

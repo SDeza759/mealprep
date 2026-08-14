@@ -394,6 +394,29 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
   return allMealData;
 }
 
+// Picks the variant whose macros best fit the remaining budget. Pure — closes over nothing — and
+// lives at module scope so the UI can reuse it when swapping a variant recipe into a day. It used
+// to be nested inside generatePlan; index.html called it anyway, inside a try/catch that swallowed
+// the resulting ReferenceError, which silently scored Shawarma Bowl (the only variant recipe) as
+// incompatible in every swap. Keep it exported.
+function selectVariant(recipe, remainingCal, remainingCarbs, remainingPro, remainingFat) {
+  recipe.selectedVariant = null;
+  if (!recipe.variants || recipe.variants.length === 0) return;
+  var bestV = null, bestDev = Infinity;
+  recipe.variants.forEach(function(v) {
+    var vm = v.totalMacros;
+    var devCal = remainingCal > 0 ? Math.abs(vm.calories - remainingCal) / remainingCal : 0;
+    var devCarbs = remainingCarbs > 0 ? Math.abs(vm.carbs - remainingCarbs) / remainingCarbs : 0;
+    var devPro = remainingPro > 0 ? Math.abs(vm.protein - remainingPro) / remainingPro : 0;
+    var devFat = remainingFat > 0 ? Math.abs(vm.fat - remainingFat) / remainingFat : 0;
+    var worstDev = Math.max(devCal, devCarbs, devPro, devFat);
+    var avgDev = (devCal + devCarbs + devPro + devFat) / 4;
+    var score = worstDev * 0.6 + avgDev * 0.4;
+    if (score < bestDev) { bestDev = score; bestV = v; }
+  });
+  recipe.selectedVariant = bestV;
+}
+
 // ===== COMBO-FIRST RECIPE SELECTION =====
 // Evaluates complete day combinations (2 or 3 recipes) before committing to any meal.
 // 50 random combos are sampled, hard-rejected if structurally incompatible, scored by
@@ -445,26 +468,6 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
 
   // Sample one valid combo of mealsPerDay recipes from the pool.
   // Hard exclusions: no duplicate recipe in same combo, cuisine ≤2/week, no same recipe in week.
-  // Select the best variant for a recipe based on remaining macro budget.
-  // If recipe has no variants, sets selectedVariant to null (backward compatible).
-  function selectVariant(recipe, remainingCal, remainingCarbs, remainingPro, remainingFat) {
-    recipe.selectedVariant = null;
-    if (!recipe.variants || recipe.variants.length === 0) return;
-    var bestV = null, bestDev = Infinity;
-    recipe.variants.forEach(function(v) {
-      var vm = v.totalMacros;
-      var devCal = remainingCal > 0 ? Math.abs(vm.calories - remainingCal) / remainingCal : 0;
-      var devCarbs = remainingCarbs > 0 ? Math.abs(vm.carbs - remainingCarbs) / remainingCarbs : 0;
-      var devPro = remainingPro > 0 ? Math.abs(vm.protein - remainingPro) / remainingPro : 0;
-      var devFat = remainingFat > 0 ? Math.abs(vm.fat - remainingFat) / remainingFat : 0;
-      var worstDev = Math.max(devCal, devCarbs, devPro, devFat);
-      var avgDev = (devCal + devCarbs + devPro + devFat) / 4;
-      var score = worstDev * 0.6 + avgDev * 0.4;
-      if (score < bestDev) { bestDev = score; bestV = v; }
-    });
-    recipe.selectedVariant = bestV;
-  }
-
   function sampleCombo(mealsPerDay) {
     var combo = [], names = {}, cuisines = {};
     // Track cumulative macros for variant selection during sampling
@@ -902,6 +905,7 @@ if (typeof module !== 'undefined' && module.exports) {
     applyIngredientOverrides,
     adjustDayMeals,
     generatePlan,
+    selectVariant,
     initializeData,
     state,
     get DEFAULT_MACROS_PER100() { return DEFAULT_MACROS_PER100; },

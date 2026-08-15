@@ -1,0 +1,92 @@
+
+Shape
+  recipes=139  registry=147 spiceRows=135 cookingRows=139
+  ok   recipe names unique
+  ok   no orphan cooking rows
+  ok   no orphan spice rows
+  ok   every recipe has cooking data
+  cuisines: American=24 Mexican=16 Japanese=16 Mediterranean=14 Indian=13 Middle Eastern=11 Italian=11 Korean=7 Peruvian=6 Thai=4 Caribbean=4 Brazilian=3 Spanish=3 Vietnamese=3 Chinese=2 French=2
+
+Name resolution
+  ok   every recipe ingredient resolves to the registry
+  FAIL spice names with no grocery category (land in "Other"): Water
+  note registry entries with no category: Water
+
+Orphans
+  FAIL registry entries no recipe or spice row references: Asian Pear, Bacon, Bean Sprouts, Blue Cheese, Breadcrumbs, Bulgur, Butter Lettuce, Canned Tuna, Cassava Flour, Celery, Clams, Cornstarch, Daikon, Doenjang, Dry Sherry, Fish Sauce, Flank Steak, Flour Tortilla, Gram Flour (Besan), Grape Leaves, Kale, Kidney Beans, Lamb Leg, Lamb Shoulder, Mirin, Mustard Greens, Nori, Ogo Seaweed, Orange, Palm Oil (Dendê), Parsley, Pork Shoulder, Ramen Noodles, Sake, Shallot, Shiitake Mushroom, Sugar, Tofu, Tonkatsu Sauce, Toor Dal, Tteok, Vegetable Oil, White Wine, Worcestershire Sauce
+  note registry entries reached only via spice rows (expected): Adobo, Bay Leaves, Black Pepper, Cumin, Oregano, Smoked Paprika, Thyme, Water
+
+Steps vs ingredients
+  FAIL ingredient never named in steps: Sushi Bowl (Chirashi) -> "Salmon Fillet"
+  FAIL ingredient never named in steps: Pulled Pork Sandwich -> "Whole Wheat Bread"
+  FAIL steps cook in a fat that is not an ingredient: Chicken Lettuce Wraps with Rice
+  ok   no numbered step prefixes
+
+Phase A data bugs
+  FAIL hard-coded cooking liquid: Miso Ramen — 3 cups
+  FAIL hard-coded cooking liquid: Lamb & Lentil Soup — 3 cups
+  FAIL hard-coded cooking liquid: Spaghetti alle Vongole — 1 cup
+  FAIL hard-coded cooking liquid: Tuscan White Bean Soup — 2 cups
+  FAIL hard-coded cooking liquid: Dal Tadka — 2.5 cups
+  FAIL hard-coded cooking liquid: Chicken Alfredo — 1 cup
+  FAIL hard-coded cooking liquid: Minestrone Soup — 3 cups
+  FAIL hard-coded cooking liquid: Doenjang Jjigae — 2 cups
+  FAIL hard-coded cooking liquid: Lamb Tagine — 1 cup
+  FAIL hard-coded cooking liquid: Asian Noodle Soup — 3 cups
+  FAIL hard-coded cooking liquid: Feijoada — 2 cups
+  FAIL hard-coded cooking liquid: Paella Mixta — 2 cups
+  FAIL hard-coded cooking liquid: Arroz con Pollo — 1.5 cups
+  FAIL hard-coded cooking liquid: Beef Pho — 3 cups
+  FAIL hard-coded cooking liquid: Chicken Pho — 3 cups
+  FAIL hard-coded cooking liquid: Duck Confit with Lentils — 2 cups
+  FAIL Spaghetti alle Vongole still lacks Clams
+  FAIL Thai Basil Chicken still lacks Basil
+  FAIL Stuffed Grape Leaves still lacks Grape Leaves
+  FAIL Picanha with Farofa still lacks Cassava Flour
+
+Spices
+  ok   every savory recipe has spices
+  note savory recipe with no Salt: Ropa Vieja
+
+MEAT_INGREDIENTS
+  ok   MEAT_INGREDIENTS covers every Meat & Seafood registry entry
+
+Near-duplicate recipes
+  note high ingredient overlap: 70%  Classic Oatmeal with Berries (American)  ~  Protein Pancakes (American)
+  note high ingredient overlap: 80%  Classic Oatmeal with Berries (American)  ~  Smoothie Bowl (American)
+  note high ingredient overlap: 70%  Greek Yogurt Parfait (Mediterranean)  ~  Smoothie Bowl (American)
+  note high ingredient overlap: 72%  Protein Pancakes (American)  ~  Smoothie Bowl (American)
+  note high ingredient overlap: 72%  Protein Pancakes (American)  ~  French Toast (American)
+  note high ingredient overlap: 71%  Chilaquiles (Mexican)  ~  Huevos Rancheros (Mexican)
+  note high ingredient overlap: 71%  Teriyaki Salmon Bowl (Japanese)  ~  Salmon Teriyaki Bento (Japanese)
+  note high ingredient overlap: 70%  Poke Bowl (Japanese)  ~  Sushi Bowl (Chirashi) (Japanese)
+  note high ingredient overlap: 75%  Egg Fried Rice (American)  ~  Chicken Fried Rice (American)
+  note high ingredient overlap: 77%  Chicken Souvlaki Plate (Mediterranean)  ~  Lamb Gyro (Mediterranean)
+  note high ingredient overlap: 70%  Turkey Stir Fry with Rice (Japanese)  ~  Five-Spice Duck Stir Fry with Rice (Chinese)
+
+Ingredient coverage
+  22 registry entries appear in fewer than 5 recipes:
+    1x  Basil
+    1x  Cherry Sauce
+    1x  Cod
+    1x  Duck Breast
+    1x  Ground Beef (lean)
+    1x  Hoisin Sauce
+    1x  Mayonnaise
+    1x  Queso Fresco
+    1x  Sea Bass
+    2x  Evaporated Milk
+    2x  Tomato
+    3x  Flour
+    3x  Mango
+    3x  Mozzarella Cheese
+    3x  Pesto Sauce
+    3x  Sweet Potato Noodles
+    4x  Aji Amarillo Paste
+    4x  Cabbage
+    4x  Duck Leg
+    4x  Kimchi
+    4x  Maple Syrup
+    4x  Paneer
+
+25 FAILURE(S)

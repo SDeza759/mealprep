@@ -16,6 +16,28 @@ const state = {
   recipeRotation: { counts: {}, totalSlots: 0 },
 };
 
+// ===== RANDOMNESS =====
+// Every random draw in this file goes through rng(), so a run can be made reproducible.
+// Unseeded (the default, and always the case in the browser) it IS Math.random, so behaviour
+// is unchanged. setRandomSeed(n) swaps in a deterministic PRNG: the same seed replays the exact
+// same plan, which is the only way to re-examine a week the harness reported as failing.
+//
+// NOTE: deliberately NOT called `seed` — `generatePlan`'s 8th arg already uses that name for the
+// partial-regen dedup seed, which is an unrelated concept.
+var _rng = Math.random;
+// mulberry32: small, fast, well-distributed. Not cryptographic — it doesn't need to be.
+function setRandomSeed(n) {
+  if (n === null || n === undefined) { _rng = Math.random; return; }
+  var a = (n >>> 0) || 1;
+  _rng = function() {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function rng() { return _rng(); }
+
 // ===== UNIT INGREDIENT HELPERS =====
 function isUnitBased(name) { return !!UNIT_INGREDIENTS[name]; }
 function getUnitCount(name, grams) {
@@ -270,7 +292,7 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
   if (!converged(bestMacros, 0.05)) {
     for (var restart = 0; restart < 5; restart++) {
       var rand = [];
-      for (var ri = 0; ri < K; ri++) rand.push(0.5 + Math.random() * 2.5);
+      for (var ri = 0; ri < K; ri++) rand.push(0.5 + rng() * 2.5);
       var tryS = solve(rand);
       var tryM = computeMacros(tryS);
       var tryL = loss(tryM);
@@ -440,16 +462,12 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
   for (var dd = 0; dd < 7; dd++) { if (!assigned[dd] && excluded.indexOf(dd) === -1) slots.push([dd]); }
   slots.sort(function(a, b) { return a[0] - b[0]; });
 
-  // Cuisine hard limit: max 2 per cuisine per week
-  var weekCuisineCounts = {};
-
   // Track recipes used this week (for same-recipe-different-day exclusion)
   var weekRecipeNames = {};
 
   // Optional seed: pre-populate week trackers from kept days when regenerating a
-  // subset of the week, so regenerated days still avoid duplicating kept recipes/cuisines.
+  // subset of the week, so regenerated days still avoid duplicating kept recipes.
   if (seed) {
-    if (seed.cuisineCounts) Object.keys(seed.cuisineCounts).forEach(function(c) { weekCuisineCounts[c] = seed.cuisineCounts[c]; });
     if (seed.recipeNames) Object.keys(seed.recipeNames).forEach(function(n) { weekRecipeNames[n] = seed.recipeNames[n]; });
   }
 
@@ -467,18 +485,18 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
   }
 
   // Sample one valid combo of mealsPerDay recipes from the pool.
-  // Hard exclusions: no duplicate recipe in same combo, cuisine ≤2/week, no same recipe in week.
+  // Hard exclusions: no duplicate recipe in same combo, no same recipe elsewhere in the week.
+  // The old cuisine ≤2/week cap was removed (S14, user's call): it existed to hold the grocery
+  // list down, but it also blocked the relabelled cuisines from ever appearing together.
   function sampleCombo(mealsPerDay) {
-    var combo = [], names = {}, cuisines = {};
+    var combo = [], names = {};
     // Track cumulative macros for variant selection during sampling
     var cumCal = 0, cumCarbs = 0, cumPro = 0, cumFat = 0;
     for (var m = 0; m < mealsPerDay; m++) {
       var attempts = 0;
       while (attempts < 20) {
-        var r = RECIPES[Math.floor(Math.random() * RECIPES.length)];
+        var r = RECIPES[Math.floor(rng() * RECIPES.length)];
         if (names[r.name]) { attempts++; continue; }
-        var wcCount = (weekCuisineCounts[r.cuisine] || 0) + (cuisines[r.cuisine] || 0);
-        if (wcCount >= 2) { attempts++; continue; }
         if (weekRecipeNames[r.name]) { attempts++; continue; }
         // Select best variant based on remaining budget
         var mealsLeft = mealsPerDay - m;
@@ -491,7 +509,6 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
         var macros = (r.selectedVariant ? r.selectedVariant.totalMacros : r.totalMacros);
         combo.push(r);
         names[r.name] = true;
-        cuisines[r.cuisine] = (cuisines[r.cuisine] || 0) + 1;
         cumCal += macros.calories; cumCarbs += macros.carbs;
         cumPro += macros.protein; cumFat += macros.fat;
         break;
@@ -876,10 +893,6 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
       dayTotals.fat += 1;
     }
 
-    dayMeals.forEach(function(meal) {
-      weekCuisineCounts[meal.cuisine] = (weekCuisineCounts[meal.cuisine] || 0) + 1;
-    });
-
     var totalsObj = { calories: round1(dayTotals.calories), carbs: round1(dayTotals.carbs), protein: round1(dayTotals.protein), fat: round1(dayTotals.fat) };
 
     slot.forEach(function(dayIdx) {
@@ -907,6 +920,7 @@ if (typeof module !== 'undefined' && module.exports) {
     generatePlan,
     selectVariant,
     initializeData,
+    setRandomSeed,
     state,
     get DEFAULT_MACROS_PER100() { return DEFAULT_MACROS_PER100; },
   };

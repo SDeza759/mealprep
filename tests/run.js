@@ -19,9 +19,11 @@ const KNOWN_MODES = ['validator', 'simulator', 'all', 'compare'];
 function printUsage() {
   process.stderr.write([
     'Usage:',
-    '  node tests/run.js validator [--targets=cal,carbs,protein,fat]',
-    '  node tests/run.js simulator [--targets=cal,carbs,protein,fat]',
-    '  node tests/run.js all       [--targets=cal,carbs,protein,fat]',
+    '  node tests/run.js validator [--targets=cal,carbs,protein,fat] [--seed=N]',
+    '  node tests/run.js simulator [--targets=cal,carbs,protein,fat] [--seed=N]',
+    '  node tests/run.js all       [--targets=cal,carbs,protein,fat] [--seed=N]',
+    '',
+    '  --seed=N  reproducible run: the same N replays the identical weeks.',
     '',
     '  node tests/run.js compare --baseline-only [--targets=...]',
     '  node tests/run.js compare --experiment <baseline.json> [--targets=...]',
@@ -40,6 +42,7 @@ function parseArgs(argv) {
   if (!KNOWN_MODES.includes(mode)) return { error: 'unknown_mode', mode };
 
   const targets = { ...DEFAULT_TARGETS };
+  let seed = null;
   let baselineOnly = false;
   let experimentBaseline = null;
   let fromPath = null;
@@ -61,6 +64,13 @@ function parseArgs(argv) {
       targets.carbs = parts[1];
       targets.protein = parts[2];
       targets.fat = parts[3];
+    } else if (arg.startsWith('--seed=')) {
+      const raw = arg.slice('--seed='.length);
+      const n = Number(raw);
+      if (!Number.isInteger(n) || n < 0) {
+        return { error: 'bad_seed', message: `Invalid --seed value: "${raw}". Expected a non-negative integer.` };
+      }
+      seed = n;
     } else if (arg === '--baseline-only') {
       baselineOnly = true;
     } else if (arg === '--experiment') {
@@ -112,7 +122,7 @@ function parseArgs(argv) {
     }
   }
 
-  return { mode, targets, baselineOnly, experimentBaseline, fromPath, toPath };
+  return { mode, targets, seed, baselineOnly, experimentBaseline, fromPath, toPath };
 }
 
 function timestamp() {
@@ -241,7 +251,7 @@ function main() {
     printUsage();
     process.exit(2);
   }
-  if (parsed.error === 'bad_targets') {
+  if (parsed.error === 'bad_targets' || parsed.error === 'bad_seed') {
     process.stderr.write(`Error: ${parsed.message}\n\n`);
     printUsage();
     process.exit(2);
@@ -254,6 +264,14 @@ function main() {
 
   // Initialize the data layer once before any algorithm call.
   algorithm.initializeData();
+
+  // --seed=N makes the run reproducible: same seed replays the identical set of weeks, which is
+  // the only way to re-examine a day the harness reported as failing. Omitted, the run uses
+  // Math.random exactly as the browser does.
+  if (parsed.seed !== null && parsed.seed !== undefined) {
+    algorithm.setRandomSeed(parsed.seed);
+    process.stdout.write(`Seeded run: --seed=${parsed.seed} (reproducible)\n`);
+  }
 
   const outputDir = ensureOutputDir();
 

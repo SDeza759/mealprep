@@ -1,0 +1,139 @@
+# Ingredients available in INGREDIENT_REGISTRY (103)
+
+- Adobo
+- Ahi Tuna
+- Aji Amarillo Paste
+- Asparagus
+- Avocado
+- BBQ Sauce
+- Banana
+- Basil
+- Basmati Rice
+- Bay Leaves
+- Beef Sirloin
+- Bell Pepper
+- Black Beans
+- Black Pepper
+- Blueberries
+- Broccoli
+- Brown Rice
+- Butter
+- Cabbage
+- Carrot
+- Cauliflower
+- Cheddar Cheese
+- Cherry Sauce
+- Chicken Breast
+- Chicken Thigh
+- Chickpeas
+- Cilantro
+- Coconut Milk
+- Cod
+- Coleslaw Mix
+- Corn
+- Corn Tortillas
+- Cucumber
+- Cumin
+- Duck Breast
+- Duck Leg
+- Edamame
+- Egg
+- Eggplant
+- Evaporated Milk
+- Feta Cheese
+- Flour
+- Garlic
+- Ginger
+- Granola
+- Greek Yogurt
+- Green Beans
+- Green Onion
+- Green Peas
+- Ground Beef (80% lean)
+- Ground Beef (lean)
+- Ground Lamb
+- Hoisin Sauce
+- Honey
+- Hummus
+- Kimchi
+- Lemon
+- Lime
+- Mango
+- Maple Syrup
+- Mayonnaise
+- Miso Paste
+- Mozzarella Cheese
+- Olive Oil
+- Onion
+- Oregano
+- Paneer
+- Panko Breadcrumbs
+- Parmesan Cheese
+- Pasta
+- Pesto Sauce
+- Pita Bread
+- Pork Belly
+- Pork Loin
+- Potato
+- Queso Fresco
+- Red Lentils
+- Red Onion
+- Rice Noodles
+- Rolled Oats
+- Romaine Lettuce
+- Salmon Fillet
+- Sea Bass
+- Sesame Oil
+- Shrimp
+- Smoked Paprika
+- Soy Sauce
+- Spinach
+- Strawberries
+- Sweet Potato
+- Sweet Potato Noodles
+- Tahini
+- Thyme
+- Tomato
+- Tomato Sauce
+- Turkey Breast
+- Water
+- White Beans
+- White Rice
+- Whole Milk
+- Whole Wheat Bread
+- Whole Wheat Tortilla
+- Zucchini
+
+# Spice/seasoning names already used in RECIPE_SPICE_OVERRIDES (31 unique)
+
+- Adobo
+- Aji Limo
+- Allspice
+- Bay Leaf
+- Bay Leaves
+- Black Pepper
+- Cardamom
+- Cayenne
+- Chili Flakes
+- Chili Powder
+- Cinnamon
+- Coriander Powder
+- Cumin
+- Curry Powder
+- Dried Basil
+- Dried Parsley
+- Five-Spice
+- Garam Masala
+- Garlic Powder
+- Ginger (ground)
+- Gochugaru
+- Gochujang
+- Oregano
+- Paprika
+- Red Wine Vinegar
+- Salt
+- Smoked Paprika
+- Thyme
+- Turmeric
+- Water
+- White Pepper

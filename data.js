@@ -121,7 +121,81 @@ var INGREDIENT_REGISTRY = {
   "Whole Milk": { calories: 61, carbs: 4.8, protein: 3.2, fat: 3.3 },
   "Whole Wheat Bread": { calories: 259, carbs: 43.3, protein: 9, fat: 4 },
   "Whole Wheat Tortilla": { calories: 271, carbs: 45.7, protein: 7.1, fat: 7.1 },
-  "Zucchini": { calories: 17, carbs: 3.1, protein: 1.2, fat: 0.3 }
+  "Zucchini": { calories: 17, carbs: 3.1, protein: 1.2, fat: 0.3 },
+
+  // === S14: added by the cuisine-authenticity audit. USDA raw/100g unless noted. ===
+  "Asian Pear": { calories: 42, carbs: 10.7, protein: 0.5, fat: 0.2 },
+  "Bacon": { calories: 458, carbs: 1.3, protein: 11.6, fat: 45 },
+  "Bean Sprouts": { calories: 30, carbs: 5.9, protein: 3, fat: 0.2 },
+  "Blue Cheese": { calories: 353, carbs: 2.3, protein: 21.4, fat: 28.7 },
+  // Plain dry. Distinct from the existing Panko Breadcrumbs row (374/73.4/10.7/2.3); higher sodium.
+  "Breadcrumbs": { calories: 395, carbs: 72, protein: 13.4, fat: 5.3 },
+  "Bulgur": { calories: 342, carbs: 75.9, protein: 12.3, fat: 1.3 },
+  "Butter Lettuce": { calories: 13, carbs: 2.2, protein: 1.4, fat: 0.2 },
+  // Drained, in water. USDA's two entries disagree (116 vs 90); this is the as-sold label basis.
+  // In oil roughly doubles calories and fat.
+  "Canned Tuna": { calories: 107, carbs: 0, protein: 23.2, fat: 0.9 },
+  // No USDA entry for the flour. Brand labels span 344-371.
+  "Cassava Flour": { calories: 359, carbs: 87, protein: 0.9, fat: 0.5 },
+  "Celery": { calories: 16, carbs: 3, protein: 0.7, fat: 0.2 },
+  // Shucked meat. Live in-shell yields only ~25-30% of purchased weight.
+  "Clams": { calories: 86, carbs: 3.6, protein: 14.7, fat: 1 },
+  "Cornstarch": { calories: 381, carbs: 91.3, protein: 0.3, fat: 0.1 },
+  "Daikon": { calories: 18, carbs: 4.1, protein: 0.6, fat: 0.1 },
+  // No USDA standard entry; FDC Branded rows are mis-scaled (per-serving in the per-100g field).
+  // Derived by reconciling Chung Jung One / Sempio / Haechandle labels. Brand range 125-190. High sodium.
+  "Doenjang": { calories: 170, carbs: 20, protein: 13, fat: 4 },
+  // Drinking sherry, NOT salted 'cooking sherry' (~83cal, 10g carbs). Ethanol calories.
+  "Dry Sherry": { calories: 116, carbs: 1.4, protein: 0.2, fat: 0 },
+  // Sodium outlier (~7,850mg/100g). Contains anchovy.
+  "Fish Sauce": { calories: 35, carbs: 3.6, protein: 5.1, fat: 0 },
+  "Flank Steak": { calories: 165, carbs: 0, protein: 21.2, fat: 8.3 },
+  // 45g/unit (8-inch). 6-inch ~30g, 10-inch burrito ~70g.
+  "Flour Tortilla": { calories: 297, carbs: 49.3, protein: 8, fat: 7.6 },
+  "Gram Flour (Besan)": { calories: 387, carbs: 57.8, protein: 22.4, fat: 6.7 },
+  "Grape Leaves": { calories: 69, carbs: 12.5, protein: 4.5, fat: 2.1 },
+  // USDA SR Legacy (49). Foundation Foods re-analysis says 35; SR Legacy chosen to match the
+  // existing Spinach/Basil/Cilantro rows, which are all SR Legacy.
+  "Kale": { calories: 49, carbs: 8.8, protein: 4.3, fat: 0.9 },
+  // DRY. Boiled is ~127 (2.7x lighter) — a drained-can recipe needs grams divided by ~2.7.
+  "Kidney Beans": { calories: 337, carbs: 61.3, protein: 22.5, fat: 1.1 },
+  "Lamb Leg": { calories: 230, carbs: 0, protein: 17.9, fat: 17.1 },
+  // Lean-and-fat, as the cut is sold and braised. Lean-only would be ~144.
+  "Lamb Shoulder": { calories: 244, carbs: 0, protein: 17.1, fat: 19 },
+  // Hon-mirin. Energy exceeds 4C+4P+9F because ~14% is ethanol, which the app does not model.
+  "Mirin": { calories: 241, carbs: 43.2, protein: 0.3, fat: 0 },
+  "Mustard Greens": { calories: 27, carbs: 4.7, protein: 2.9, fat: 0.4 },
+  // Dried sheets. USDA 'laver, raw' (35 cal) is WET laver — a ~10x trap.
+  "Nori": { calories: 380, carbs: 44.3, protein: 41.4, fat: 3.5 },
+  // Fresh basis, proxied from USDA agar (Gracilaria). Dried ogo is ~10x concentrated.
+  "Ogo Seaweed": { calories: 26, carbs: 6.8, protein: 0.5, fat: 0 },
+  "Orange": { calories: 47, carbs: 11.8, protein: 0.9, fat: 0.1 },
+  "Palm Oil (Dendê)": { calories: 884, carbs: 0, protein: 0, fat: 100 },
+  // FRESH flat-leaf. Distinct from the existing Dried Parsley spice — do not merge.
+  "Parsley": { calories: 36, carbs: 6.3, protein: 3, fat: 0.8 },
+  // RAW (cooked is ~269).
+  "Pork Shoulder": { calories: 186, carbs: 0, protein: 17.7, fat: 12.4 },
+  // Dry, non-fried (chuka men), NOT the flash-fried instant block (~440cal/16.5g fat).
+  // Dry basis to match Pasta/Rice Noodles; a fresh-noodle row (~250) would be the only wet starch here.
+  "Ramen Noodles": { calories: 361, carbs: 75, protein: 13, fat: 1.2 },
+  // As-poured. Most of the ~16g/100g ethanol boils off in a simmered dish, so this overstates a cooked result.
+  "Sake": { calories: 134, carbs: 5, protein: 0.5, fat: 0 },
+  "Shallot": { calories: 72, carbs: 16.8, protein: 2.5, fat: 0.1 },
+  // FRESH. Dried shiitake is ~296 cal/100g (~9x) and must not use this row.
+  "Shiitake Mushroom": { calories: 34, carbs: 6.8, protein: 2.2, fat: 0.5 },
+  "Sugar": { calories: 387, carbs: 100, protein: 0, fat: 0 },
+  // FIRM. Silken is ~55 and super-firm ~190.
+  "Tofu": { calories: 144, carbs: 2.8, protein: 17.3, fat: 8.7 },
+  // Bull-Dog basis (127). Kikkoman/Shirakiku run 140-170. High sodium.
+  "Tonkatsu Sauce": { calories: 127, carbs: 31.5, protein: 0.6, fat: 0.1 },
+  // DRY. Cooked is ~121 (2.8x).
+  "Toor Dal": { calories: 343, carbs: 62.8, protein: 21.7, fat: 1.5 },
+  // Rice cakes. Refrigerated fresh ~170, vacuum-packed ~235; brand spread ~25%.
+  "Tteok": { calories: 230, carbs: 50, protein: 4, fat: 0.5 },
+  "Vegetable Oil": { calories: 884, carbs: 0, protein: 0, fat: 100 },
+  // As-poured; ethanol calories. Cooking off reduces the real contribution substantially.
+  "White Wine": { calories: 82, carbs: 2.6, protein: 0.1, fat: 0 },
+  "Worcestershire Sauce": { calories: 78, carbs: 19.5, protein: 0, fat: 0 },
 };
 
 // ===== PER-RECIPE SPICE OVERRIDES =====
@@ -661,7 +735,73 @@ var INGREDIENT_CATEGORIES = {
   "Brown Rice":"Grains & Pasta","White Rice":"Grains & Pasta","Basmati Rice":"Grains & Pasta","Pasta":"Grains & Pasta","Rice Noodles":"Grains & Pasta","Sweet Potato Noodles":"Grains & Pasta","Rolled Oats":"Grains & Pasta","Granola":"Grains & Pasta","Flour":"Grains & Pasta",
   "Black Beans":"Canned & Legumes","White Beans":"Canned & Legumes","Chickpeas":"Canned & Legumes","Red Lentils":"Canned & Legumes","Edamame":"Canned & Legumes","Coconut Milk":"Canned & Legumes","Tomato Sauce":"Canned & Legumes",
   "Olive Oil":"Condiments & Oils","Sesame Oil":"Condiments & Oils","Soy Sauce":"Condiments & Oils","BBQ Sauce":"Condiments & Oils","Pesto Sauce":"Condiments & Oils","Hoisin Sauce":"Condiments & Oils","Cherry Sauce":"Condiments & Oils","Miso Paste":"Condiments & Oils","Tahini":"Condiments & Oils","Hummus":"Condiments & Oils","Kimchi":"Condiments & Oils","Honey":"Condiments & Oils","Maple Syrup":"Condiments & Oils","Aji Amarillo Paste":"Condiments & Oils","Mayonnaise":"Condiments & Oils","Red Wine Vinegar":"Condiments & Oils",
-  "Cumin":"Spices & Seasonings","Turmeric":"Spices & Seasonings","Garam Masala":"Spices & Seasonings","Coriander Powder":"Spices & Seasonings","Chili Powder":"Spices & Seasonings","Black Pepper":"Spices & Seasonings","Salt":"Spices & Seasonings","Garlic Powder":"Spices & Seasonings","Oregano":"Spices & Seasonings","Dried Basil":"Spices & Seasonings","Paprika":"Spices & Seasonings","White Pepper":"Spices & Seasonings","Chili Flakes":"Spices & Seasonings","Gochugaru":"Spices & Seasonings","Gochujang":"Spices & Seasonings","Cayenne":"Spices & Seasonings","Cinnamon":"Spices & Seasonings","Cardamom":"Spices & Seasonings","Bay Leaf":"Spices & Seasonings","Bay Leaves":"Spices & Seasonings","Allspice":"Spices & Seasonings","Ginger (ground)":"Spices & Seasonings","Curry Powder":"Spices & Seasonings","Dried Parsley":"Spices & Seasonings","Thyme":"Spices & Seasonings","Smoked Paprika":"Spices & Seasonings","Adobo":"Spices & Seasonings"
+  "Cumin":"Spices & Seasonings","Turmeric":"Spices & Seasonings","Garam Masala":"Spices & Seasonings","Coriander Powder":"Spices & Seasonings","Chili Powder":"Spices & Seasonings","Black Pepper":"Spices & Seasonings","Salt":"Spices & Seasonings","Garlic Powder":"Spices & Seasonings","Oregano":"Spices & Seasonings","Dried Basil":"Spices & Seasonings","Paprika":"Spices & Seasonings","White Pepper":"Spices & Seasonings","Chili Flakes":"Spices & Seasonings","Gochugaru":"Spices & Seasonings","Gochujang":"Spices & Seasonings","Cayenne":"Spices & Seasonings","Cinnamon":"Spices & Seasonings","Cardamom":"Spices & Seasonings","Bay Leaf":"Spices & Seasonings","Bay Leaves":"Spices & Seasonings","Allspice":"Spices & Seasonings","Ginger (ground)":"Spices & Seasonings","Curry Powder":"Spices & Seasonings","Dried Parsley":"Spices & Seasonings","Thyme":"Spices & Seasonings","Smoked Paprika":"Spices & Seasonings","Adobo":"Spices & Seasonings",
+
+  // === S14 cuisine-authenticity audit additions ===
+  "Ancho Chile": "Spices & Seasonings",
+  "Annatto": "Spices & Seasonings",
+  "Asian Pear": "Fruit",
+  "Bacon": "Meat & Seafood",
+  "Baking Powder": "Spices & Seasonings",
+  "Bean Sprouts": "Produce",
+  "Blue Cheese": "Eggs & Dairy",
+  "Breadcrumbs": "Bakery & Bread",
+  "Bulgur": "Grains & Pasta",
+  "Butter Lettuce": "Produce",
+  "Canned Tuna": "Canned & Legumes",
+  "Caraway": "Spices & Seasonings",
+  "Cassava Flour": "Grains & Pasta",
+  "Celery": "Produce",
+  "Chipotle Powder": "Spices & Seasonings",
+  "Clams": "Meat & Seafood",
+  "Cornstarch": "Grains & Pasta",
+  "Culantro": "Produce",
+  "Daikon": "Produce",
+  "Dill": "Produce",
+  "Doenjang": "Condiments & Oils",
+  "Dry Sherry": "Condiments & Oils",
+  "Epazote": "Produce",
+  "Fish Sauce": "Condiments & Oils",
+  "Flank Steak": "Meat & Seafood",
+  "Flour Tortilla": "Bakery & Bread",
+  "Gram Flour (Besan)": "Grains & Pasta",
+  "Grape Leaves": "Canned & Legumes",
+  "Guajillo Chile": "Spices & Seasonings",
+  "Jalapeno": "Produce",
+  "Kale": "Produce",
+  "Karashi": "Condiments & Oils",
+  "Kidney Beans": "Canned & Legumes",
+  "Lamb Leg": "Meat & Seafood",
+  "Lamb Shoulder": "Meat & Seafood",
+  "Mexican Oregano": "Spices & Seasonings",
+  "Mint": "Produce",
+  "Mirin": "Condiments & Oils",
+  "Mustard Greens": "Produce",
+  "Nori": "Condiments & Oils",
+  "Ogo Seaweed": "Produce",
+  "Orange": "Fruit",
+  "Palm Oil (Dendê)": "Condiments & Oils",
+  "Parsley": "Produce",
+  "Perilla Leaves": "Produce",
+  "Pork Shoulder": "Meat & Seafood",
+  "Ramen Noodles": "Grains & Pasta",
+  "Rice Vinegar": "Condiments & Oils",
+  "Saffron": "Spices & Seasonings",
+  "Sake": "Condiments & Oils",
+  "Serrano Chile": "Produce",
+  "Shallot": "Produce",
+  "Shichimi Togarashi": "Spices & Seasonings",
+  "Shiitake Mushroom": "Produce",
+  "Star Anise": "Spices & Seasonings",
+  "Sugar": "Condiments & Oils",
+  "Tofu": "Eggs & Dairy",
+  "Tonkatsu Sauce": "Condiments & Oils",
+  "Toor Dal": "Canned & Legumes",
+  "Tteok": "Grains & Pasta",
+  "Vanilla Extract": "Spices & Seasonings",
+  "Vegetable Oil": "Condiments & Oils",
+  "White Wine": "Condiments & Oils",
+  "Worcestershire Sauce": "Condiments & Oils",
 };
 
 // Practical grocery units for whole countable items

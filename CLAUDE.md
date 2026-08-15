@@ -1,8 +1,9 @@
 # CLAUDE.md — Project Context
 
 ## Last Updated
-2026-08-14 — S13. Swap picker is now an unranked searchable list (retires the S4 false-negative bug);
-`selectVariant` hoisted + exported; olives removed app-wide. 700/700 + 7000/7000, 139/139 reachable.
+2026-08-15 — S14 **Phase A complete, Phase B not started.** Audited all 133 non-Peruvian recipes for
+cuisine authenticity (14 subagents); 6 passed. Registry 103→147, cuisine cap removed, `--seed=N` added.
+No recipe was changed yet. 700/700 + 7000/7000, 139/139 reachable. **Next session: see PHASE B below.**
 
 ## Project Overview
 Multi-file HTML meal-prep optimizer ("Actual Size Optimizer"). Weekly plans vs macro targets
@@ -30,6 +31,10 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
 ## User Constraints (non-negotiable)
 - **No nuts. No olives.** `Peanuts` (S11) and `Black Olives` (S13) removed from registry, categories and
   every recipe. `Olive Oil` is unrelated and stays — a careless grep for "olive" strips ~40 recipes.
+- **Nutmeg IS allowed** (S14, user's explicit ruling: nut allergies don't extend to nutmeg). Don't re-ask.
+- **`Sumac` is PENDING and currently excluded.** Same family as cashew/pistachio/mango with documented
+  cashew cross-reactivity. Researched but deliberately left out of registry + categories. One Middle
+  Eastern recipe wants it. Only the user can decide; don't add it on your own judgement.
 - **Preferences outrank authenticity.** Both bans landed on the research-backed Peruvian dishes, where
   walnuts and olives are traditional garnishes. Drop the ingredient, keep the rest of the dish, reword the
   `RECIPE_COOKING_DATA` step so it doesn't name what's gone. Never "restore" them as a data-integrity fix.
@@ -72,6 +77,12 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
   aji limo, never mango). Don't simplify them into generic adaptations.
 - **Harness state reset**: reset `state.recipeRotation`/`solverDiagnostics` ONCE before the week loop,
   never per-week (per-week kills rotation fairness and starves recipes).
+- **No cuisine cap** (S14, user's call — reverses the old ≤2/week rule). It existed to hold the grocery
+  list down but blocked the relabelled cuisines from co-occurring. `weekCuisineCounts` and
+  `seed.cuisineCounts` are gone from both files. Recipe dedup within a week still applies.
+- **All randomness goes through `rng()`** (S14), which defaults to `Math.random` so the browser is
+  unchanged. `setRandomSeed(n)` (exported) swaps in mulberry32. Deliberately NOT named `seed` —
+  `generatePlan`'s 8th arg already means the partial-regen dedup seed.
 
 ## Fragile Areas
 - **Registry name match**: recipe `name` must exactly match a key or macros zero out. Two ground-beef
@@ -104,11 +115,11 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
 - **Plans store stale data**: cloned to localStorage at gen time; recipe edits show only after regenerating.
   Day-group colors likewise snapshot at gen time.
 - **Weekly-table layout, three traps** (S12): (1) `.wk-narrow` is *measured* (`scrollWidth > clientWidth`,
-  re-checked per render + `ResizeObserver`), not a media query — whether columns sit at their 190px floor
-  depends on meal count as much as screen width, so 6 meals bottoms out even on a wide desktop. (2) Never
-  `display:flex` on `.wk-meal-cell` — it's a `<td>`; that drops it out of table layout and rows collapse
-  into a vertical stack. (3) The border/radius frame belongs on `.wk-table-scroll`, not `.wk-table` —
-  `overflow:hidden` on the table makes it its own scrollport and silently kills the sticky day column.
+  per render + `ResizeObserver`), not a media query — the 190px floor depends on meal count as much as
+  screen width, so 6 meals bottoms out on a wide desktop. (2) Never `display:flex` on `.wk-meal-cell` —
+  it's a `<td>`; that drops it out of table layout and rows collapse into a stack. (3) The border/radius
+  frame belongs on `.wk-table-scroll`, not `.wk-table` — `overflow:hidden` there makes the table its own
+  scrollport and silently kills the sticky day column.
 - **`.wk-name-row` reserves 56px** for the absolutely-positioned stepper. Without it, long names and the
   favorite star render *underneath* it: the star stops being tappable and a tap there hits the stepper's
   "−", silently changing servings (was 10/14 cells).
@@ -135,23 +146,78 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
   cod-labelled-as-salmon bug, and 3 orphans. Note ~8 registry entries look orphaned but are spices reached
   via `RECIPE_SPICE_OVERRIDES` — check there before deleting.
 
-## What to Do Next
+## PHASE B — the next session's job ("proceed with phase B")
+
+S14 audited every non-Peruvian recipe and found **6 of 133 clean**. The user approved the FULL scope:
+all three tiers, plus the data bugs. Phase A (registry + infrastructure) is committed. Phase B applies
+the recipe changes. Nothing in `RECIPES` / `RECIPE_SPICE_OVERRIDES` / `RECIPE_COOKING_DATA` has changed yet.
+
+**Your inputs — all committed, read them, do not re-run the audit:**
+- `audit/cuisine-audit/reports/NN-<slice>.report.md` — 14 reports, one per cuisine slice. Per recipe:
+  verdict, findings, a concrete proposed fix with grams, ingredients added/dropped, sources.
+- `audit/cuisine-audit/reports/ingredients-batch-N.md` — the 65 researched ingredients (44 registry rows
+  + 21 spices), already applied to `data.js`.
+- `audit/cuisine-audit/SHARED-CONTEXT.md` — the rules the auditors worked to.
+- `audit/cuisine-audit/briefs/` — each slice's original recipe state, useful for diffing.
+
+**Architecture — this is the part that matters.** The audit parallelised safely because it was
+read-only. Phase B writes, and 14 agents editing one 145KB `data.js` will corrupt it. So:
+**agents NEVER touch `data.js`.** Each rewrites its slice and emits records to its own file; you merge
+mechanically by recipe name. Recipes are independent keyed records, so the merge is conflict-free.
+Run ~5 agents at a time (the session limit killed 14-at-once twice) and tell every agent to
+**write its output file incrementally** — three agents once died after finishing research but before
+saving, losing everything.
+
+**The registry is FROZEN.** Agents must reference only names that already exist in
+`INGREDIENT_REGISTRY` or the spice vocabulary. They must not invent ingredients — exact string match
+or macros silently zero out. If a slice genuinely needs something absent, it reports it and you decide.
+
+**Scope decisions already made — don't re-ask:**
+- All 3 tiers: 32 relabels, 45 small additions, 50 rebuilds.
+- The 5 non-dishes get **rebuilt into real dishes**, not deleted (pool stays 139): Pulled Pork Sandwich,
+  Black Bean Bowl, Chipotle Chicken Bowl, Mango Chicken Curry, Chicken Lettuce Wraps with Rice.
+- New cuisine labels are fine: `Italian-American`, `Chinese-American`, `Tex-Mex`, `Hawaiian`,
+  `British-Indian`. (Not yet added — Phase B does this.)
+- `Duck Leg` STAYS. A reviewer claimed the Chinese fixes would orphan it; it's in 4 recipes and both
+  confit dishes require the leg by definition. Verify counts yourself before acting on any orphan claim.
+
+**Still owed from Phase A (do these first, they're mechanical):**
+- **27 verified data bugs.** (a) 7 recipes cook in oil absent from the ingredient list: Palak Paneer,
+  Chicken Korma, Mango Chicken Curry, Japanese Tamagoyaki, Pork Tonkatsu, Katsu Curry, Chicken Lettuce
+  Wraps with Rice. (b) 16 recipes have hard-coded cooking liquid ("2 cups" for 20g lentils) never
+  rescaled when grams shrank for macros. (c) 4 dishes named after an ingredient they lack: Spaghetti
+  alle Vongole (no clams), Thai Basil Chicken (no basil — `Basil` IS in the registry), Stuffed Grape
+  Leaves (no grape leaves), Picanha with Farofa (no cassava flour).
+- Add the 5 cuisine labels.
+
+**Verification:** `node tests/run.js validator` then `simulator`. Both were 100% at Phase A close, so
+any drop is yours. Use `--seed=N` to replay a failing week — that is exactly why it was added.
+Then the data-hygiene sweep in Conventions, and re-check `MEAT_INGREDIENTS` for new proteins.
+
+**Expect macros to move.** Reviewers flagged: Indian loses ~9g protein on two dishes and gains 50–110
+cal of fat on three; Enchiladas drops 120–150 cal; Bun Tom gains ~100. `adjustDayMeals` rescales
+servings within [0.5,3.0] so much of this absorbs, but the suites are the real check.
+
+## What to Do Next (after Phase B)
 - **Verify the mobile pass on a real phone.** S12 was checked at 375/768/1280px in the in-app browser, but
   `ResizeObserver` callbacks aren't delivered there, so the live re-check on rotate/resize is the one path
   never exercised. Rotate a phone with a 5–6 meal day and confirm `.wk-narrow` toggles. Touch scrolling of
   the weekly table is also untested.
-- **Variant labels render only in the detail modal** (S13). The weekly-table cell and grocery list don't
-  show them — decide whether the table needs it, where horizontal space is already tight on a phone.
-- **Pending audit review**: `audit/macro-audit.html` (S10) compares 45 packaged ingredients vs Amazon Fresh;
-  user reviewing keep/adjust per item. Open brand-variance candidates: Pesto Sauce, Cheddar/Mozzarella
-  (whole vs part-skim), Chickpeas (~17% cal), nonfat Greek Yogurt.
-- **Data backlog**: add `Wild Rice`/`Shallots` (Pan-Seared Duck uses fallbacks); raise below-5-recipe
-  ingredients (Cherry Sauce, Duck Breast/Leg, Hoisin, Cod, Flour, Kimchi, Paneer). Both mean authoring new
-  recipes — agree the dish list with the user first.
-- **`--seed=N` harness flag — deferred on purpose.** Cheap (only 2 `Math.random()` sites in `algorithm.js`)
-  but its motivation died with the S13 dry run, and the harness has been 7000/7000 for many sessions. Add
-  it the first time a run drops below 100% and a week needs reproducing. `generatePlan`'s existing `seed`
-  arg is the partial-regen dedup seed — pick another name.
+- **Variant labels: grocery list deliberately skipped.** Table done S14 (pill in the meta row, not the
+  name row — that 56px belongs to the stepper). The grocery `appearances` line still says plain
+  "Shawarma Bowl"; quantities there are already correct, so only attribution is ambiguous. Revisit only
+  if it bites.
+- **`audit/macro-audit.html` (S10) — DO NOT walk it until Phase B lands.** Compares 45 packaged
+  ingredients vs Amazon Fresh; all 45 decisions still unmade. The user was about to review it when the
+  cuisine audit started; it was deliberately held because Phase B changes the ingredient set. Two of its
+  45 rows are already dead (`Peanuts`, `Flatbread` — not in the registry). After Phase B: remove dead
+  rows, add rows for the new *packaged* ingredients only (fresh produce needs none), then have the user
+  review once. Decisions are keyed by ingredient name in localStorage, so renaming an entry loses its
+  decision. No generator exists — it's a hand-edited 141KB static file.
+- **Data backlog**: `Shallot` was added in S14; `Wild Rice` still missing (Pan-Seared Duck uses a
+  fallback). Raise below-5-recipe ingredients (Cherry Sauce, Hoisin, Cod, Flour, Kimchi, Paneer) — means
+  authoring new recipes, so agree the dish list with the user first. Phase B will shift these counts;
+  re-measure before acting.
 
 ## Session History
 - **S1–6**: built the app; `INGREDIENT_REGISTRY` + USDA audit; gradient-descent solver and solver-as-filter;
@@ -159,14 +225,20 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
   flattened 40/41 variants.
 - **S7–10**: partial day regeneration + remove-meal; favorites tab; grocery store-walk taxonomy;
   cooked→raw fix for 7 legume/pasta entries (with proportional gram rescale) + per-serving grocery macros.
-- **S11**: manual edits made group-aware; meals/day exposed to the user; add-meal; days can be emptied and
-  refilled. Data 141→139: merged a duplicate, fixed 3 cod-as-salmon recipes, removed all nuts, rebuilt the
-  6 Peruvian dishes from research, added Causa Limena + Tallarines Verdes.
-- **S12**: merged S9–S11 to `main`. Mobile pass on the weekly table + detail modal, driven by measuring the
-  live page rather than eyeballing — found the stepper covering meal names and making 10/14 favorite stars
-  untappable, the day column scrolling out of view, and a crushed spice row.
-- **S13**: replaced swap scoring with a plain searchable list, which retired the S4 false-negative bug and
-  exposed that `selectVariant` had been throwing there since S4 (hoisted + exported; variant selection
-  moved into `handleSwap`; `variantLabel` finally rendered). Backlog: dropped 2 dead `UNIT_INGREDIENTS`
-  keys; found the `4C+4P+9F > cal` warning already implemented and stricter than specified (and wrong as
-  literally written — fat rounds to 1dp, so the shipped defaults give 2000.4 > 2000). Removed olives.
+- **S11**: manual edits made group-aware; meals/day exposed to the user; add-meal; days can be emptied.
+  Data 141→139: merged a duplicate, fixed 3 cod-as-salmon recipes, removed all nuts, rebuilt the 6
+  Peruvian dishes from research, added Causa Limena + Tallarines Verdes.
+- **S12**: merged S9–S11 to `main`. Mobile pass on the weekly table + detail modal, driven by measuring
+  the live page — found the stepper covering meal names (10/14 favorite stars untappable), the day column
+  scrolling away, a crushed spice row.
+- **S13**: swap scoring → plain searchable list, retiring the S4 false-negative bug and exposing that
+  `selectVariant` had been throwing there since S4. Dropped 2 dead `UNIT_INGREDIENTS` keys. Removed
+  olives. Noted the `4C+4P+9F > cal` warning is stricter than specified and wrong as literally written
+  (fat rounds to 1dp, so the shipped defaults give 2000.4 > 2000).
+- **S14**: variant pill added to the weekly table. Then the big one — a 14-subagent cuisine-authenticity
+  audit of all 133 non-Peruvian recipes: **6 passed**, 32 mislabeled, 45 minor drift, 50 needing rebuild,
+  plus 27 objective data bugs I verified against `data.js` myself (several reviewer claims were wrong —
+  always re-derive orphan/usage counts). Phase A applied: cuisine cap removed, 65 ingredients researched
+  and 44 registry rows added (103→147, +64 categories, +7 meats), `Ramen Noodles` re-based to dry after
+  a reviewer returned fresh-noodle macros (the S10 cooked/raw trap recurring), `--seed=N` added with
+  determinism verified both directions. **Phase B (the recipe rewrites) is untouched — see above.**

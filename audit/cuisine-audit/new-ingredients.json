@@ -1,0 +1,468 @@
+[
+ {
+  "name": "Fish Sauce",
+  "demand": 8,
+  "slices": [
+   "06",
+   "12"
+  ]
+ },
+ {
+  "name": "Vegetable Oil",
+  "demand": 7,
+  "slices": [
+   "02",
+   "12"
+  ]
+ },
+ {
+  "name": "Mexican Oregano",
+  "demand": 6,
+  "slices": [
+   "04"
+  ]
+ },
+ {
+  "name": "Parsley",
+  "demand": 6,
+  "slices": [
+   "09",
+   "10"
+  ]
+ },
+ {
+  "name": "Mirin",
+  "demand": 5,
+  "slices": [
+   "05",
+   "06"
+  ]
+ },
+ {
+  "name": "Bean Sprouts",
+  "demand": 3,
+  "slices": [
+   "06",
+   "12"
+  ]
+ },
+ {
+  "name": "Celery",
+  "demand": 3,
+  "slices": [
+   "10"
+  ]
+ },
+ {
+  "name": "Chipotle Powder",
+  "demand": 3,
+  "slices": [
+   "04"
+  ]
+ },
+ {
+  "name": "Mint",
+  "demand": 3,
+  "slices": [
+   "09",
+   "12"
+  ]
+ },
+ {
+  "name": "Sugar",
+  "demand": 3,
+  "slices": [
+   "05"
+  ]
+ },
+ {
+  "name": "White Wine",
+  "demand": 3,
+  "slices": [
+   "10"
+  ]
+ },
+ {
+  "name": "Asian Pear",
+  "demand": 2,
+  "slices": [
+   "11"
+  ]
+ },
+ {
+  "name": "Bacon",
+  "demand": 2,
+  "slices": [
+   "01"
+  ]
+ },
+ {
+  "name": "Cornstarch",
+  "demand": 2,
+  "slices": [
+   "02",
+   "12"
+  ]
+ },
+ {
+  "name": "Gram Flour (Besan)",
+  "demand": 2,
+  "slices": [
+   "08"
+  ]
+ },
+ {
+  "name": "Guajillo Chile",
+  "demand": 2,
+  "slices": [
+   "03",
+   "04"
+  ]
+ },
+ {
+  "name": "Jalapeno",
+  "demand": 2,
+  "slices": [
+   "04"
+  ]
+ },
+ {
+  "name": "Lamb Shoulder",
+  "demand": 2,
+  "slices": [
+   "08",
+   "09"
+  ]
+ },
+ {
+  "name": "Nori",
+  "demand": 2,
+  "slices": [
+   "05",
+   "06"
+  ]
+ },
+ {
+  "name": "Pork Shoulder",
+  "demand": 2,
+  "slices": [
+   "01",
+   "03"
+  ]
+ },
+ {
+  "name": "Rice Vinegar",
+  "demand": 2,
+  "slices": [
+   "06"
+  ]
+ },
+ {
+  "name": "Sake",
+  "demand": 2,
+  "slices": [
+   "06"
+  ]
+ },
+ {
+  "name": "Tonkatsu Sauce",
+  "demand": 2,
+  "slices": [
+   "05"
+  ]
+ },
+ {
+  "name": "Ancho Chile",
+  "demand": 1,
+  "slices": [
+   "04"
+  ]
+ },
+ {
+  "name": "Annatto",
+  "demand": 1,
+  "slices": [
+   "13"
+  ]
+ },
+ {
+  "name": "Baking Powder",
+  "demand": 1,
+  "slices": [
+   "01"
+  ]
+ },
+ {
+  "name": "Blue Cheese",
+  "demand": 1,
+  "slices": [
+   "01"
+  ]
+ },
+ {
+  "name": "Breadcrumbs",
+  "demand": 1,
+  "slices": [
+   "10"
+  ]
+ },
+ {
+  "name": "Bulgur",
+  "demand": 1,
+  "slices": [
+   "09"
+  ]
+ },
+ {
+  "name": "Butter Lettuce",
+  "demand": 1,
+  "slices": [
+   "01"
+  ]
+ },
+ {
+  "name": "Canned Tuna",
+  "demand": 1,
+  "slices": [
+   "07"
+  ]
+ },
+ {
+  "name": "Caraway",
+  "demand": 1,
+  "slices": [
+   "09"
+  ]
+ },
+ {
+  "name": "Cassava Flour",
+  "demand": 1,
+  "slices": [
+   "13"
+  ]
+ },
+ {
+  "name": "Clams",
+  "demand": 1,
+  "slices": [
+   "10"
+  ]
+ },
+ {
+  "name": "Culantro",
+  "demand": 1,
+  "slices": [
+   "13"
+  ]
+ },
+ {
+  "name": "Daikon",
+  "demand": 1,
+  "slices": [
+   "05"
+  ]
+ },
+ {
+  "name": "Dill",
+  "demand": 1,
+  "slices": [
+   "07"
+  ]
+ },
+ {
+  "name": "Doenjang",
+  "demand": 1,
+  "slices": [
+   "11"
+  ]
+ },
+ {
+  "name": "Dry Sherry",
+  "demand": 1,
+  "slices": [
+   "14"
+  ]
+ },
+ {
+  "name": "Epazote",
+  "demand": 1,
+  "slices": [
+   "04"
+  ]
+ },
+ {
+  "name": "Flank Steak",
+  "demand": 1,
+  "slices": [
+   "13"
+  ]
+ },
+ {
+  "name": "Flour Tortilla",
+  "demand": 1,
+  "slices": [
+   "12"
+  ]
+ },
+ {
+  "name": "Grape Leaves",
+  "demand": 1,
+  "slices": [
+   "09"
+  ]
+ },
+ {
+  "name": "Kale",
+  "demand": 1,
+  "slices": [
+   "10"
+  ]
+ },
+ {
+  "name": "Karashi",
+  "demand": 1,
+  "slices": [
+   "05"
+  ]
+ },
+ {
+  "name": "Kidney Beans",
+  "demand": 1,
+  "slices": [
+   "13"
+  ]
+ },
+ {
+  "name": "Lamb Leg",
+  "demand": 1,
+  "slices": [
+   "08"
+  ]
+ },
+ {
+  "name": "Mustard Greens",
+  "demand": 1,
+  "slices": [
+   "08"
+  ]
+ },
+ {
+  "name": "Ogo Seaweed",
+  "demand": 1,
+  "slices": [
+   "06"
+  ]
+ },
+ {
+  "name": "Orange",
+  "demand": 1,
+  "slices": [
+   "03"
+  ]
+ },
+ {
+  "name": "Palm Oil (Dend\u00ea)",
+  "demand": 1,
+  "slices": [
+   "13"
+  ]
+ },
+ {
+  "name": "Perilla Leaves",
+  "demand": 1,
+  "slices": [
+   "11"
+  ]
+ },
+ {
+  "name": "Ramen Noodles",
+  "demand": 1,
+  "slices": [
+   "05"
+  ]
+ },
+ {
+  "name": "Saffron",
+  "demand": 1,
+  "slices": [
+   "14"
+  ]
+ },
+ {
+  "name": "Serrano Chile",
+  "demand": 1,
+  "slices": [
+   "04"
+  ]
+ },
+ {
+  "name": "Shallot",
+  "demand": 1,
+  "slices": [
+   "14"
+  ]
+ },
+ {
+  "name": "Shichimi Togarashi",
+  "demand": 1,
+  "slices": [
+   "06"
+  ]
+ },
+ {
+  "name": "Shiitake Mushroom",
+  "demand": 1,
+  "slices": [
+   "11"
+  ]
+ },
+ {
+  "name": "Star Anise",
+  "demand": 1,
+  "slices": [
+   "06"
+  ]
+ },
+ {
+  "name": "Sumac",
+  "demand": 1,
+  "slices": [
+   "09"
+  ]
+ },
+ {
+  "name": "Tofu",
+  "demand": 1,
+  "slices": [
+   "11"
+  ]
+ },
+ {
+  "name": "Toor Dal",
+  "demand": 1,
+  "slices": [
+   "08"
+  ]
+ },
+ {
+  "name": "Tteok",
+  "demand": 1,
+  "slices": [
+   "11"
+  ]
+ },
+ {
+  "name": "Vanilla Extract",
+  "demand": 1,
+  "slices": [
+   "01"
+  ]
+ },
+ {
+  "name": "Worcestershire Sauce",
+  "demand": 1,
+  "slices": [
+   "01"
+  ]
+ }
+]

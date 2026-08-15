@@ -1,0 +1,742 @@
+[
+ {
+  "name": "Fish Sauce",
+  "batch": "1",
+  "type": "registry",
+  "macros": [
+   35.0,
+   3.6,
+   5.1,
+   0.0
+  ],
+  "cat": "Condiments & Oils",
+  "meat": false
+ },
+ {
+  "name": "Mirin",
+  "batch": "1",
+  "type": "registry",
+  "macros": [
+   241.0,
+   43.2,
+   0.3,
+   0.0
+  ],
+  "cat": "Condiments & Oils",
+  "meat": false
+ },
+ {
+  "name": "Mint",
+  "batch": "1",
+  "type": "spice",
+  "macros": null,
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Bacon",
+  "batch": "1",
+  "type": "registry",
+  "macros": [
+   458.0,
+   1.3,
+   11.6,
+   45.0
+  ],
+  "cat": "Meat & Seafood",
+  "meat": true
+ },
+ {
+  "name": "Jalapeno",
+  "batch": "1",
+  "type": "spice",
+  "macros": null,
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Rice Vinegar",
+  "batch": "1",
+  "type": "spice",
+  "macros": null,
+  "cat": "Condiments & Oils",
+  "meat": false
+ },
+ {
+  "name": "Annatto",
+  "batch": "1",
+  "type": "spice",
+  "macros": null,
+  "cat": "Spices & Seasonings",
+  "meat": false
+ },
+ {
+  "name": "Bulgur",
+  "batch": "1",
+  "type": "registry",
+  "macros": [
+   342.0,
+   75.9,
+   12.3,
+   1.3
+  ],
+  "cat": "Grains & Pasta",
+  "meat": false
+ },
+ {
+  "name": "Cassava Flour",
+  "batch": "1",
+  "type": "registry",
+  "macros": [
+   359.0,
+   87.0,
+   0.9,
+   0.5
+  ],
+  "cat": "Grains & Pasta",
+  "meat": false
+ },
+ {
+  "name": "Dill",
+  "batch": "1",
+  "type": "spice",
+  "macros": null,
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Flank Steak",
+  "batch": "1",
+  "type": "registry",
+  "macros": [
+   165.0,
+   0.0,
+   21.2,
+   8.3
+  ],
+  "cat": "Meat & Seafood",
+  "meat": true
+ },
+ {
+  "name": "Karashi",
+  "batch": "1",
+  "type": "spice",
+  "macros": null,
+  "cat": "Condiments & Oils",
+  "meat": false
+ },
+ {
+  "name": "Ogo Seaweed",
+  "batch": "1",
+  "type": "registry",
+  "macros": [
+   26.0,
+   6.8,
+   0.5,
+   0.0
+  ],
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Ramen Noodles",
+  "batch": "1",
+  "type": "registry",
+  "macros": [
+   250.0,
+   51.0,
+   9.5,
+   1.5
+  ],
+  "cat": "Grains & Pasta",
+  "meat": false
+ },
+ {
+  "name": "Shichimi Togarashi",
+  "batch": "1",
+  "type": "spice",
+  "macros": null,
+  "cat": "Spices & Seasonings",
+  "meat": false
+ },
+ {
+  "name": "Tofu",
+  "batch": "1",
+  "type": "registry",
+  "macros": [
+   144.0,
+   2.8,
+   17.3,
+   8.7
+  ],
+  "cat": "Eggs & Dairy",
+  "meat": false
+ },
+ {
+  "name": "Worcestershire Sauce",
+  "batch": "1",
+  "type": "registry",
+  "macros": [
+   78.0,
+   19.5,
+   0.0,
+   0.0
+  ],
+  "cat": "Condiments & Oils",
+  "meat": false
+ },
+ {
+  "name": "Vegetable Oil",
+  "batch": "2",
+  "type": "registry",
+  "macros": [
+   884.0,
+   0.0,
+   0.0,
+   100.0
+  ],
+  "cat": "Condiments & Oils",
+  "meat": false
+ },
+ {
+  "name": "Bean Sprouts",
+  "batch": "2",
+  "type": "registry",
+  "macros": [
+   30.0,
+   5.9,
+   3.0,
+   0.2
+  ],
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Sugar",
+  "batch": "2",
+  "type": "registry",
+  "macros": [
+   387.0,
+   100.0,
+   0.0,
+   0.0
+  ],
+  "cat": "Condiments & Oils",
+  "meat": false
+ },
+ {
+  "name": "Cornstarch",
+  "batch": "2",
+  "type": "registry",
+  "macros": [
+   381.0,
+   91.3,
+   0.3,
+   0.1
+  ],
+  "cat": "Grains & Pasta",
+  "meat": false
+ },
+ {
+  "name": "Lamb Shoulder",
+  "batch": "2",
+  "type": "registry",
+  "macros": [
+   244.0,
+   0.0,
+   17.1,
+   19.0
+  ],
+  "cat": "Meat & Seafood",
+  "meat": true
+ },
+ {
+  "name": "Sake",
+  "batch": "2",
+  "type": "registry",
+  "macros": [
+   134.0,
+   5.0,
+   0.5,
+   0.0
+  ],
+  "cat": "Condiments & Oils",
+  "meat": false
+ },
+ {
+  "name": "Baking Powder",
+  "batch": "2",
+  "type": "spice",
+  "macros": null,
+  "cat": "Spices & Seasonings",
+  "meat": false
+ },
+ {
+  "name": "Butter Lettuce",
+  "batch": "2",
+  "type": "registry",
+  "macros": [
+   13.0,
+   2.2,
+   1.4,
+   0.2
+  ],
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Clams",
+  "batch": "2",
+  "type": "registry",
+  "macros": [
+   86.0,
+   3.6,
+   14.7,
+   1.0
+  ],
+  "cat": "Meat & Seafood",
+  "meat": true
+ },
+ {
+  "name": "Doenjang",
+  "batch": "2",
+  "type": "registry",
+  "macros": [
+   170.0,
+   20.0,
+   13.0,
+   4.0
+  ],
+  "cat": "Condiments & Oils",
+  "meat": false
+ },
+ {
+  "name": "Flour Tortilla",
+  "batch": "2",
+  "type": "registry",
+  "macros": [
+   297.0,
+   49.3,
+   8.0,
+   7.6
+  ],
+  "cat": "Bakery & Bread",
+  "meat": false
+ },
+ {
+  "name": "Kidney Beans",
+  "batch": "2",
+  "type": "registry",
+  "macros": [
+   337.0,
+   61.3,
+   22.5,
+   1.1
+  ],
+  "cat": "Canned & Legumes",
+  "meat": false
+ },
+ {
+  "name": "Orange",
+  "batch": "2",
+  "type": "registry",
+  "macros": [
+   47.0,
+   11.8,
+   0.9,
+   0.1
+  ],
+  "cat": "Fruit",
+  "meat": false
+ },
+ {
+  "name": "Saffron",
+  "batch": "2",
+  "type": "spice",
+  "macros": null,
+  "cat": "Spices & Seasonings",
+  "meat": false
+ },
+ {
+  "name": "Shiitake Mushroom",
+  "batch": "2",
+  "type": "registry",
+  "macros": [
+   34.0,
+   6.8,
+   2.2,
+   0.5
+  ],
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Toor Dal",
+  "batch": "2",
+  "type": "registry",
+  "macros": [
+   343.0,
+   62.8,
+   21.7,
+   1.5
+  ],
+  "cat": "Canned & Legumes",
+  "meat": false
+ },
+ {
+  "name": "Mexican Oregano",
+  "batch": "3",
+  "type": "spice",
+  "macros": null,
+  "cat": "Spices & Seasonings",
+  "meat": false
+ },
+ {
+  "name": "Celery",
+  "batch": "3",
+  "type": "registry",
+  "macros": [
+   16.0,
+   3.0,
+   0.7,
+   0.2
+  ],
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "White Wine",
+  "batch": "3",
+  "type": "registry",
+  "macros": [
+   82.0,
+   2.6,
+   0.1,
+   0.0
+  ],
+  "cat": "Condiments & Oils",
+  "meat": false
+ },
+ {
+  "name": "Gram Flour (Besan)",
+  "batch": "3",
+  "type": "registry",
+  "macros": [
+   387.0,
+   57.8,
+   22.4,
+   6.7
+  ],
+  "cat": "Grains & Pasta",
+  "meat": false
+ },
+ {
+  "name": "Nori",
+  "batch": "3",
+  "type": "registry",
+  "macros": [
+   380.0,
+   44.3,
+   41.4,
+   3.5
+  ],
+  "cat": "Condiments & Oils",
+  "meat": false
+ },
+ {
+  "name": "Tonkatsu Sauce",
+  "batch": "3",
+  "type": "registry",
+  "macros": [
+   127.0,
+   31.5,
+   0.6,
+   0.1
+  ],
+  "cat": "Condiments & Oils",
+  "meat": false
+ },
+ {
+  "name": "Blue Cheese",
+  "batch": "3",
+  "type": "registry",
+  "macros": [
+   353.0,
+   2.3,
+   21.4,
+   28.7
+  ],
+  "cat": "Eggs & Dairy",
+  "meat": false
+ },
+ {
+  "name": "Canned Tuna",
+  "batch": "3",
+  "type": "registry",
+  "macros": [
+   107.0,
+   0.0,
+   23.2,
+   0.9
+  ],
+  "cat": "Canned & Legumes",
+  "meat": true
+ },
+ {
+  "name": "Culantro",
+  "batch": "3",
+  "type": "spice",
+  "macros": null,
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Dry Sherry",
+  "batch": "3",
+  "type": "registry",
+  "macros": [
+   116.0,
+   1.4,
+   0.2,
+   0.0
+  ],
+  "cat": "Condiments & Oils",
+  "meat": false
+ },
+ {
+  "name": "Grape Leaves",
+  "batch": "3",
+  "type": "registry",
+  "macros": [
+   69.0,
+   12.5,
+   4.5,
+   2.1
+  ],
+  "cat": "Canned & Legumes",
+  "meat": false
+ },
+ {
+  "name": "Lamb Leg",
+  "batch": "3",
+  "type": "registry",
+  "macros": [
+   230.0,
+   0.0,
+   17.9,
+   17.1
+  ],
+  "cat": "Meat & Seafood",
+  "meat": true
+ },
+ {
+  "name": "Palm Oil (Dend\u00ea)",
+  "batch": "3",
+  "type": "registry",
+  "macros": [
+   884.0,
+   0.0,
+   0.0,
+   100.0
+  ],
+  "cat": "Condiments & Oils",
+  "meat": false
+ },
+ {
+  "name": "Serrano Chile",
+  "batch": "3",
+  "type": "spice",
+  "macros": null,
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Star Anise",
+  "batch": "3",
+  "type": "spice",
+  "macros": null,
+  "cat": "Spices & Seasonings",
+  "meat": false
+ },
+ {
+  "name": "Tteok",
+  "batch": "3",
+  "type": "registry",
+  "macros": [
+   230.0,
+   50.0,
+   4.0,
+   0.5
+  ],
+  "cat": "Grains & Pasta",
+  "meat": false
+ },
+ {
+  "name": "Parsley",
+  "batch": "4",
+  "type": "registry",
+  "macros": [
+   36.0,
+   6.3,
+   3.0,
+   0.8
+  ],
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Chipotle Powder",
+  "batch": "4",
+  "type": "spice",
+  "macros": null,
+  "cat": "Spices & Seasonings",
+  "meat": false
+ },
+ {
+  "name": "Asian Pear",
+  "batch": "4",
+  "type": "registry",
+  "macros": [
+   42.0,
+   10.7,
+   0.5,
+   0.2
+  ],
+  "cat": "Fruit",
+  "meat": false
+ },
+ {
+  "name": "Guajillo Chile",
+  "batch": "4",
+  "type": "spice",
+  "macros": null,
+  "cat": "Spices & Seasonings",
+  "meat": false
+ },
+ {
+  "name": "Pork Shoulder",
+  "batch": "4",
+  "type": "registry",
+  "macros": [
+   186.0,
+   0.0,
+   17.7,
+   12.4
+  ],
+  "cat": "Meat & Seafood",
+  "meat": true
+ },
+ {
+  "name": "Ancho Chile",
+  "batch": "4",
+  "type": "spice",
+  "macros": null,
+  "cat": "Spices & Seasonings",
+  "meat": false
+ },
+ {
+  "name": "Breadcrumbs",
+  "batch": "4",
+  "type": "registry",
+  "macros": [
+   395.0,
+   72.0,
+   13.4,
+   5.3
+  ],
+  "cat": "Bakery & Bread",
+  "meat": false
+ },
+ {
+  "name": "Caraway",
+  "batch": "4",
+  "type": "spice",
+  "macros": null,
+  "cat": "Spices & Seasonings",
+  "meat": false
+ },
+ {
+  "name": "Daikon",
+  "batch": "4",
+  "type": "registry",
+  "macros": [
+   18.0,
+   4.1,
+   0.6,
+   0.1
+  ],
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Epazote",
+  "batch": "4",
+  "type": "spice",
+  "macros": null,
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Kale",
+  "batch": "4",
+  "type": "registry",
+  "macros": [
+   49.0,
+   8.8,
+   4.3,
+   0.9
+  ],
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Mustard Greens",
+  "batch": "4",
+  "type": "registry",
+  "macros": [
+   27.0,
+   4.7,
+   2.9,
+   0.4
+  ],
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Perilla Leaves",
+  "batch": "4",
+  "type": "spice",
+  "macros": null,
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Shallot",
+  "batch": "4",
+  "type": "registry",
+  "macros": [
+   72.0,
+   16.8,
+   2.5,
+   0.1
+  ],
+  "cat": "Produce",
+  "meat": false
+ },
+ {
+  "name": "Sumac",
+  "batch": "4",
+  "type": "spice",
+  "macros": null,
+  "cat": "Spices & Seasonings",
+  "meat": false
+ },
+ {
+  "name": "Vanilla Extract",
+  "batch": "4",
+  "type": "spice",
+  "macros": null,
+  "cat": "Spices & Seasonings",
+  "meat": false
+ }
+]

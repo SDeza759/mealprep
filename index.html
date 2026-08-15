@@ -433,7 +433,9 @@ var MEAT_INGREDIENTS = new Set([
   "Ground Beef (lean)", "Ground Beef (80% lean)", "Beef Sirloin",
   "Pork Loin", "Pork Belly",
   "Ground Lamb",
-  "Salmon Fillet", "Cod", "Ahi Tuna", "Shrimp"
+  "Salmon Fillet", "Cod", "Ahi Tuna", "Shrimp",
+  // S14 audit additions
+  "Bacon", "Canned Tuna", "Clams", "Flank Steak", "Lamb Leg", "Lamb Shoulder", "Pork Shoulder"
 ]);
 
 
@@ -1399,12 +1401,11 @@ function App() {
     for (var d = 0; d < 7; d++) { if (!regenSet[d]) excludedForCall.push(d); }
 
     // Seed week trackers from kept days (active, not regenerated) so new days don't duplicate them.
-    var seed = { recipeNames: {}, cuisineCounts: {} };
+    var seed = { recipeNames: {} };
     plan.forEach(function(day, di) {
       if (!day || regenSet[di] || excludedDays.indexOf(di) !== -1) return;
       day.meals.forEach(function(meal) {
         seed.recipeNames[meal.name] = true;
-        seed.cuisineCounts[meal.cuisine] = (seed.cuisineCounts[meal.cuisine] || 0) + 1;
       });
     });
 
@@ -1900,7 +1901,13 @@ function App() {
                           <span className="wk-meal-name">{slot.name}</span>
                           <span className={"fav-star"+(favorites[slot.originalName]?" active":"")} title="Toggle favorite" onClick={function(e){e.stopPropagation();toggleFavorite(slot.originalName);}}>{favorites[slot.originalName] ? "\u2605" : "\u2606"}</span>
                         </div>
+                        {/* Variant pill sits in the meta row, not the name row: row 1 already gives
+                            56px to the stepper, and the meta row is below the stepper's 21px so it
+                            keeps the full cell width. .wk-meal-meta is flex-wrap, so in a floored
+                            190px column the pill drops to its own line instead of overflowing.
+                            Same order as the detail modal — name, variant, cuisine. */}
                         <div className="wk-meal-meta">
+                          {slot.variantLabel && <span className="variant-tag">{slot.variantLabel}</span>}
                           <span className="cuisine-tag">{slot.cuisine}</span>
                           <span className="wk-meal-macros">{Math.round(slot.totalMacros.calories)} cal</span>
                         </div>

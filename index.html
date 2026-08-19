@@ -1642,17 +1642,14 @@ function App() {
     setDetailModal(null); setDetailInstrOpen(false); setPlan(newPlan);
   }
 
-  // Set slot `si`'s serving count, propagated to every day in di's group so grouped days
-  // keep identical servings. `delta` is +1/-1 from di's current value; result is clamped ≥1.
+  // Set slot `si`'s serving count for THIS DAY ONLY — deliberately NOT group-aware (S17, user's
+  // call), unlike swap/remove/add. Servings only scale the grocery list, so a grouped pair can
+  // cook the same dish in different amounts on each day. `delta` is +1/-1; result is clamped ≥1.
   function changeServing(di, si, delta) {
-    var members = planGroupMembers(di);
-    var base = mealServings[di + "-" + si] || 1;
-    var val = Math.max(1, base + delta);
+    var k = di + "-" + si;
+    var val = Math.max(1, (mealServings[k] || 1) + delta);
     var n = Object.assign({}, mealServings);
-    members.forEach(function(d) {
-      var k = d + "-" + si;
-      if (val === 1) delete n[k]; else n[k] = val;
-    });
+    if (val === 1) delete n[k]; else n[k] = val;
     setMealServings(n);
   }
 

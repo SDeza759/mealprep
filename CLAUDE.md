@@ -1,10 +1,11 @@
 # CLAUDE.md — Project Context
 
 ## Last Updated
-2026-08-18 — S16. **The macro audit is built and awaiting the user's review.** `macro-audit.html` is
-now GENERATED (45 → 76 rows) with per-row + general notes fields, and all 76 keep/adjust decisions are
-still unmade — that review is the only thing blocking it. `data.js` untouched; 700/700 + 7000/7000,
-139/139, hygiene all-green.
+2026-08-18 — S17. One change: the serving stepper is per-day again (see Key Decisions). **The macro
+audit is built and the user is doing the review OFF-SESSION** — they left S17 to tick all 76 rows in
+`audit/macro-audit.html` and will return with pasted decisions, so expect that paste as the opening
+move of S18 and don't rebuild or re-review the audit. `data.js` untouched since S15; 700/700 +
+7000/7000, 139/139, hygiene all-green.
 
 ## Project Overview
 Multi-file HTML meal-prep optimizer ("Actual Size Optimizer"). Weekly plans vs macro targets
@@ -70,10 +71,13 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
 - **Partial regen** (`handleRegenerateSelected`): calls `generatePlan` with `excludedDays`=all non-selected
   days, merges returned days. Optional `seed` ({recipeNames}) pre-seeds week trackers from kept days so
   rerolls don't duplicate them. Grouped days reroll as a unit.
-- **Manual edits are group-aware** (S11, reverses S7): swap / remove / add / serving-steppers compute the
-  result ONCE from the interacted day and deep-clone it to every group member (`planGroupMembers(di)`,
-  membership from the `planGroups` gen-time snapshot, NOT live `dayGroups`). The first such edit heals a
-  diverged group. Ungrouped → `[di]`. The "eaten" checkbox stays per-day.
+- **Manual edits are group-aware** (S11, reverses S7): swap / remove / add compute the result ONCE from
+  the interacted day and deep-clone it to every group member (`planGroupMembers(di)`, membership from the
+  `planGroups` gen-time snapshot, NOT live `dayGroups`). The first such edit heals a diverged group.
+  Ungrouped → `[di]`. **The serving stepper is the exception** (S17, user's call): `changeServing` writes
+  only `di`'s key, so grouped days can carry different serving counts. Servings feed nothing but the
+  grocery list (quantities + the `(×N)` appearances label) — day macros, stats and the shake ignore them,
+  so per-day servings can't desync a group's plan. The "eaten" checkbox is likewise per-day.
 - **Peruvian recipes are research-backed** (S11): the specifics ARE the dish (aji amarillo not turmeric;
   fresh tomato and fried potato in lomo saltado; salsa criolla has no tomato; ceviche is white fish + aji
   limo, never mango). Don't simplify into generic adaptations. S14/S15 held the other 133 to the same bar.
@@ -214,3 +218,6 @@ refuses to write on any error); `out/*.jsonl` (every applied record + rationale 
   behind one user review. Lesson: extracting the hand-written file into records and proving the generator
   **reproduced it byte-for-byte** before adding anything is what exposed 3 real arithmetic errors; they
   were the only diffs left once the round-trip was clean.
+- **S17**: serving steppers unlinked from day groups (user's call) — `changeServing` writes one day's
+  key instead of every group member's. Verified in the browser: a grouped pair kept identical meals
+  while carrying 3 vs 1 servings, and the grocery list summed all 4. No data or algorithm change.

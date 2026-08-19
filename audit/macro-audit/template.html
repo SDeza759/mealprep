@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amazon Fresh vs USDA — Macro Audit</title>
+<style>
+  :root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  body { margin: 0; padding: 0 0 80px; background: #f6f7f9; color: #1c1f23; }
+  header { background: #1c1f23; color: #fff; padding: 24px 32px; }
+  header h1 { margin: 0 0 4px; font-size: 22px; }
+  header p { margin: 2px 0; color: #b9c0c8; font-size: 13px; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 24px 16px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; margin: 16px 0; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .dot.ok { background: #2f9e44; } .dot.warn { background: #f08c00; } .dot.bad { background: #e03131; } .dot.na { background: #adb5bd; }
+  table { border-collapse: collapse; width: 100%; background: #fff; }
+  .summary { border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+  .summary th, .summary td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #eef0f2; font-size: 13px; }
+  .summary thead th { background: #f1f3f5; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: #495057; }
+  .summary td a { color: #1971c2; text-decoration: none; font-weight: 600; }
+  .summary td a:hover { text-decoration: underline; }
+  .cat { color: #868e96; font-weight: 400; font-size: 12px; }
+  .card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px 18px; margin: 16px 0; box-shadow: 0 1px 2px rgba(0,0,0,.05); }
+  .card h3 { margin: 0 0 10px; font-size: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; color: #fff; }
+  .badge.ok { background: #2f9e44; } .badge.warn { background: #f08c00; } .badge.bad { background: #e03131; } .badge.na { background: #adb5bd; }
+  .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .tag { font-size: 11px; background: #f1f3f5; color: #495057; padding: 3px 8px; border-radius: 4px; }
+  .tag.mismatch { background: #fff3bf; color: #846200; }
+  .tag-amazon-page { background: #d3f9d8; color: #2b8a3e; }
+  .tag-aggregator { background: #e7f5ff; color: #1971c2; }
+  .tag-none { background: #ffe3e3; color: #c92a2a; }
+  .notes { font-size: 13px; color: #495057; margin: 6px 0; font-style: italic; }
+  .links { font-size: 13px; margin: 8px 0 12px; line-height: 1.6; }
+  .links a { color: #1971c2; }
+  .cmp { border: 1px solid #e9ecef; border-radius: 6px; overflow: hidden; }
+  .cmp th, .cmp td { padding: 7px 10px; font-size: 13px; border-bottom: 1px solid #f1f3f5; text-align: right; }
+  .cmp thead th { background: #f8f9fa; text-align: right; font-size: 12px; color: #495057; }
+  .cmp thead th:first-child, .cmp tbody th { text-align: left; font-weight: 600; color: #343a40; }
+  .cmp tbody th { background: #fcfcfd; }
+  .cmp tr.delta th, .cmp tr.delta td { border-top: 2px solid #dee2e6; font-weight: 600; }
+  .pct { font-weight: 400; font-size: 11px; opacity: .8; }
+  td.ok { background: #ebfbee; color: #2b8a3e; } td.warn { background: #fff9db; color: #a05a00; } td.bad { background: #fff0f0; color: #c92a2a; } td.na { color: #adb5bd; }
+  .summary td.ok { font-weight: 600; color: #2b8a3e; } .summary td.warn { font-weight: 600; color: #a05a00; } .summary td.bad { font-weight: 700; color: #c92a2a; } .summary td.na { color: #adb5bd; }
+  .muted { color: #adb5bd; }
+  .decision { margin-top: 12px; font-size: 13px; color: #495057; }
+  .decision label { margin-right: 16px; cursor: pointer; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .04em; color: #495057; margin: 28px 0 8px; }
+
+  th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+  th.sortable:hover { background: #e3e6ea; }
+  th .arrow { font-size: 10px; opacity: .45; margin-left: 4px; }
+  th .hint { font-weight: 400; font-size: 10px; color: #868e96; margin-left: 3px; }
+  .summary td[data-sort] { text-align: right; white-space: nowrap; }
+
+  .decpanel { background:#fff; border:1px solid #dee2e6; border-radius:8px; padding:14px 16px; margin:16px 0 8px; box-shadow:0 1px 2px rgba(0,0,0,.05); }
+  .decpanel-h { font-size:14px; margin-bottom:8px; }
+  .decbtns { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+  .decbtns button { font-size:13px; padding:6px 12px; border:1px solid #ced4da; background:#f1f3f5; border-radius:6px; cursor:pointer; }
+  .decbtns button:hover { background:#e3e6ea; }
+  #decText { width:100%; box-sizing:border-box; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; border:1px solid #dee2e6; border-radius:6px; padding:8px; resize:vertical; background:#fbfcfd; }
+  .deccell.keep { color:#2b8a3e; font-weight:600; } .deccell.adjust { color:#c92a2a; font-weight:700; } .deccell { color:#adb5bd; }
+  .decision .clearrow { font-size:11px; margin-left:10px; padding:2px 8px; border:1px solid #e9ecef; background:#f8f9fa; border-radius:4px; cursor:pointer; color:#868e96; }
+  .decision input[type=radio] { margin-right:3px; }
+
+  .rownote { margin-top:10px; }
+  .rownote label { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#868e96; margin-bottom:4px; }
+  .rownote textarea, #genNote { width:100%; box-sizing:border-box; font-family:inherit; font-size:13px; line-height:1.45;
+    border:1px solid #dee2e6; border-radius:6px; padding:7px 9px; resize:vertical; background:#fcfcfd; color:#1c1f23; }
+  .rownote textarea:focus, #genNote:focus { outline:none; border-color:#4dabf7; background:#fff; box-shadow:0 0 0 3px rgba(77,171,247,.15); }
+  .rownote textarea::placeholder, #genNote::placeholder { color:#ced4da; }
+  .rownote.has-note label { color:#1971c2; font-weight:600; }
+  .rownote.has-note textarea { border-color:#a5d8ff; background:#fff; }
+  .gennote { margin:10px 0 4px; }
+  .gennote label { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#868e96; margin-bottom:4px; }
+  .notecount { color:#1971c2; }
+</style></head>
+<body>
+<header>
+  <h1>Amazon Fresh vs USDA — Macro Audit</h1>
+  <p>Packaged ingredients only (45). First generated 2026-06-07, expanded 2026-08-18. All values normalized to per 100 g.</p>
+  <p>45/45 ingredients matched to an Amazon listing · 1 flagged for raw-vs-cooked/canned form mismatch.</p>
+</header>
+<div class="wrap">
+  <div class="legend">
+    <strong>Δ magnitude (max macro):</strong>
+    <span><i class="dot ok"></i> &lt;5%</span>
+    <span><i class="dot warn"></i> 5–15%</span>
+    <span><i class="dot bad"></i> &gt;15%</span>
+    <span><i class="dot na"></i> no data</span>
+  </div>
+  <p style="font-size:13px;color:#495057;margin:4px 0 16px">Each Δ column shows <strong>Amazon − ours</strong> per 100 g as grams and percent (same as the detail tables), heat-mapped by magnitude. <strong>Click any column header to sort</strong> (Δ columns sort by <strong>percent</strong>; toggles ascending/descending; blank/no-percent cells sort last). Default view: largest calorie gap first. ⚠ marks items whose Amazon label is a different form (cooked/canned/drained) than our USDA raw/dry data, so a large delta is expected. Review each and tick a decision box; every card also has a free-text <strong>Notes</strong> field, and there is a general notes box in the panel below. Notes are copied out along with the decisions, and a ✎ in the Decision column marks a row you have annotated.</p>
+  <h2>Summary — all 45, biggest deltas first</h2>
+  <table class="summary" id="summaryTable">
+    <thead><tr><th class="sortable" onclick="sortTable(this,0,'text')">Ingredient<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,1,'text')">Category<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,2,'num')">Δ Cal<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,3,'num')">Δ Carbs<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,4,'num')">Δ Protein<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,5,'num')">Δ Fat<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,6,'text')">Form<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,7,'text')">Source<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,8,'text')">Conf.<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,9,'text')">Decision<span class="arrow">↕</span></th></tr></thead>
+{{ROWS}}
+  </table>
+  <div id="decisionPanel" class="decpanel">
+    <div class="decpanel-h"><strong>Your decisions</strong> <span id="decCounts" class="muted"></span></div>
+    <div class="decbtns">
+      <button type="button" onclick="copyDec()">📋 Copy decisions</button>
+      <button type="button" onclick="downloadDec()">⬇ Download JSON</button>
+      <button type="button" onclick="clearAll()">✕ Clear all</button>
+    </div>
+    <div class="gennote">
+      <label for="genNote">General notes (anything not tied to one ingredient)</label>
+      <textarea id="genNote" rows="3" spellcheck="true" placeholder="e.g. only buy the store brand; recheck tofu after switching brands" oninput="setGenNote(this)"></textarea>
+    </div>
+    <label for="decText" style="display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#868e96;margin:10px 0 4px">What gets copied</label>
+    <textarea id="decText" readonly rows="6" spellcheck="false"></textarea>
+    <p class="muted" style="font-size:12px;margin:6px 0 0">Choices save automatically in this browser and survive reopening. To send them to me: click <strong>Copy decisions</strong> and paste into chat, <em>or</em> <strong>Download JSON</strong> (saves <code>macro-audit-decisions.json</code> to your Downloads) and tell me to read it.</p>
+  </div>
+  <h2>Detail — per ingredient</h2>
+  
+{{CARDS}}
+</div>
+
+<script>
+function sortTable(th, col, type){
+  var table=document.getElementById('summaryTable');
+  var tbody=table.tBodies[0];
+  var rows=Array.prototype.slice.call(tbody.rows);
+  var dir=(th.getAttribute('data-dir')==='asc')?'desc':'asc';
+  Array.prototype.forEach.call(table.querySelectorAll('th'),function(t){
+    t.removeAttribute('data-dir');
+    var a=t.querySelector('.arrow'); if(a) a.textContent='↕';
+  });
+  th.setAttribute('data-dir',dir);
+  var ar=th.querySelector('.arrow'); if(ar) ar.textContent=(dir==='asc'?'↑':'↓');
+  rows.sort(function(a,b){
+    var x=a.cells[col], y=b.cells[col];
+    if(type==='num'){
+      var xv=parseFloat(x.getAttribute('data-sort')), yv=parseFloat(y.getAttribute('data-sort'));
+      var xn=isNaN(xv), yn=isNaN(yv);
+      if(xn&&yn) return 0; if(xn) return 1; if(yn) return -1;  // blanks always last
+      return dir==='asc'? xv-yv : yv-xv;
+    }
+    var xt=x.textContent.trim().toLowerCase(), yt=y.textContent.trim().toLowerCase();
+    return dir==='asc'? xt.localeCompare(yt) : yt.localeCompare(xt);
+  });
+  rows.forEach(function(r){ tbody.appendChild(r); });
+}
+</script>
+
+<script>
+(function(){
+  var KEY='mealprep_macro_audit_decisions';
+  var NKEY='mealprep_macro_audit_notes';   // separate key so the decisions map stays a clean name->verdict
+  var GEN='__general';
+
+  function load(){ try { return JSON.parse(localStorage.getItem(KEY))||{}; } catch(e){ return {}; } }
+  function store(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+  function loadN(){ try { return JSON.parse(localStorage.getItem(NKEY))||{}; } catch(e){ return {}; } }
+  function storeN(n){ localStorage.setItem(NKEY, JSON.stringify(n)); }
+  function allIngredients(){ return Array.prototype.map.call(document.querySelectorAll('.decision'), function(el){ return el.getAttribute('data-ing'); }); }
+
+  window.setDec=function(input){
+    var ing=input.closest('.decision').getAttribute('data-ing');
+    var d=load(); d[ing]=input.value; store(d); refresh();
+  };
+  window.clearDec=function(btn){
+    var ing=btn.closest('.decision').getAttribute('data-ing');
+    var d=load(); delete d[ing]; store(d);
+    Array.prototype.forEach.call(btn.closest('.decision').querySelectorAll('input[type=radio]'), function(r){ r.checked=false; });
+    refresh();   // the note is deliberately left alone; clear the textarea itself to drop it
+  };
+  window.clearAll=function(){
+    if(!confirm('Clear all decisions AND all notes?')) return;
+    localStorage.removeItem(KEY); localStorage.removeItem(NKEY);
+    Array.prototype.forEach.call(document.querySelectorAll('.decision input[type=radio]'), function(r){ r.checked=false; });
+    Array.prototype.forEach.call(document.querySelectorAll('.rownote textarea'), function(t){ t.value=''; });
+    document.getElementById('genNote').value='';
+    refresh();
+  };
+
+  // Notes save as you type, debounced so we are not hitting localStorage per keystroke.
+  // Timers are PER FIELD: one shared timer meant typing in a second box cancelled the
+  // first box's pending write and silently dropped that note.
+  var noteTimers={}, pending={};
+  function flushNote(key){
+    if(!(key in pending)) return;
+    var val=pending[key];
+    delete pending[key];
+    clearTimeout(noteTimers[key]); delete noteTimers[key];
+    var n=loadN();
+    if(val.trim()) n[key]=val.trim(); else delete n[key];
+    storeN(n);
+  }
+  function flushAll(){ Object.keys(pending).forEach(flushNote); }
+  function saveNote(key, val){
+    pending[key]=val;
+    clearTimeout(noteTimers[key]);
+    noteTimers[key]=setTimeout(function(){ flushNote(key); refresh(); }, 350);
+  }
+  window.setNote=function(ta){
+    ta.closest('.rownote').classList.toggle('has-note', !!ta.value.trim());
+    saveNote(ta.getAttribute('data-ing'), ta.value);
+  };
+  window.setGenNote=function(ta){ saveNote(GEN, ta.value); };
+  // Leaving a field, or leaving the page, commits immediately rather than waiting out the debounce.
+  document.addEventListener('blur', function(e){
+    var t=e.target;
+    if(t && t.tagName==='TEXTAREA' && (t.id==='genNote' || t.closest('.rownote'))){ flushAll(); refresh(); }
+  }, true);
+  window.addEventListener('pagehide', flushAll);
+  document.addEventListener('visibilitychange', function(){ if(document.hidden) flushAll(); });
+
+  window.copyDec=function(){
+    var t=document.getElementById('decText'); t.select();
+    navigator.clipboard ? navigator.clipboard.writeText(t.value).then(function(){flash('Copied!');}) : document.execCommand('copy');
+  };
+  window.downloadDec=function(){
+    var n=loadN(), general=n[GEN]||'';
+    var rowNotes={}; Object.keys(n).forEach(function(k){ if(k!==GEN) rowNotes[k]=n[k]; });
+    var payload={ tool:'macro-audit', date:'2026-08-15', decisions:load(), notes:rowNotes, generalNotes:general };
+    var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='macro-audit-decisions.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  };
+  function flash(msg){ var c=document.getElementById('decCounts'); c.textContent=msg; setTimeout(function(){refresh();},1200); }
+
+  function refresh(){
+    var d=load(), n=loadN(), all=allIngredients();
+    var adjust=[], keep=[], undecided=[];
+    all.forEach(function(ing){ var v=d[ing]; if(v==='adjust')adjust.push(ing); else if(v==='keep')keep.push(ing); else undecided.push(ing); });
+    // live badges in summary
+    Array.prototype.forEach.call(document.querySelectorAll('.deccell'), function(td){
+      var ing=td.getAttribute('data-ing'), v=d[ing];
+      td.className='deccell'+(v?(' '+v):'');
+      td.textContent=(v?(v==='adjust'?'adjust':'keep'):'—')+(n[ing]?' ✎':'');
+    });
+    // restore radios
+    Array.prototype.forEach.call(document.querySelectorAll('.decision'), function(el){
+      var v=d[el.getAttribute('data-ing')];
+      Array.prototype.forEach.call(el.querySelectorAll('input[type=radio]'), function(r){ r.checked=(r.value===v); });
+    });
+    // restore notes (skip the field being typed in, or we would fight the caret)
+    Array.prototype.forEach.call(document.querySelectorAll('.rownote textarea'), function(ta){
+      var v=n[ta.getAttribute('data-ing')]||'';
+      if(document.activeElement!==ta) ta.value=v;
+      ta.closest('.rownote').classList.toggle('has-note', !!v);
+    });
+    var g=document.getElementById('genNote');
+    if(g && document.activeElement!==g) g.value=n[GEN]||'';
+
+    var noteCount=Object.keys(n).filter(function(k){ return k!==GEN; }).length;
+    document.getElementById('decCounts').innerHTML='— '+adjust.length+' adjust · '+keep.length+' keep · '+undecided.length+' undecided'
+      + (noteCount?' · <span class="notecount">'+noteCount+' noted</span>':'');
+
+    var lines=[];
+    lines.push('Macro audit decisions ('+adjust.length+' adjust / '+keep.length+' keep / '+undecided.length+' undecided'+(noteCount?', '+noteCount+' with notes':'')+')');
+    function emit(title, list, showAll){
+      lines.push(''); lines.push(title);
+      var any=false;
+      list.forEach(function(name){
+        var note=n[name];
+        if(!showAll || note){ lines.push('  - '+name); any=true; }
+        if(note) note.split('\n').forEach(function(l,i){ lines.push((i?'            ':'      note: ')+l); });
+      });
+      if(!any) lines.push('  (none)');
+    }
+    emit('ADJUST toward Amazon:', adjust, false);
+    emit('KEEP ours:', keep, false);
+    if(undecided.length) emit('UNDECIDED:', undecided, false);
+    if(n[GEN]){ lines.push(''); lines.push('GENERAL NOTES:'); n[GEN].split('\n').forEach(function(l){ lines.push('  '+l); }); }
+    document.getElementById('decText').value=lines.join('\n');
+  }
+  if(document.readyState!=='loading') refresh();
+  else document.addEventListener('DOMContentLoaded', refresh);
+})();
+</script>
+</body></html>

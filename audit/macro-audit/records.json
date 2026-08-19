@@ -1,0 +1,2317 @@
+[
+  {
+    "idx": 0,
+    "name": "Basmati Rice",
+    "category": "Grains & Pasta",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "dry",
+    "formMismatch": false,
+    "notes": "No Amazon Fresh store brand exists; used Royal (the #1 basmati brand sold on Amazon). Dry 45g label scales to ~356cal/80C/8P/0F per 100g, closely matching our USDA raw data. Amazon page itself wouldn't render the label, so numbers came from FatSecret/CalorieKing for the Royal product.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Royal-Naturally-Authentic-Grain-Indian/dp/B00I330QEQ",
+        "label": "Royal Authentic White Basmati Rice, 15 lb (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Royal-White-Basmati-Rice-Pound/dp/B0037JCLIU",
+        "label": "Royal White Basmati Rice, 10 lb (Amazon)"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/royal/basmati-rice",
+        "label": "Royal Basmati Rice nutrition (FatSecret)"
+      }
+    ],
+    "serving": 45,
+    "label": {
+      "calories": 160,
+      "carbs": 36,
+      "protein": 4,
+      "fat": 0
+    },
+    "order": 0
+  },
+  {
+    "idx": 1,
+    "name": "Brown Rice",
+    "category": "Grains & Pasta",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "dry",
+    "formMismatch": false,
+    "notes": "Amazon Grocery/Happy Belly store-brand long grain brown rice; dry/uncooked label (45g = 1/4 cup), directly comparable to our USDA raw data and within ~4% of it.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Happy-Belly-Brown-Rice/dp/B08C92WFWG",
+        "label": "Amazon Grocery (Happy Belly) Brown Long Grain Rice, 5 Lb"
+      },
+      {
+        "url": "https://www.eatthismuch.com/calories/long-grain-brown-rice-3329090",
+        "label": "Happy Belly Long Grain Brown Rice - Eat This Much"
+      },
+      {
+        "url": "https://www.mynetdiary.com/food/calories-in-brown-rice-long-grain-by-happy-belly-cup-dry-26350648-0.html",
+        "label": "Brown Rice Long Grain by Happy Belly - MyNetDiary"
+      }
+    ],
+    "serving": 45,
+    "label": {
+      "calories": 160,
+      "carbs": 34,
+      "protein": 3,
+      "fat": 1
+    },
+    "order": 1
+  },
+  {
+    "idx": 2,
+    "name": "Flour",
+    "category": "Grains & Pasta",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "dry",
+    "formMismatch": false,
+    "notes": "Amazon Fresh branded flour via Eat This Much (Amazon page wouldn't render label); listing is bread flour (367 cal/100g) vs our all-purpose USDA data (364/100g) — close; dry form, directly comparable.",
+    "links": [
+      {
+        "url": "https://www.eatthismuch.com/calories/unbleached-enriched-bread-flour-4141002",
+        "label": "Amazon Fresh Unbleached Enriched Bread Flour (Eat This Much)"
+      },
+      {
+        "url": "https://www.amazon.com/Amazon-Brand-Fresh-Purpose-Unbleached/dp/B075KJH45B",
+        "label": "Amazon Grocery Unbleached All Purpose Flour, 5 Lb"
+      },
+      {
+        "url": "https://www.amazon.com/Amazon-Fresh-Purpose-Flour-Pack/dp/B0D181XRLD",
+        "label": "Amazon Grocery All Purpose Flour, 2 Lb (Previously Amazon Fresh)"
+      }
+    ],
+    "serving": 30,
+    "label": {
+      "calories": 110,
+      "carbs": 23,
+      "protein": 3,
+      "fat": 0
+    },
+    "order": 2
+  },
+  {
+    "idx": 3,
+    "name": "Granola",
+    "category": "Grains & Pasta",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Amazon Fresh Berry Crunch Granola (55g serving); per-100g ~455cal/64C/7P/20F, close to our USDA carbs/fat but lower protein since this variant has berries; granola macros vary by brand/flavor.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Fresh-Brand-Berry-Crunch-Granola/dp/B086ZM71NZ",
+        "label": "Amazon Fresh Berry Crunch Granola, 9.2 Oz"
+      },
+      {
+        "url": "https://www.amazon.com/Fresh-Brand-Super-Fruit-Granola/dp/B086ZMQ3CT",
+        "label": "Amazon Fresh Super Seed & Fruit Granola, 10.5 Oz"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/amazon-fresh/berry-crunch-granola",
+        "label": "FatSecret: Amazon Fresh Berry Crunch Granola"
+      }
+    ],
+    "serving": 55,
+    "label": {
+      "calories": 250,
+      "carbs": 35,
+      "protein": 4,
+      "fat": 11
+    },
+    "order": 3
+  },
+  {
+    "idx": 4,
+    "name": "Pasta",
+    "category": "Grains & Pasta",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "dry",
+    "formMismatch": false,
+    "notes": "Amazon Fresh store-brand spaghetti (enriched durum semolina), dry form — directly comparable to our USDA dry data; per-100g ~357cal/75C/12.5P/1.8F matches ours within ~4%.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Fresh-Pasta-Spaghetti-Ounce/dp/B09TSGDMY5",
+        "label": "Amazon Grocery Spaghetti, 16 Oz"
+      },
+      {
+        "url": "https://www.amazon.com/Amazon-Fresh-Penne-Rigate-Pasta/dp/B0BVC34Z36",
+        "label": "Amazon Grocery Penne Rigate Pasta, 16 Oz"
+      },
+      {
+        "url": "https://www.eatthismuch.com/calories/spaghetti-enriched-macaroni-product-4116453",
+        "label": "Eat This Much: Amazon Fresh Spaghetti nutrition"
+      }
+    ],
+    "serving": 56,
+    "label": {
+      "calories": 200,
+      "carbs": 42,
+      "protein": 7,
+      "fat": 1
+    },
+    "order": 4
+  },
+  {
+    "idx": 5,
+    "name": "Rice Noodles",
+    "category": "Grains & Pasta",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "dry",
+    "formMismatch": false,
+    "notes": "No Amazon Fresh store brand exists; used mainstream \"A Taste of Thai\" rice noodles sold on Amazon (dry, rice flour). Per-serving from aggregators since Amazon page wouldn't render the label; scaled to 100g (~333cal/77C/7P/0F) it aligns with our USDA dry data.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Taste-Thai-Noodles-16-Ounce-Boxes/dp/B004I5IC5I",
+        "label": "A Taste of Thai Rice Noodles (16 oz, Pack of 6) - Amazon"
+      },
+      {
+        "url": "https://www.calorieking.com/us/en/foods/f/calories-in-noodles-wide-rice-noodles/c3SGX2P3TTuPmu9JdmdMOA",
+        "label": "A Taste of Thai Wide Rice Noodles - CalorieKing"
+      },
+      {
+        "url": "https://www.myfooddiary.com/foods/7287806/a-taste-of-thai-rice-noodles",
+        "label": "A Taste of Thai Rice Noodles - MyFoodDiary"
+      }
+    ],
+    "serving": 57,
+    "label": {
+      "calories": 190,
+      "carbs": 44,
+      "protein": 4,
+      "fat": 0
+    },
+    "order": 5
+  },
+  {
+    "idx": 6,
+    "name": "Rolled Oats",
+    "category": "Grains & Pasta",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "dry",
+    "formMismatch": false,
+    "notes": "Amazon store-brand (Happy Belly/Amazon Saver) Old Fashioned Oats, 40g dry serving; per-100g scales to ~375/67.5/12.5/6.25, closely matching our USDA dry data. Amazon page blocked label, numbers from MyFoodDiary referencing the branded product.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Brand-Happy-Belly-Fashioned/dp/B08FNGHYL3",
+        "label": "Amazon Saver Whole Grain Old Fashioned Oats, 2.6 Lb"
+      },
+      {
+        "url": "https://www.amazon.com/Amazon-Brand-Happy-Belly-Fashioned/dp/B07TV7ZHT2",
+        "label": "Amazon Grocery Old Fashioned Oats, 18 Oz"
+      },
+      {
+        "url": "https://www.amazon.com/Quaker-Fashioned-Oatmeal-Breakfast-Cereal/dp/B01KV4H51G",
+        "label": "Quaker Old Fashioned Rolled Oats (backup mainstream brand)"
+      }
+    ],
+    "serving": 40,
+    "label": {
+      "calories": 150,
+      "carbs": 27,
+      "protein": 5,
+      "fat": 2.5
+    },
+    "order": 6
+  },
+  {
+    "idx": 7,
+    "name": "Sweet Potato Noodles",
+    "category": "Grains & Pasta",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "dry",
+    "formMismatch": false,
+    "notes": "No Amazon Fresh store brand; used Chung Jung One (mainstream Korean dry glass noodle). Label 360 cal/100g matches our 351 well; Amazon page wouldn't render label so numbers via Eat This Much aggregator.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Chung-Jung-One-Potato-Noodle/dp/B0796M3DSJ",
+        "label": "Chung Jung One Sweet Potato Glass Noodle (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Fusion-Select-Sweet-Potato-Noodles/dp/B0B199BKQZ",
+        "label": "Fusion Select Sweet Potato Glass Noodles (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/SUNGIVEN-Vermicelli-Noodles-Additive-NON-ALUM/dp/B00LM994ZK",
+        "label": "SUNGIVEN Sweet Potato Glass Noodles (Amazon)"
+      }
+    ],
+    "serving": 25,
+    "label": {
+      "calories": 90,
+      "carbs": 22,
+      "protein": 0,
+      "fat": 0
+    },
+    "order": 7
+  },
+  {
+    "idx": 8,
+    "name": "White Rice",
+    "category": "Grains & Pasta",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "dry",
+    "formMismatch": false,
+    "notes": "Amazon Grocery (formerly Amazon Fresh) Enriched White Long Grain Rice; dry label is 1/4 cup (45g) ~160cal, matching our USDA dry data. Amazon page didn't expose the panel; one aggregator listed the COOKED form (143g/150cal) — not comparable to our raw figures.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Enriched-Previously-Fresh-Packaging/dp/B08C8ZBVPH",
+        "label": "Amazon Grocery (prev. Amazon Fresh) Enriched White Long Grain Rice, 2 Lb"
+      },
+      {
+        "url": "https://www.amazon.com/Amazon-Grocery-Enriched-Previously-Packaging/dp/B08C8WMK6N",
+        "label": "Amazon Grocery (prev. Amazon Fresh) Enriched White Long Grain Rice, 5 Lb"
+      },
+      {
+        "url": "https://www.eatthismuch.com/calories/long-grain-white-rice-4911528",
+        "label": "Eat This Much — Amazon Fresh Long Grain White Rice"
+      }
+    ],
+    "serving": 45,
+    "label": {
+      "calories": 160,
+      "carbs": 36,
+      "protein": 3,
+      "fat": 0
+    },
+    "order": 8
+  },
+  {
+    "idx": 9,
+    "name": "Corn Tortillas",
+    "category": "Bakery & Bread",
+    "source": "mixed",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Mission White Corn Tortillas (sold on Amazon); 2-tortilla/47g serving = ~213cal/100g, in line with our USDA 211; as-sold ready-to-eat.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Mission-White-Corn-Tortillas-Count/dp/B00EOEA544",
+        "label": "Mission White Corn Tortillas, 30 Count (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Mission-Foods-White-Tortillas-Count/dp/B07KN4QDPV",
+        "label": "Mission White Corn Tortillas, Gluten Free, 30 Count (Amazon)"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/mission/white-corn-tortilla-(47g)",
+        "label": "Mission White Corn Tortilla nutrition (FatSecret)"
+      }
+    ],
+    "serving": 47,
+    "label": {
+      "calories": 100,
+      "carbs": 21,
+      "protein": 2,
+      "fat": 1
+    },
+    "order": 9
+  },
+  {
+    "idx": 11,
+    "name": "Panko Breadcrumbs",
+    "category": "Bakery & Bread",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "365 by Whole Foods Market (Amazon store brand, ASIN B074H5LYGT); Amazon page wouldn't render label so used CalorieKing/MyFoodDiary aggregators; per-100g (~367cal/76.7C/13.3P/3.3F) closely matches our USDA data.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/365-Everyday-Value-Panko-Crumbs/dp/B074H5LYGT",
+        "label": "365 by Whole Foods Market Panko Bread Crumbs, 8 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Kikkoman-Panko-Japanese-Style-Crumbs/dp/B000WD3PZM",
+        "label": "Kikkoman Panko Japanese Style Bread Crumbs, 8 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Panko-Bread-Crumbs/s?k=Panko+Bread+Crumbs",
+        "label": "Amazon search: Panko Bread Crumbs"
+      }
+    ],
+    "serving": 30,
+    "label": {
+      "calories": 110,
+      "carbs": 23,
+      "protein": 4,
+      "fat": 1
+    },
+    "order": 11
+  },
+  {
+    "idx": 12,
+    "name": "Pita Bread",
+    "category": "Bakery & Bread",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Amazon product nutrition table not machine-readable; used standard white pita (60g serving, 275 cal/100g) which matches our USDA data exactly. Amazon-sold brands vary: Toufayan ~170cal/57g, Joseph's flax is a low-carb specialty.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Value-Pack-Josephs-Whole-Reduced/dp/B01HHITSLE",
+        "label": "Joseph's Flax Pita 3-Pack (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/pita-bread-Grocery-Gourmet-Food/s?k=pita+bread&rh=n:16310101",
+        "label": "Amazon pita bread (Grocery) search"
+      },
+      {
+        "url": "https://www.eatthismuch.com/food/nutrition/pita-bread,4298/",
+        "label": "Pita Bread nutrition (Eat This Much)"
+      }
+    ],
+    "serving": 60,
+    "label": {
+      "calories": 165,
+      "carbs": 33,
+      "protein": 5,
+      "fat": 1
+    },
+    "order": 12
+  },
+  {
+    "idx": 13,
+    "name": "Whole Wheat Bread",
+    "category": "Bakery & Bread",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "No Amazon Fresh store-brand bread exists; used Nature's Own 100% Whole Wheat (sold on Amazon). Amazon page wouldn't render labels, so macros are from FatSecret. Per-100g (~250cal/46C/11P/1.8F) roughly matches our USDA values except fat is much lower; brands vary by slice weight (~28g).",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Natures-Own-Whole-Wheat-Bread/dp/B004A94260",
+        "label": "Nature's Own 100% Whole Wheat Bread, 20 oz Loaf (Amazon)"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/natures-own/100%25-whole-wheat-bread",
+        "label": "Nature's Own 100% Whole Wheat Bread nutrition (FatSecret)"
+      },
+      {
+        "url": "https://www.myfooddiary.com/foods/649503/natures-own-100-percent-whole-wheat-bread",
+        "label": "Nature's Own 100% Whole Wheat Bread (MyFoodDiary)"
+      }
+    ],
+    "serving": 28,
+    "label": {
+      "calories": 70,
+      "carbs": 13,
+      "protein": 3,
+      "fat": 0.5
+    },
+    "order": 13
+  },
+  {
+    "idx": 14,
+    "name": "Whole Wheat Tortilla",
+    "category": "Bakery & Bread",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "365 by Whole Foods (Amazon house brand), 1 tortilla/38g; Amazon page hides label so values from aggregators; our USDA per-100g (271 cal) ~103 cal/38g, closely matches the product. Brands vary 100-130 cal.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/365-Everyday-Value-Organic-Tortillas/dp/B07FW7FXWY",
+        "label": "365 by Whole Foods Market Whole Wheat Tortillas, 10.7 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Mission-Whole-Wheat-Tortillas-Medium/dp/B004XJLYJ0",
+        "label": "Mission Soft Taco Whole Wheat Tortillas, 10 Count (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Tortilla-Factory-Whole-Wheat-Tortillas/dp/B002QM9CTA",
+        "label": "La Tortilla Factory Whole Wheat Low Carb Tortillas (Amazon)"
+      }
+    ],
+    "serving": 38,
+    "label": {
+      "calories": 100,
+      "carbs": 17,
+      "protein": 3,
+      "fat": 3
+    },
+    "order": 14
+  },
+  {
+    "idx": 15,
+    "name": "Black Beans",
+    "category": "Canned & Legumes",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "dry",
+    "formMismatch": false,
+    "notes": "Amazon Fresh sells a dry black bean (B09SHHYCXW); its Amazon label wouldn't render, so dry-form per-50g numbers are from an aggregator and scale to ~340cal/100g, matching our 341cal USDA dry data. A canned Amazon Fresh variant also exists (130g drained=110cal) but is not directly comparable.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Fresh-REGULAR-BLACK-WHOLE/dp/B09SHHYCXW",
+        "label": "Amazon Fresh Regular Black Beans Whole (dry), 16 oz"
+      },
+      {
+        "url": "https://www.amazon.com/Amazon-Fresh-Canned-Black-Beans/dp/B0DDT8FF3T",
+        "label": "Amazon Fresh Canned Black Beans, 15.25 oz (Pack of 4)"
+      },
+      {
+        "url": "https://www.recipal.com/ingredients/9933-nutrition-facts-calories-protein-carbs-fat-organic-black-beans-dry",
+        "label": "Organic Black Beans (dry) nutrition facts"
+      }
+    ],
+    "serving": 50,
+    "label": {
+      "calories": 170,
+      "carbs": 32,
+      "protein": 11,
+      "fat": 0
+    },
+    "order": 15
+  },
+  {
+    "idx": 16,
+    "name": "Chickpeas",
+    "category": "Canned & Legumes",
+    "source": "mixed",
+    "confidence": "medium",
+    "form": "dry",
+    "formMismatch": false,
+    "notes": "Goya 1-lb DRY bag chosen (matches our USDA dry form); 43g serving label ~190cal/27C/10P/3F scales to ~378/63/20.5/6 per 100g, consistent with our data. Amazon Fresh store-brand is canned-only, not comparable.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Goya-Chick-Peas-1-Pound/dp/B000G632OY",
+        "label": "Goya Chick Peas, Garbanzo Beans, Dry, 1 Pound Bag (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Amazon-Fresh-Canned-Chick-Garbanzo/dp/B0BZBJRBY7",
+        "label": "Amazon Grocery Canned Garbanzo Beans 15.5 oz (canned, not dry)"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/goya/chick-peas-garbanzos",
+        "label": "FatSecret: Goya Chick Peas Garbanzos"
+      }
+    ],
+    "serving": 43,
+    "label": {
+      "calories": 190,
+      "carbs": 27,
+      "protein": 10,
+      "fat": 3
+    },
+    "order": 16
+  },
+  {
+    "idx": 17,
+    "name": "Coconut Milk",
+    "category": "Canned & Legumes",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Chose Thai Kitchen Unsweetened canned (no Amazon-brand canned coconut milk exists); 1/3 cup serving listed in cups only, 80g estimated from ~80mL at density ~1.0; per-100g (~150cal/15g fat) matches our USDA data well.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Thai-Kitchen-Gluten-Unsweetened-Coconut/dp/B07YG5X8MK",
+        "label": "Thai Kitchen Gluten Free Unsweetened Coconut Milk 13.66 fl oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Thai-Kitchen-Coconut-Milk-13-66/dp/B000GZSDZI",
+        "label": "Thai Kitchen Unsweetened Coconut Milk 13.66 fl oz (Amazon)"
+      },
+      {
+        "url": "https://www.eatthismuch.com/calories/coconut-milk-unsweetened-1585383",
+        "label": "Thai Kitchen Coconut Milk Unsweetened nutrition (EatThisMuch)"
+      }
+    ],
+    "serving": 80,
+    "label": {
+      "calories": 120,
+      "carbs": 1,
+      "protein": 0.5,
+      "fat": 12
+    },
+    "order": 17
+  },
+  {
+    "idx": 18,
+    "name": "Edamame",
+    "category": "Canned & Legumes",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "cooked",
+    "formMismatch": true,
+    "notes": "365 by Whole Foods (Amazon-owned, sold on Amazon); frozen shelled edamame label is per 100g cooked/prepared, reads ~140 cal vs our 121 USDA raw, so not directly comparable.",
+    "links": [
+      {
+        "url": "https://us.amazon.com/365-Everyday-Value-Shelled-Edamame/dp/B074H6S8D8",
+        "label": "365 by Whole Foods Market Shelled Edamame (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Amazon-Brand-Happy-Frozen-Edamame/dp/B089DTNYK7",
+        "label": "Amazon Grocery Edamame Pods, 12 Oz, Frozen"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/365/shelled-edamame",
+        "label": "FatSecret: 365 Shelled Edamame nutrition"
+      }
+    ],
+    "serving": 100,
+    "label": {
+      "calories": 140,
+      "carbs": 11,
+      "protein": 11,
+      "fat": 5
+    },
+    "order": 18
+  },
+  {
+    "idx": 19,
+    "name": "Red Lentils",
+    "category": "Canned & Legumes",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "dry",
+    "formMismatch": false,
+    "notes": "Bob's Red Mill dry red lentils (sold on Amazon); per-100g ~333cal/60C/24.4P/0F closely matches our USDA dry data. Amazon Grocery store-brand exists but label didn't render.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Fresh-REGULAR-LENTIL-WHOLE/dp/B09SHLXK12",
+        "label": "Amazon Grocery Lentils, Non GMO, 16 oz (store brand)"
+      },
+      {
+        "url": "https://www.amazon.com/Bobs-Red-Mill-Lentils-27-ounce/dp/B000VDZ2GI",
+        "label": "Bob's Red Mill Red Lentils, 27 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/365-Whole-Foods-Market-Organic/dp/B084NHCPPD",
+        "label": "365 Whole Foods Organic Red Lentils, 16 oz (Amazon)"
+      }
+    ],
+    "serving": 45,
+    "label": {
+      "calories": 150,
+      "carbs": 27,
+      "protein": 11,
+      "fat": 0
+    },
+    "order": 19
+  },
+  {
+    "idx": 20,
+    "name": "Tomato Sauce",
+    "category": "Canned & Legumes",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Amazon store-brand label wouldn't render; used Hunt's canned sauce (sold on Amazon) at 62g/serving — comparable to our USDA canned figures.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Brand-Happy-Belly-Tomato/dp/B07TYTL6JQ",
+        "label": "Amazon Grocery (formerly Amazon Fresh) Tomato Sauce, 15 oz"
+      },
+      {
+        "url": "https://www.amazon.com/Hunts-Tomato-Sauce-8-oz/dp/B000Q3R6KS",
+        "label": "Hunt's Tomato Sauce, 8 oz Can (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Amazon-Brand-Happy-Belly-Tomato/dp/B07TSCWN1P",
+        "label": "Amazon Grocery Tomato Sauce, 8 Oz"
+      }
+    ],
+    "serving": 62,
+    "label": {
+      "calories": 20,
+      "carbs": 4,
+      "protein": 0.5,
+      "fat": 0
+    },
+    "order": 20
+  },
+  {
+    "idx": 21,
+    "name": "White Beans",
+    "category": "Canned & Legumes",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "dry",
+    "formMismatch": false,
+    "notes": "Dry small white beans label (Bob's Red Mill, sold on Amazon) via Eat This Much; scales to ~313cal/100g vs our 333 — close, our USDA dry data checks out. Amazon pages did not render nutrition; canned/cooked white beans differ greatly.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Organic-Cannellini-Food-Live-Non-GMO/dp/B078SRZKLV",
+        "label": "Food to Live Organic Cannellini Beans (dried white kidney beans), 1 lb"
+      },
+      {
+        "url": "https://www.amazon.com/365-Everyday-Value-Organic-Cannellini/dp/B074H54XM2",
+        "label": "365 by Whole Foods Market Organic Cannellini Beans, 15.5 oz (canned)"
+      },
+      {
+        "url": "https://www.amazon.com/dried-white-beans/s?k=dried+white+beans",
+        "label": "Amazon search: Dried White Beans"
+      }
+    ],
+    "serving": 48,
+    "label": {
+      "calories": 150,
+      "carbs": 28,
+      "protein": 10,
+      "fat": 0.5
+    },
+    "order": 21
+  },
+  {
+    "idx": 22,
+    "name": "BBQ Sauce",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Kraft Original (Amazon best-seller); Amazon page didn't render label so used FatSecret. 36g serving scales to ~167cal/38.9gC per 100g, close to our USDA data. BBQ sauce sugar content varies by brand.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Kraft-Original-Barbecue-Sauce-18/dp/B00VC5BIC6",
+        "label": "Kraft Original Slow-Simmered Barbecue BBQ Sauce, 18 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Stubbs-Bar-Sauce-Original-Ounce/dp/B00FLM7Y38",
+        "label": "Stubb's Original BBQ Sauce, 36 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/BBQ-Sauce/s?k=BBQ+Sauce",
+        "label": "Amazon BBQ Sauce search results"
+      }
+    ],
+    "serving": 36,
+    "label": {
+      "calories": 60,
+      "carbs": 14,
+      "protein": 0,
+      "fat": 0
+    },
+    "order": 22
+  },
+  {
+    "idx": 23,
+    "name": "Cherry Sauce",
+    "category": "Condiments & Oils",
+    "source": "mixed",
+    "confidence": "low",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Sephra Cherry Topping Sauce (Amazon B08KFHV5VD); label is per-100g only (252kcal/61.9C/0.16P/0.05F), scaled to a standard 30g topping serving. Commercial topping is sugar-heavy (252 vs our USDA 91 cal/100g) — major variance; cherry sauces vary widely by brand.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Sephra-Cherry-Topping-Sauce-2-2lb/dp/B08KFHV5VD",
+        "label": "Sephra Cherry Topping/Dessert Sauce 2.2lb (Amazon.com)"
+      },
+      {
+        "url": "https://www.sephrausa.com/sephra-cherry-topping-sauce",
+        "label": "Sephra USA Cherry Topping Sauce product page"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/dairy-queen/cherry-topping",
+        "label": "FatSecret: Dairy Queen Cherry Topping (28g serving reference)"
+      }
+    ],
+    "serving": 30,
+    "label": {
+      "calories": 76,
+      "carbs": 18.6,
+      "protein": 0.1,
+      "fat": 0
+    },
+    "order": 23
+  },
+  {
+    "idx": 24,
+    "name": "Hoisin Sauce",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "No Amazon Fresh store brand; chose Lee Kum Kee (mainstream Amazon product), label via FatSecret since Amazon page would not render; label protein rounds to 0g vs our USDA 3.3g/100g.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Lee-Kum-Kee-Hoisin-Sauce/dp/B00354T3MY",
+        "label": "Lee Kum Kee Hoisin Sauce 8.5 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Sun-Luck-Traditional-Hoisin-Sauce/dp/B000SRMAOY",
+        "label": "Sun Luck Traditional Hoisin Sauce 8 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/hoisin-sauce/s?k=hoisin+sauce",
+        "label": "Amazon hoisin sauce search results"
+      }
+    ],
+    "serving": 42,
+    "label": {
+      "calories": 90,
+      "carbs": 20,
+      "protein": 0,
+      "fat": 1
+    },
+    "order": 24
+  },
+  {
+    "idx": 25,
+    "name": "Honey",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "365/Amazon honey is plain honey; per-tbsp (21g) label matches our USDA per-100g (304cal/82.4C) exactly, no caveat. Amazon page nutrition table not machine-readable, so used aggregator.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/365-Everyday-Value-Organic-Mountain/dp/B074JD6DSD",
+        "label": "365 by Whole Foods Market Organic Raw Wildflower Honey, 16 OZ (Amazon)"
+      },
+      {
+        "url": "https://us.amazon.com/365-Everyday-Value-Organic-Mountain/dp/B074MH4QLB",
+        "label": "365 by Whole Foods Market Organic Raw Honey, Mountain Forest, 16 OZ (Amazon)"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/usda/honey?portionid=40062&portionamount=1.000",
+        "label": "FatSecret: Honey per 1 tbsp (21g)"
+      }
+    ],
+    "serving": 21,
+    "label": {
+      "calories": 64,
+      "carbs": 17.3,
+      "protein": 0.1,
+      "fat": 0
+    },
+    "order": 25
+  },
+  {
+    "idx": 26,
+    "name": "Hummus",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Amazon Kitchen (Amazon Fresh store brand) Classic Hummus, 30g/2 tbsp serving; per-100g (~267cal/16.7g fat) is richer/fattier than our leaner USDA entry — hummus varies by brand. Amazon page wouldn't render label; numbers from aggregator citing the branded product.",
+    "links": [
+      {
+        "url": "https://us.amazon.com/Amazon-Kitchen-Classic-Hummus/dp/B083SXGRD8",
+        "label": "Amazon Kitchen Classic Hummus, 8 Oz (Amazon Fresh store brand)"
+      },
+      {
+        "url": "https://www.eatthismuch.com/calories/classic-hummus-2685865",
+        "label": "Amazon Kitchen Classic Hummus nutrition - Eat This Much"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/amazon-kitchen/classic-hummus",
+        "label": "Amazon Kitchen Classic Hummus - FatSecret"
+      }
+    ],
+    "serving": 30,
+    "label": {
+      "calories": 80,
+      "carbs": 6,
+      "protein": 2,
+      "fat": 5
+    },
+    "order": 26
+  },
+  {
+    "idx": 27,
+    "name": "Kimchi",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Jongga Mat Kimchi (Amazon); Amazon page returned HTTP 500 so numbers are from Carb Manager/EatThisMuch referencing the Jongga branded product; kimchi varies widely by brand (this label shows ~1g fat/serving vs our near-zero USDA fat).",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Chongga-Mat-Kimchi-Certified-Probiotic/dp/B06XBLR2W8",
+        "label": "Jongga Mat Kimchi 88 oz Cut Cabbage Kimchi (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Chongga-Kimchi-52-9-1-5kg-Cabbage/dp/B077K4RT59",
+        "label": "Jongga Mat Kimchi 52.9 oz Cut Cabbage Kimchi (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/JONGGA-Shelf-Stable-Kimchi-pack/dp/B0842D8JVS",
+        "label": "Jongga Spicy Fermented Kimchi Pouch Pack of 8 (Amazon)"
+      }
+    ],
+    "serving": 28,
+    "label": {
+      "calories": 15,
+      "carbs": 2,
+      "protein": 0.1,
+      "fat": 1
+    },
+    "order": 27
+  },
+  {
+    "idx": 28,
+    "name": "Maple Syrup",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "365 by Whole Foods Market (Amazon store brand); label 2 tbsp/30mL (~40g) = 110cal/27C/0P/0F, scales to ~275cal/67.5C per 100g — matches our USDA data well.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/365-Everyday-Value-Organic-Grade/dp/B074VBM1S2",
+        "label": "365 by Whole Foods Market, Organic Grade A Amber Maple Syrup, 32 Fl Oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/365-Everyday-Value-Organic-Grade/dp/B074V3V186",
+        "label": "365 by Whole Foods Market, Organic Grade A Dark Maple Syrup, 32 Fl Oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/365-Everyday-Value-Organic-Grade/dp/B074H5CN2X",
+        "label": "365 by Whole Foods Market, Organic Grade A Dark Maple Syrup, 12 Fl Oz (Amazon)"
+      }
+    ],
+    "serving": 40,
+    "label": {
+      "calories": 110,
+      "carbs": 27,
+      "protein": 0,
+      "fat": 0
+    },
+    "order": 28
+  },
+  {
+    "idx": 29,
+    "name": "Miso Paste",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Roland White (shiro) Miso on Amazon, 1 Tbsp=16g label; white miso is lower-cal than USDA mixed-miso avg (35cal/16g ~ 219cal/100g vs our 199); varies by miso type.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Roland-White-Miso-Paste-Ounce/dp/B005258AZU",
+        "label": "Roland Foods White Miso Paste (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Hikari-Organic-Miso-Paste-White/dp/B00IBNZAEE",
+        "label": "Hikari Organic White Miso Paste (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Miso-Master-Mellow-White-Organic/dp/B078HTGHH2",
+        "label": "Miso Master Organic Mellow White Miso (Amazon)"
+      }
+    ],
+    "serving": 16,
+    "label": {
+      "calories": 35,
+      "carbs": 4,
+      "protein": 2,
+      "fat": 1
+    },
+    "order": 29
+  },
+  {
+    "idx": 30,
+    "name": "Olive Oil",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Amazon Fresh Italian EVOO; standard label 1 Tbsp/14g = 120 cal, 14g fat, 0 carb/protein — matches our USDA per-100g (884 cal, 100g fat) exactly. Amazon page wouldn't render label; numbers from standard EVOO label confirmed across Amazon brands.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/AmazonFresh-Italian-Extra-Virgin-Olive/dp/B01N0SOZPK",
+        "label": "Amazon Fresh Italian Extra Virgin Olive Oil, First Cold Pressed, 16.9 Fl Oz"
+      },
+      {
+        "url": "https://www.amazon.com/AmazonFresh-Mediterranean-Extra-Virgin-Olive/dp/B01N3LCEDL",
+        "label": "AmazonFresh Mediterranean Extra Virgin Olive Oil, 68 Fl Oz (2L)"
+      },
+      {
+        "url": "https://www.amazon.com/AmazonFresh-Mediterranean-Blend-Extra-Virgin/dp/B01N2VRYNM",
+        "label": "Amazon Fresh Mediterranean Extra Virgin Olive Oil, 16.9 Fl Oz"
+      }
+    ],
+    "serving": 14,
+    "label": {
+      "calories": 120,
+      "carbs": 0,
+      "protein": 0,
+      "fat": 14
+    },
+    "order": 30
+  },
+  {
+    "idx": 32,
+    "name": "Pesto Sauce",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "No Amazon Fresh store-brand pesto exists; used Kirkland Signature (sold on Amazon) label per FatSecret: 60g serving = 330cal/9C/6P/30F, i.e. ~550cal/15C/10P/50F per 100g vs our 400/6.7/6.7/40 — our entry runs notably low on cal/fat/carbs. Pesto varies widely by brand.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/ROI-Italian-Pesto-Sauce-6-3oz/dp/B0033PYYXS",
+        "label": "ROI Vegan Basil Pesto Sauce 6.3 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Pesto-Sauces/b?ie=UTF8&node=6502789011",
+        "label": "Amazon Pesto Sauces category"
+      },
+      {
+        "url": "https://androidembeddedregional.fatsecret.com/calories-nutrition/kirkland-signature/pesto-sauce",
+        "label": "Kirkland Signature Pesto label (FatSecret)"
+      }
+    ],
+    "serving": 60,
+    "label": {
+      "calories": 330,
+      "carbs": 9,
+      "protein": 6,
+      "fat": 30
+    },
+    "order": 32
+  },
+  {
+    "idx": 33,
+    "name": "Sesame Oil",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Amazon product pages wouldn't render nutrition labels; used standard 1 tbsp (14g) oil label, which matches our USDA data exactly (884 cal/100g, 100% fat). No variance concern for pure oil.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Deep-Oil-Sesame-500-ml/dp/B00XU9MM2M",
+        "label": "Deep Sesame Oil 16.9oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Organic-Sesame-100-Pressed-Artisan/dp/B00014FJWE",
+        "label": "Flora Organic Sesame Oil 8.5 fl oz (Amazon)"
+      },
+      {
+        "url": "https://www.eatthismuch.com/calories/sesame-oil-268",
+        "label": "Sesame Oil nutrition (Eat This Much)"
+      }
+    ],
+    "serving": 14,
+    "label": {
+      "calories": 120,
+      "carbs": 0,
+      "protein": 0,
+      "fat": 14
+    },
+    "order": 33
+  },
+  {
+    "idx": 34,
+    "name": "Soy Sauce",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "low",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Amazon store brand Happy Belly soy sauce (~10 cal/1 tbsp); Amazon page wouldn't render the label so macros are from MyNetDiary/EatThisMuch; soy sauce calories/carbs vary by brand and low-sodium vs regular formulation.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Brand-Happy-Belly-Sodium/dp/B08CJ5RBVK",
+        "label": "Amazon Brand - Happy Belly Low Sodium Soy Sauce, 15 fl oz"
+      },
+      {
+        "url": "https://www.amazon.com/Amazon-Brand-Happy-Belly-Sauce/dp/B08CJ5P2NP",
+        "label": "Amazon Brand - Happy Belly Soy Sauce, 15 fl oz"
+      },
+      {
+        "url": "https://www.mynetdiary.com/food/calories-in-happy-belly-soy-sauce-by-amazon-tablespoon-29987619-0.html",
+        "label": "Happy Belly Soy Sauce by Amazon - MyNetDiary"
+      }
+    ],
+    "serving": 16,
+    "label": {
+      "calories": 10,
+      "carbs": 1,
+      "protein": 1,
+      "fat": 0
+    },
+    "order": 34
+  },
+  {
+    "idx": 35,
+    "name": "Tahini",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "365 by Whole Foods Market (Amazon-owned) tahini; per-28g label scales to ~607cal/100g, closely matching our USDA 593; Amazon page nutrition panel not fetchable so used aggregator referencing the brand.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/365-Everyday-Value-Organic-Tahini/dp/B074H5LWYM",
+        "label": "365 by Whole Foods Market Organic Tahini, 16 oz (Amazon)"
+      },
+      {
+        "url": "https://www.eatthismuch.com/calories/tahini-162105",
+        "label": "365 Everyday Value Tahini nutrition (Eat This Much)"
+      },
+      {
+        "url": "https://www.amazon.com/Once-Again-Organic-Tahini-16/dp/B000VHLSCG",
+        "label": "Once Again Organic Tahini, 16 oz (Amazon)"
+      }
+    ],
+    "serving": 28,
+    "label": {
+      "calories": 170,
+      "carbs": 6,
+      "protein": 5,
+      "fat": 16
+    },
+    "order": 35
+  },
+  {
+    "idx": 36,
+    "name": "Butter",
+    "category": "Eggs & Dairy",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Amazon Grocery (ex-Amazon Fresh) Salted Butter Sticks; standard butter, label per 1 tbsp (14g) matches our USDA per-100g (label-rounded). Amazon page nutrition didn't render; values confirmed via aggregator.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Brand-Salted-Butter-Sticks/dp/B07VF6RXNL",
+        "label": "Amazon Grocery (formerly Amazon Fresh) Salted Butter Sticks, 16 oz"
+      },
+      {
+        "url": "https://us.amazon.com/Amazon-Brand-Unsalted-Butter-Sticks/dp/B07VHDXKRG",
+        "label": "Amazon Fresh Unsalted Butter Sticks, 16 oz"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/food/butter",
+        "label": "FatSecret salted butter nutrition"
+      }
+    ],
+    "serving": 14,
+    "label": {
+      "calories": 100,
+      "carbs": 0,
+      "protein": 0,
+      "fat": 11
+    },
+    "order": 36
+  },
+  {
+    "idx": 37,
+    "name": "Cheddar Cheese",
+    "category": "Eggs & Dairy",
+    "source": "mixed",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Amazon Brand Shredded Sharp Cheddar (1/4 cup/28g serving); shredded cheese with anti-caking starch runs slightly lower per gram (~393cal/100g) than USDA block 403; as-sold, comparable.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Brand-Shredded-Cheddar-Cheese/dp/B075Y87YJV",
+        "label": "Amazon Brand Shredded Sharp Cheddar Cheese, 8 oz"
+      },
+      {
+        "url": "https://www.amazon.com/Amazon-Brand-Happy-Shredded-Cheddar/dp/B07Z5FJ736",
+        "label": "Amazon Brand Finely Shredded Sharp Cheddar, 32 oz"
+      },
+      {
+        "url": "https://www.amazon.com/Cheddar-Cheese/s?k=Cheddar+Cheese",
+        "label": "Amazon search: Cheddar Cheese"
+      }
+    ],
+    "serving": 28,
+    "label": {
+      "calories": 110,
+      "carbs": 1,
+      "protein": 6,
+      "fat": 9
+    },
+    "order": 37
+  },
+  {
+    "idx": 38,
+    "name": "Egg",
+    "category": "Eggs & Dairy",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Amazon Fresh cage-free large eggs; 1 egg=50g raw shell egg. Label 70cal/0C/6P/5F matches our USDA raw scaled to 50g (~72cal/6.3P/5F); rounded label values, no discrepancy.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Grocery-Cage-Free-Previously-Packaging/dp/B07ZS6WCZG",
+        "label": "Amazon Grocery Cage-Free Brown Eggs, Grade A, 18 Ct"
+      },
+      {
+        "url": "https://www.amazon.com/Amazon-Fresh-Cage-Free-Previously-Packaging/dp/B07ZS7B3VM",
+        "label": "Amazon Grocery Cage-Free Large White Eggs, Grade A, 18 Ct"
+      },
+      {
+        "url": "https://www.mynetdiary.com/food/calories-in-grade-a-large-cage-free-brown-eggs-by-amazon-fresh-egg-41284010-0.html",
+        "label": "Amazon Fresh Grade A Large Cage-Free Brown Eggs (MyNetDiary)"
+      }
+    ],
+    "serving": 50,
+    "label": {
+      "calories": 70,
+      "carbs": 0,
+      "protein": 6,
+      "fat": 5
+    },
+    "order": 38
+  },
+  {
+    "idx": 39,
+    "name": "Feta Cheese",
+    "category": "Eggs & Dairy",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "365 by Whole Foods Market crumbled feta (sold on Amazon); per-100g recalc ~250cal/7C/21P/14F differs from our USDA which has fat/protein roughly swapped (21.3F/14.2P) — feta macros vary by brand.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/365-Everyday-Value-Cheese-Crumbles/dp/B074JD6HH5",
+        "label": "365 by Whole Foods Market Feta Crumbles, 6 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/365-Everyday-Value-Cheese-Block/dp/B074H61RV7",
+        "label": "365 by Whole Foods Market Feta Block, 16 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Athenos-Crumbled-Feta-4-oz/dp/B0012FPTXU",
+        "label": "Athenos Traditional Crumbled Feta Cheese, 4 oz (Amazon)"
+      }
+    ],
+    "serving": 28,
+    "label": {
+      "calories": 70,
+      "carbs": 2,
+      "protein": 6,
+      "fat": 4
+    },
+    "order": 39
+  },
+  {
+    "idx": 40,
+    "name": "Greek Yogurt",
+    "category": "Eggs & Dairy",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Amazon Fresh nonfat plain Greek yogurt (Amazon page 500'd; numbers from SnapCalorie, cross-checked vs Kirkland nonfat); our USDA 10g protein/0.7g fat reflects whole/lowfat, so nonfat variant is higher protein, near-zero fat.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Fresh-Nonfat-Previously-Packaging/dp/B07W5TD361",
+        "label": "Amazon Fresh, Greek Nonfat Plain Yogurt, 32 Oz"
+      },
+      {
+        "url": "https://us.amazon.com/Amazon-Brand-Happy-Belly-Yogurt/dp/B07W5TC5NB",
+        "label": "Happy Belly Greek Whole Milk Plain Yogurt, 32 Oz"
+      },
+      {
+        "url": "https://www.snapcalorie.com/nutrition/amazon_fresh_plain_greek_yogurt_nutrition.html",
+        "label": "SnapCalorie: Amazon Fresh Plain Greek Yogurt nutrition"
+      }
+    ],
+    "serving": 150,
+    "label": {
+      "calories": 100,
+      "carbs": 6,
+      "protein": 18,
+      "fat": 0
+    },
+    "order": 40
+  },
+  {
+    "idx": 41,
+    "name": "Mozzarella Cheese",
+    "category": "Eggs & Dairy",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Amazon-brand store product is shredded low-moisture PART-SKIM (80cal/1C/7P/5F per 28g, ~286cal/100g); our USDA 280cal/21.6F figure is whole-milk mozzarella — part-skim is notably lower fat. Amazon page label wouldn't render; serving from aggregator matching the part-skim product.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Brand-Shredded-Mozzarella-Part-Skim/dp/B075Y87ZGM",
+        "label": "Amazon Grocery Mozzarella Cheese, Shredded, 8 Oz (B075Y87ZGM)"
+      },
+      {
+        "url": "https://www.amazon.com/Amazon-Brand-Low-Moisture-Part-Skim-Mozzarella/dp/B07WQ2K3SS",
+        "label": "Amazon Grocery Mozzarella Cheese, Shredded, 16 Oz (B07WQ2K3SS)"
+      },
+      {
+        "url": "https://www.eatthismuch.com/calories/mozzarella-shredded-part-skim-558974",
+        "label": "Shredded Part-Skim Mozzarella nutrition (Eat This Much)"
+      }
+    ],
+    "serving": 28,
+    "label": {
+      "calories": 80,
+      "carbs": 1,
+      "protein": 7,
+      "fat": 5
+    },
+    "order": 41
+  },
+  {
+    "idx": 42,
+    "name": "Paneer",
+    "category": "Eggs & Dairy",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Gopi Paneer (sold on Amazon); label via aggregator since Amazon page wouldn't render. Per 100g ~321cal/25f vs our USDA 260cal/20f — Gopi whole-milk is richer; paneer macros vary by brand.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Gopi-Paneer-Indian-Cooking-Cheese/dp/B076ZXXH79",
+        "label": "Gopi Paneer Indian Cooking Cheese, 8 oz (Amazon)"
+      },
+      {
+        "url": "https://us.amazon.com/Sach-Paneer-Original-Organic-Ounce/dp/B087DKMYT7",
+        "label": "Sach Organic Original Paneer, 6 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/paneer-cheese-fresh/s?k=paneer+cheese+fresh",
+        "label": "Amazon search: paneer cheese fresh"
+      }
+    ],
+    "serving": 28,
+    "label": {
+      "calories": 90,
+      "carbs": 1,
+      "protein": 6,
+      "fat": 7
+    },
+    "order": 42
+  },
+  {
+    "idx": 43,
+    "name": "Parmesan Cheese",
+    "category": "Eggs & Dairy",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "365/Whole Foods grated parmesan (sold on Amazon); 5g label ~400cal/40P/30F per 100g, consistent with our USDA data. Amazon store-brand page (B09X173H5W) wouldn't render nutrition.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Grocery-Grated-Parmesan-Cheese/dp/B09X173H5W",
+        "label": "Amazon Grocery Grated Parmesan Cheese, 5 Oz"
+      },
+      {
+        "url": "https://www.amazon.com/365-Everyday-Value-Grated-Parmesan/dp/B074H5SRZX",
+        "label": "365 by Whole Foods Market Grated Parmesan, 5 OZ"
+      },
+      {
+        "url": "https://www.amazon.com/Kraft-Grated-Parmesan-Cheese-Shaker/dp/B0014CSHM6",
+        "label": "Kraft Grated Parmesan Cheese, 16 Oz"
+      }
+    ],
+    "serving": 5,
+    "label": {
+      "calories": 20,
+      "carbs": 0,
+      "protein": 2,
+      "fat": 1.5
+    },
+    "order": 43
+  },
+  {
+    "idx": 44,
+    "name": "Whole Milk",
+    "category": "Eggs & Dairy",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "notes": "Amazon Grocery (ex-Amazon Fresh) Whole Milk page exists but label didn't render; per-serving from FatSecret (1 cup = 240mL/244g). Per-100g matches our USDA data closely; milk is liquid as-sold, directly comparable.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Grocery-Whole-Milk-Gallon/dp/B0D6TFZBF8",
+        "label": "Amazon Grocery (formerly Amazon Fresh) Whole Milk, 1 Gallon"
+      },
+      {
+        "url": "https://www.amazon.com/Amazon-Grocery-Whole-Milk-Gallon/dp/B0D6TLHBDX",
+        "label": "Amazon Grocery Whole Milk, Half Gallon, 64 Fl Oz"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/generic/milk-cows-fluid-whole",
+        "label": "FatSecret Whole Milk nutrition facts"
+      }
+    ],
+    "serving": 244,
+    "label": {
+      "calories": 146,
+      "carbs": 11,
+      "protein": 7.9,
+      "fat": 7.9
+    },
+    "order": 44
+  },
+  {
+    "name": "Breadcrumbs",
+    "category": "Bakery & Bread",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 33,
+    "label": {
+      "calories": 130,
+      "carbs": 26,
+      "protein": 3,
+      "fat": 1.5
+    },
+    "notes": "Progresso Plain, the default plain breadcrumb on Amazon. Calories land within 0.3% of our USDA plain-dry data, but the label's protein is a third lower (9.1 vs 13.4 per 100g) — Progresso is a white-bread crumb where USDA's row is a mixed-grain average. Distinct from our separate Panko Breadcrumbs row.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Progresso-Plain-Bread-Crumbs-Canister/dp/B00099XO5U",
+        "label": "Progresso Plain Bread Crumbs, 15 oz canister (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Progresso-Plain-Bread-Crumbs-Ounce/dp/B003TL1ZNI",
+        "label": "Progresso Plain Bread Crumbs, 15 oz (Amazon)"
+      },
+      {
+        "url": "https://www.myfooddiary.com/foods/825936/progresso-plain-bread-crumbs",
+        "label": "Progresso Plain Bread Crumbs label (MyFoodDiary)"
+      }
+    ],
+    "order": 1000
+  },
+  {
+    "name": "Flour Tortilla",
+    "category": "Bakery & Bread",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 49,
+    "label": {
+      "calories": 150,
+      "carbs": 24,
+      "protein": 3,
+      "fat": 4.5
+    },
+    "notes": "Mission Soft Taco, the volume leader. One tortilla is 49g on the label against the 45g/unit our registry comment assumes, so a recipe counting units is understating by ~9%. Carbs match almost exactly; the label runs leaner on protein and fattier than our USDA row.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Mission-Flour-Tortillas-Trans-Authentic/dp/B004XJLYRM",
+        "label": "Mission Soft Taco Flour Tortillas, 10 count (Amazon)"
+      },
+      {
+        "url": "https://www.nutritionvalue.org/Soft_taco_flour_tortillas_by_Mission_Foods_Inc_1611248_nutritional_value.html",
+        "label": "Mission Soft Taco Flour Tortillas label (NutritionValue)"
+      }
+    ],
+    "order": 1001
+  },
+  {
+    "name": "Canned Tuna",
+    "category": "Canned & Legumes",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 74,
+    "label": {
+      "calories": 70,
+      "carbs": 0,
+      "protein": 17,
+      "fat": 0.5
+    },
+    "notes": "StarKist Chunk Light in water, drained — the same basis as our row. Protein agrees to within 1%, which is the number that matters here; calories run ~12% under ours because USDA's drained figure carries more residual fat than the label admits. Tuna in oil would roughly double both.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/s?k=starkist+chunk+light+tuna+in+water",
+        "label": "StarKist Chunk Light Tuna in Water (Amazon search)"
+      },
+      {
+        "url": "https://www.nutritionvalue.org/Starkist%2C_chunk_light_tuna_in_water_by_STARKIST_386162_nutritional_value.html",
+        "label": "StarKist Chunk Light Tuna in Water label (NutritionValue)"
+      },
+      {
+        "url": "https://starkist.com/product/chunk-light-tuna-in-water-can/",
+        "label": "StarKist Chunk Light Tuna in Water (manufacturer)"
+      }
+    ],
+    "order": 1002
+  },
+  {
+    "name": "Grape Leaves",
+    "category": "Canned & Legumes",
+    "source": "aggregator",
+    "confidence": "low",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 8,
+    "label": {
+      "calories": 5,
+      "carbs": 1,
+      "protein": 0,
+      "fat": 0
+    },
+    "notes": "Krinos in vinegar brine — plain leaves, NOT the stuffed dolma that dominates Amazon search (those are ~190cal/100g and a different food). Carbs match our USDA row exactly. Protein and fat read -100% only because a 2-leaf 8g serving rounds everything under 0.5g to zero; treat those two deltas as label rounding, not evidence.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Krinos-Grape-Leaves-Vinegar-Brine/dp/B01B02CF6S",
+        "label": "Krinos Imported Grape Leaves in Vinegar Brine, 16 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Krinos-Gourmet-Leaves-Vinegar-Ounces/dp/B000LRFY7Q",
+        "label": "Krinos Gourmet Grape Leaves in a Jar, 16 oz (Amazon)"
+      },
+      {
+        "url": "https://tools.myfooddata.com/nutrition-facts/408944/wt1",
+        "label": "Krinos Grape Leaves in Vinegar Brine label (MyFoodData)"
+      }
+    ],
+    "order": 1003
+  },
+  {
+    "name": "Green Lentils",
+    "category": "Canned & Legumes",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "dry",
+    "formMismatch": false,
+    "serving": 45,
+    "label": {
+      "calories": 160,
+      "carbs": 29,
+      "protein": 10,
+      "fat": 0.5
+    },
+    "notes": "Bob's Red Mill green lentils, dry — same basis as our row. Everything agrees inside 10%, confirming the S15 decision to give green lentils the same USDA numbers as Red Lentils and split them on culinary grounds only.",
+    "links": [
+      {
+        "url": "https://us.amazon.com/Bobs-Red-Mill-LENTIL-GREEN/dp/B09PMLLSFG",
+        "label": "Bob's Red Mill Green Lentils, 24 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Bobs-Red-Mill-Petite-Lentils/dp/B084J5YGZJ",
+        "label": "Bob's Red Mill Petite French Green Lentils, 24 oz (Amazon)"
+      },
+      {
+        "url": "https://www.myfooddiary.com/foods/5053636/bobs-red-mill-green-lentils",
+        "label": "Bob's Red Mill Green Lentils label (MyFoodDiary)"
+      }
+    ],
+    "order": 1004
+  },
+  {
+    "name": "Kidney Beans",
+    "category": "Canned & Legumes",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "canned",
+    "formMismatch": true,
+    "serving": 123,
+    "label": {
+      "calories": 110,
+      "carbs": 21,
+      "protein": 8,
+      "fat": 0
+    },
+    "notes": "Goya's only published kidney-bean label is the drained can, while our row is DRY — hence the ~73% gap, which is water, not a data error. It is still worth reading: at 89cal/100g drained vs 337 dry, a recipe that means canned beans and uses dry grams triples the entry. The registry comment already warns of the ~2.7x factor.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Goya-Kidney-Beans-Red-Pound/dp/B004XHLAGO",
+        "label": "Goya Red Kidney Beans, Dry, 1 lb (Amazon — matches our dry row)"
+      },
+      {
+        "url": "https://www.amazon.com/Goya-Kidney-Beans-15-5-ounces/dp/B0004MZ28O",
+        "label": "Goya Red Kidney Beans, 15.5 oz can (Amazon — the labelled form)"
+      },
+      {
+        "url": "https://www.myfooddiary.com/foods/5126848/goya-red-kidney-beans",
+        "label": "Goya Red Kidney Beans (canned) label (MyFoodDiary)"
+      }
+    ],
+    "order": 1005
+  },
+  {
+    "name": "Toor Dal",
+    "category": "Canned & Legumes",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "dry",
+    "formMismatch": false,
+    "serving": 35,
+    "label": {
+      "calories": 120,
+      "carbs": 22,
+      "protein": 8,
+      "fat": 0.5
+    },
+    "notes": "Swad toor dal, dry — the standard Indian-grocery brand. Calories and carbs match our USDA dry row to within 0.2%, the closest agreement of any row added this pass. Cooked toor dal is ~121cal/100g, so the dry basis must be preserved.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/s?k=swad+toor+dal",
+        "label": "Swad Toor Dal, split pigeon peas (Amazon search)"
+      },
+      {
+        "url": "https://www.nutritionvalue.org/Toor_dal_%28split_pigeon_peas%29_by_SWAD_565000_nutritional_value.html",
+        "label": "Swad Toor Dal label (NutritionValue)"
+      }
+    ],
+    "order": 1006
+  },
+  {
+    "name": "Aji Amarillo Paste",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "low",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 14,
+    "label": {
+      "calories": 5,
+      "carbs": 0,
+      "protein": 0,
+      "fat": 0
+    },
+    "notes": "Doña Isabel, the brand our registry line already cites. Calories match to within 1%, vindicating the S11 anchor. Carbs, protein and fat all read -100% purely because a 14g serving rounds every macro under 0.5g to zero — the label cannot resolve them, so it is no evidence against our USDA-chili-derived values.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Isabel-Amarillo-Molido-Yellow-Pepper/dp/B00BKAFS2Y",
+        "label": "Doña Isabel Aji Amarillo Molido, 7.5 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Goya-Yellow-Hot-Pepper-Paste/dp/B07NDXY8QG",
+        "label": "Goya Aji Amarillo Yellow Hot Pepper Paste, 7.5 oz (Amazon)"
+      },
+      {
+        "url": "https://www.nutritionvalue.org/Aji_amarillo_yellow_hot_pepper_paste_by_DONA_ISABEL_570087_nutritional_value.html",
+        "label": "Doña Isabel Aji Amarillo label (NutritionValue)"
+      }
+    ],
+    "order": 1007
+  },
+  {
+    "name": "Doenjang",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 30,
+    "label": {
+      "calories": 50,
+      "carbs": 6,
+      "protein": 4,
+      "fat": 1
+    },
+    "notes": "Chung Jung One Sunchang, one of the three brands the S14 registry line was reconciled from. Every macro lands within 20% and calories within 2%, so the derived row holds up. Sodium remains the real story at ~1150mg per 30g serving.",
+    "links": [
+      {
+        "url": "https://us.amazon.com/Chung-Jung-One-Sunchang-Doenjang/dp/B004JHL5IG",
+        "label": "Chung Jung One O'Food Doenjang Soybean Paste (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Chung-Jung-One-Sunchang-Traditional/dp/B01MYE73DS",
+        "label": "Chung Jung One Doenjang, 1.1 lb / 500g (Amazon)"
+      },
+      {
+        "url": "https://tools.myfooddata.com/nutrition-facts/464050/wt1",
+        "label": "Chung Jung One Sunchang Doenjang label (MyFoodData)"
+      }
+    ],
+    "order": 1008
+  },
+  {
+    "name": "Dry Sherry",
+    "category": "Condiments & Oils",
+    "source": "none",
+    "confidence": "low",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": null,
+    "label": null,
+    "notes": "No comparison possible. Alcoholic beverages are exempt from FDA nutrition labelling, so no sherry bottle carries a Nutrition Facts panel, and Amazon does not retail drinking sherry in most states. Our 116cal/100g is USDA and is mostly ethanol, which the app does not model as a macro. Nothing to decide against — keep ours by default.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/s?k=dry+sherry+cooking+wine",
+        "label": "Dry sherry (Amazon search — returns salted cooking sherry, a different product at ~83cal)"
+      }
+    ],
+    "order": 1009
+  },
+  {
+    "name": "Duck Fat",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 14,
+    "label": {
+      "calories": 130,
+      "carbs": 0,
+      "protein": 0,
+      "fat": 14
+    },
+    "notes": "EPIC rendered duck fat. Fat matches at 100g/100g; the +5% calorie gap is pure label rounding — 14g of fat is 126cal, printed as 130. Same artifact as the existing olive and sesame oil rows, in the opposite direction. Recipes should still record only the fat actually eaten, not confit poaching fat.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Epic-Animal-Fats-Duck-Count/dp/B01B8V7ACA",
+        "label": "EPIC Provisions Rendered Duck Fat, 11 oz jar (Amazon)"
+      },
+      {
+        "url": "https://tools.myfooddata.com/nutrition-facts/2109539/wt1",
+        "label": "EPIC Traditional Duck Fat label (MyFoodData)"
+      }
+    ],
+    "order": 1010
+  },
+  {
+    "name": "Fish Sauce",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 15,
+    "label": {
+      "calories": 16,
+      "carbs": 2,
+      "protein": 2,
+      "fat": 0
+    },
+    "notes": "THE BIGGEST GAP IN THIS BATCH. Three Crabs reads 107cal/100g against our USDA 35 — a 3x understatement — and Red Boat is in the same range (15cal per 15ml tbsp). Real bottles carry added sugar and far more dissolved protein than USDA's generic row. Our fish sauce entry is very likely too low.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Three-Crabs-Brand-24-Ounce-Bottle/dp/B001OQWK0W",
+        "label": "Three Crabs Brand Fish Sauce, 24 oz (Amazon)"
+      },
+      {
+        "url": "https://www.nutritionvalue.org/Fish_sauce_by_THREE_CRABS_BRAND_497393_nutritional_value.html",
+        "label": "Three Crabs Fish Sauce label (NutritionValue)"
+      },
+      {
+        "url": "https://www.recipal.com/ingredients/21121-nutrition-facts-calories-protein-carbs-fat-red-boat-fish-sauce",
+        "label": "Red Boat Fish Sauce label (Recipal) — corroborates the higher basis"
+      }
+    ],
+    "order": 1011
+  },
+  {
+    "name": "Mayonnaise",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 13,
+    "label": {
+      "calories": 90,
+      "carbs": 0,
+      "protein": 0,
+      "fat": 10
+    },
+    "notes": "Hellmann's Real, the category default. Calories and fat agree within 3%; the -100% carb and protein deltas are the 13g serving rounding 0.08g and 0.13g down to zero. One of the cleanest matches in the audit.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Hellmanns-Real-Mayonnaise-30-oz/dp/B000LQTTVY",
+        "label": "Hellmann's Real Mayonnaise, 30 fl oz (Amazon)"
+      },
+      {
+        "url": "https://tools.myfooddata.com/nutrition-facts/1195723/wt1",
+        "label": "Hellmann's Real Mayonnaise label (MyFoodData)"
+      }
+    ],
+    "order": 1012
+  },
+  {
+    "name": "Mirin",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 15,
+    "label": {
+      "calories": 35,
+      "carbs": 8,
+      "protein": 0,
+      "fat": 0
+    },
+    "notes": "Kikkoman Aji-Mirin. Calories match within 3%, but the label carries ~23% more carbohydrate — Aji-Mirin is a sweetened mirin-style seasoning with added corn syrup, not the hon-mirin our USDA-adjacent row describes. The label's 15ml is treated as 15g here; mirin is ~1.1 g/ml, so the per-100g figures run slightly high.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/s?k=kikkoman+aji+mirin",
+        "label": "Kikkoman Aji-Mirin Sweet Cooking Rice Wine (Amazon search)"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/kikkoman/manjo-aji-mirin",
+        "label": "Kikkoman Manjo Aji-Mirin label (FatSecret)"
+      }
+    ],
+    "order": 1013
+  },
+  {
+    "name": "Nori",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "low",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 2.6,
+    "label": {
+      "calories": 10,
+      "carbs": 1,
+      "protein": 1,
+      "fat": 0
+    },
+    "notes": "gimme organic sushi nori. Calories and protein both land within 8% of our dried-sheet row, which is the important confirmation — the S14 warning that USDA 'laver, raw' (35cal) is WET and a ~10x trap holds. Low confidence only because the 2.6g sheet weight is derived from pack weight over sheet count, and every macro on a 2.6g serving is heavily rounded.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Seaweed-Premium-Organic-Gluten-Free-Restaurant-style/dp/B01ESBNFGC",
+        "label": "gimme Organic Sushi Nori Sheets, 0.81 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/ORGANIC-Premium-Roasted-Organic-Seaweed/dp/B00I01ZXYE",
+        "label": "ONE ORGANIC Sushi Nori, 50 full sheets (Amazon)"
+      },
+      {
+        "url": "https://gimmeseaweed.com/products/organic-sushi-nori-seaweed-sheets",
+        "label": "gimme Organic Sushi Nori (manufacturer label)"
+      }
+    ],
+    "order": 1014
+  },
+  {
+    "name": "Palm Oil (Dendê)",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 14,
+    "label": {
+      "calories": 130,
+      "carbs": 0,
+      "protein": 0,
+      "fat": 14
+    },
+    "notes": "Nutiva unrefined red palm oil — the dendê used in Bahian cooking. Fat is exactly 100g/100g as ours has it; the +5% calorie delta is the same 14g-serving rounding that inflates the duck fat row. No action indicated.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Nutiva-Organic-Trade-Certified-Ounce/dp/B00CLZ1QR8",
+        "label": "Nutiva Organic Red Palm Oil, Virgin, 15 fl oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Nutiva-Certified-Cold-Filtered-Unrefined-Ecuadorian/dp/B00JJ1E83G",
+        "label": "Nutiva Organic Fair-Trade Ecuadorian Red Palm Oil, 15 oz (Amazon)"
+      },
+      {
+        "url": "https://www.eatthismuch.com/calories/red-palm-oil-unrefined-2073640",
+        "label": "Nutiva Red Palm Oil, unrefined label (Eat This Much)"
+      }
+    ],
+    "order": 1015
+  },
+  {
+    "name": "Sake",
+    "category": "Condiments & Oils",
+    "source": "none",
+    "confidence": "low",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": null,
+    "label": null,
+    "notes": "No comparison possible — drinking sake is an alcoholic beverage, exempt from FDA nutrition labelling and not retailed by Amazon in most states. Our 134cal/100g is USDA as-poured and is largely ethanol, most of which boils off in a simmered dish. Labelled cooking sake exists but is salted and a different product.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/s?k=cooking+sake+ryorishu",
+        "label": "Cooking sake / ryorishu (Amazon search — salted, not the same as drinking sake)"
+      }
+    ],
+    "order": 1016
+  },
+  {
+    "name": "Sugar",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 4,
+    "label": {
+      "calories": 15,
+      "carbs": 4,
+      "protein": 0,
+      "fat": 0
+    },
+    "notes": "Granulated cane sugar, any brand — the label is identical across the category. Carbohydrate is exactly 100g/100g as ours has it; the -3% calorie delta is the 4g teaspoon rounding 15.5cal to 15. Nothing to fix.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Imperial-Sugar-Granulated-25-Pound/dp/B007SNIK68",
+        "label": "Imperial Sugar Granulated, 25 lb (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/White-Granulated-Sugar/b?ie=UTF8&node=23656497011",
+        "label": "White granulated sugar (Amazon category)"
+      }
+    ],
+    "order": 1017
+  },
+  {
+    "name": "Tonkatsu Sauce",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 15,
+    "label": {
+      "calories": 25,
+      "carbs": 6,
+      "protein": 0,
+      "fat": 0
+    },
+    "notes": "Bull-Dog, the exact brand our registry line cites as its basis — yet the label reads 167cal/100g against our 127, a 31% gap. Worth a look: the S14 note says Kikkoman and Shirakiku run 140-170, so 127 may sit below the whole brand range. The label's 15ml is treated as 15g; the sauce is ~1.15 g/ml, which would pull the per-100g figures down toward 145.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Bull-Dog-Bull-Dog-Tonkatsu-Sauce/dp/B0002IZD1G",
+        "label": "Bull-Dog Tonkatsu Sauce (Amazon)"
+      },
+      {
+        "url": "https://tools.myfooddata.com/nutrition-facts/2455990/wt1",
+        "label": "Bull-Dog Vegetable & Fruit Tonkatsu Sauce label (MyFoodData)"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/bull-dog/vegetable-fruit-sauce-(tonkatsu-sauce)",
+        "label": "Bull-Dog Tonkatsu Sauce label (FatSecret)"
+      }
+    ],
+    "order": 1018
+  },
+  {
+    "name": "Vegetable Oil",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 14,
+    "label": {
+      "calories": 120,
+      "carbs": 0,
+      "protein": 0,
+      "fat": 14
+    },
+    "notes": "Amazon Grocery vegetable oil. Identical in every respect to the existing Olive Oil and Sesame Oil rows, including the -3% calorie artifact from a 14g serving printed as 120cal. Fat is exact. No action indicated.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Amazon-Brand-Vegetable-Gallon-Ounces/dp/B07MK2XKKV",
+        "label": "Amazon Grocery Vegetable Oil, 128 fl oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Crisco-Pure-Vegetable-Oil-Gallon/dp/B0BF48VJB6",
+        "label": "Crisco Pure Vegetable Oil, 1 gallon (Amazon)"
+      }
+    ],
+    "order": 1019
+  },
+  {
+    "name": "White Wine",
+    "category": "Condiments & Oils",
+    "source": "none",
+    "confidence": "low",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": null,
+    "label": null,
+    "notes": "No comparison possible — wine is exempt from FDA nutrition labelling and Amazon does not retail it in most states. Our 82cal/100g is USDA as-poured and is mostly ethanol, which the app does not model and which largely cooks off. Labelled 'cooking wine' is salted and not the same ingredient.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/s?k=white+cooking+wine",
+        "label": "White cooking wine (Amazon search — salted, not the same as drinking wine)"
+      }
+    ],
+    "order": 1020
+  },
+  {
+    "name": "Worcestershire Sauce",
+    "category": "Condiments & Oils",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 5,
+    "label": {
+      "calories": 5,
+      "carbs": 1.1,
+      "protein": 0,
+      "fat": 0
+    },
+    "notes": "Lea & Perrins, the reference bottle. Reads 100cal/100g against our 78 (+28%) with carbs +13%, so our row may run a little low — though at a 5g teaspoon serving the label's own precision is poor. Low stakes: recipes use this by the teaspoon.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/PERRINS-Original-Worcestershire-Sauce-Bottle/dp/B000R2Z2WM",
+        "label": "Lea & Perrins The Original Worcestershire Sauce, 10 fl oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Lea-Perrins-Worcestershire-Sauce-Ounce/dp/B0005XO2ME",
+        "label": "Lea & Perrins Worcestershire Sauce, 10 oz (Amazon)"
+      },
+      {
+        "url": "https://tools.myfooddata.com/nutrition-facts/100121796/wt1",
+        "label": "Lea & Perrins Original Worcestershire Sauce label (MyFoodData)"
+      }
+    ],
+    "order": 1021
+  },
+  {
+    "name": "Blue Cheese",
+    "category": "Eggs & Dairy",
+    "source": "mixed",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 28,
+    "label": {
+      "calories": 100,
+      "carbs": 1,
+      "protein": 6,
+      "fat": 8
+    },
+    "notes": "Amazon sells Happy Belly blue cheese crumbles; the published label is from the equivalent Happy Farms crumble, since the Amazon listing does not render one. Protein and fat match ours to within 0.4%, calories to 1%. As clean a confirmation as the audit produces.",
+    "links": [
+      {
+        "url": "https://us.amazon.com/Crumbled-Previously-Happy-Belly-Packaging/dp/B07WJGLBHL",
+        "label": "Happy Belly (Amazon Grocery) Blue Cheese Crumbles, 6 oz (Amazon)"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/happy-farms/crumbled-blue-cheese",
+        "label": "Crumbled blue cheese label (FatSecret)"
+      }
+    ],
+    "order": 1022
+  },
+  {
+    "name": "Evaporated Milk",
+    "category": "Eggs & Dairy",
+    "source": "aggregator",
+    "confidence": "medium",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 32,
+    "label": {
+      "calories": 40,
+      "carbs": 3,
+      "protein": 2,
+      "fat": 2
+    },
+    "notes": "Carnation, the reference can. Everything reads modestly under ours — calories -7%, fat -18% — consistent with Carnation being a standardised 6.5%-fat product where USDA's row averages richer stock. The label states 2 tbsp (30ml); converted at 1.07 g/ml for the 32g serving used here.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Carnation-Evaporated-Milk-Can-Vitamin/dp/B00XI11WBY",
+        "label": "Carnation Evaporated Milk, Vitamin D added, 12 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Carnation-Evaporated-Milk-12-Cout/dp/B00K7VZRDW",
+        "label": "Carnation Evaporated Milk, 12 fl oz, pack of 12 (Amazon)"
+      },
+      {
+        "url": "https://foods.fatsecret.com/calories-nutrition/carnation/evaporated-milk",
+        "label": "Carnation Evaporated Milk label (FatSecret)"
+      }
+    ],
+    "order": 1023
+  },
+  {
+    "name": "Queso Fresco",
+    "category": "Eggs & Dairy",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 28,
+    "label": {
+      "calories": 80,
+      "carbs": 0,
+      "protein": 6,
+      "fat": 6
+    },
+    "notes": "Cacique, the dominant US brand. Calories within 5% and fat within 11%; the label's protein runs 18% higher than our row and its carbs round to zero. Cacique is part-skim, which is exactly the style the Peruvian recipes assume.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Cacique-Queso-Fresco/dp/B00CJ5S7IG",
+        "label": "Cacique Queso Fresco Cheese, 10 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Cacique-Queso-Fresco-Ranchero-12/dp/B00CJ5S4KW",
+        "label": "Cacique Queso Fresco Ranchero, 10 oz (Amazon)"
+      },
+      {
+        "url": "https://tools.myfooddata.com/nutrition-facts/358110/wt1/1",
+        "label": "Cacique Ranchero Queso Fresco label (MyFoodData)"
+      }
+    ],
+    "order": 1024
+  },
+  {
+    "name": "Tofu",
+    "category": "Eggs & Dairy",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 56,
+    "label": {
+      "calories": 48,
+      "carbs": 0.5,
+      "protein": 6.1,
+      "fat": 2.3
+    },
+    "notes": "THE LARGEST GAP IN THIS BATCH. House Foods firm tofu reads 86cal/100g with 10.9g protein, against our 144cal and 17.3g — our row is 68% higher in calories and 59% higher in protein. Our value is USDA 'tofu, raw, firm, prepared with calcium sulfate', an unusually dense preparation; every mainstream US retail firm tofu label sits near 80-90cal. This one materially affects protein targets and deserves the closest look of any row here.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/House-Foods-Organic-Firm-Tofu/dp/B000VHRNUW",
+        "label": "House Foods Organic Firm Tofu, 14 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/House-Foods-Premium-Tofu-Extra/dp/B071WC228D",
+        "label": "House Foods Premium Tofu Extra Firm, 16 oz (Amazon)"
+      },
+      {
+        "url": "https://www.nutritionvalue.org/HOUSE_FOODS_Premium_Firm_Tofu_nutritional_value.html",
+        "label": "House Foods Premium Firm Tofu label (NutritionValue)"
+      }
+    ],
+    "order": 1025
+  },
+  {
+    "name": "Bulgur",
+    "category": "Grains & Pasta",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "dry",
+    "formMismatch": false,
+    "serving": 45,
+    "label": {
+      "calories": 160,
+      "carbs": 35,
+      "protein": 4,
+      "fat": 0.5
+    },
+    "notes": "Bob's Red Mill red bulgur, dry. Calories and carbs sit within 4% of ours, but the label's protein is 28% lower (8.9 vs 12.3 per 100g) — a real spread between USDA's bulgur row and what the bag claims. The tabbouleh and kisir recipes lean on this for protein.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Bobs-Red-Mill-Bulgur-Wheat/dp/B000VVWUMY",
+        "label": "Bob's Red Mill Bulgur Wheat, 28 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Red-Bulgur-Hard-Wheat-Ounce/dp/B07XSHQ21Z",
+        "label": "Bob's Red Mill Red Bulgur, 24 oz (Amazon)"
+      },
+      {
+        "url": "https://www.myfooddiary.com/foods/4484172/bobs-red-mill-whole-grain-red-bulgur",
+        "label": "Bob's Red Mill Whole Grain Red Bulgur label (MyFoodDiary)"
+      }
+    ],
+    "order": 1026
+  },
+  {
+    "name": "Cassava Flour",
+    "category": "Grains & Pasta",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 32,
+    "label": {
+      "calories": 110,
+      "carbs": 28,
+      "protein": 1,
+      "fat": 0
+    },
+    "notes": "Otto's Naturals, the reference cassava flour. Carbs match within 1% and calories within 4%, comfortably inside the 344-371 brand range the S14 registry line documents. No action indicated.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Ottos-Naturals-Cassava-Grain-Free-Gluten-Free/dp/B00S5AZRYG",
+        "label": "Otto's Naturals Multi-Purpose Cassava Flour, 2 lb (Amazon)"
+      },
+      {
+        "url": "https://www.nutritionvalue.org/Multi-purpose_cassava_flour_by_OTTO%27S_NATURALS_701806_nutritional_value.html",
+        "label": "Otto's Naturals Cassava Flour label (NutritionValue)"
+      }
+    ],
+    "order": 1027
+  },
+  {
+    "name": "Cornstarch",
+    "category": "Grains & Pasta",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 8,
+    "label": {
+      "calories": 30,
+      "carbs": 7,
+      "protein": 0,
+      "fat": 0
+    },
+    "notes": "Argo, the category reference. Calories within 2% and carbs within 4% of ours. The -100% protein and fat deltas are an 8g serving rounding 0.02g of each to zero. No action indicated.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Argo-Cornstarch-1-Pound-LB/dp/B076ZVGN79",
+        "label": "Argo Cornstarch, 1 lb (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Argo-Corn-Starch-oz-pack/dp/B06XKF3ZQL",
+        "label": "Argo Corn Starch, 35 oz, pack of 2 (Amazon)"
+      },
+      {
+        "url": "https://www.myfooddiary.com/foods/7325305/argo-corn-starch",
+        "label": "Argo Corn Starch label (MyFoodDiary)"
+      }
+    ],
+    "order": 1028
+  },
+  {
+    "name": "Gram Flour (Besan)",
+    "category": "Grains & Pasta",
+    "source": "aggregator",
+    "confidence": "low",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": 30,
+    "label": {
+      "calories": 110,
+      "carbs": 27,
+      "protein": 7,
+      "fat": 1
+    },
+    "notes": "Swad besan. Protein matches ours within 4%, but the label's 90g carb per 100g is not credible for chickpea flour — Deep's besan reads 17g per the same 30g serving (56.7 per 100g) and USDA says 57.8, both close to ours. Read the +56% carb delta as a bad label, not a bad registry row. Flagged low confidence for that reason.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Swad-Besan-Flour-Chick-Peas/dp/B00K8DW7XW",
+        "label": "Swad Besan Flour (Chick Pea Flour), 2 lb (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Swad-Besan-Gram-Chick-Flour/dp/B004LJX0SK",
+        "label": "Swad Besan (Gram or Chick Pea Flour), 4 lb (Amazon)"
+      },
+      {
+        "url": "https://www.eatthismuch.com/calories/besan-2870167",
+        "label": "Swad Besan label (Eat This Much)"
+      },
+      {
+        "url": "https://www.eatthismuch.com/calories/besan-chickpea-flour-2509202",
+        "label": "Deep Besan label (Eat This Much) — the sane comparison"
+      }
+    ],
+    "order": 1029
+  },
+  {
+    "name": "Ramen Noodles",
+    "category": "Grains & Pasta",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "dry",
+    "formMismatch": false,
+    "serving": 55,
+    "label": {
+      "calories": 190,
+      "carbs": 41,
+      "protein": 8,
+      "fat": 0.5
+    },
+    "notes": "Ka-Me chuka soba, dry and non-fried — exactly the form S14 re-based this row to. Calories, carbs and protein all agree within 12%, confirming that re-basing. The flash-fried instant block would be ~440cal with 16.5g fat and must not use this row.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Ka-Me-Noodles-Japanese-Curly-Chuka/dp/B000ET8XAQ",
+        "label": "Ka-Me Japanese Curly Noodles (Chuka Soba), 5 oz (Amazon)"
+      },
+      {
+        "url": "https://www.myfooddiary.com/foods/7193863/ka-me-japanese-curly-noodles",
+        "label": "Ka-Me Japanese Curly Noodles label (MyFoodDiary)"
+      }
+    ],
+    "order": 1030
+  },
+  {
+    "name": "Tteok",
+    "category": "Grains & Pasta",
+    "source": "none",
+    "confidence": "low",
+    "form": "as-sold",
+    "formMismatch": false,
+    "serving": null,
+    "label": null,
+    "notes": "No usable label. The Korean rice cakes on Amazon are imported and mostly ship without a published US Nutrition Facts panel; the figures that do circulate span 140-230cal/100g depending on whether the cake is refrigerated-fresh or vacuum-packed. That is the same ~25% brand spread the S14 registry line already documents, so there is nothing here our own note does not already say.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/Korean-Rice-Cake-Tteokbokki-Stick/dp/B09B2XR99G",
+        "label": "Unha's Korean Tteokbokki Garaetteok Rice Cake Sticks, 21.16 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/garaetteok/s?k=garaetteok",
+        "label": "Garaetteok rice cakes (Amazon search)"
+      }
+    ],
+    "order": 1031
+  },
+  {
+    "name": "Bacon",
+    "category": "Meat & Seafood",
+    "source": "aggregator",
+    "confidence": "high",
+    "form": "cooked",
+    "formMismatch": true,
+    "serving": 15,
+    "label": {
+      "calories": 80,
+      "carbs": 0,
+      "protein": 5,
+      "fat": 7
+    },
+    "notes": "Hormel Black Label, but the label's serving is 2 PAN-FRIED slices while our row is USDA raw — so the +187% protein and +16% calorie deltas are rendered-out water and fat, not a data error. The practical warning stands: 15g of cooked bacon comes from roughly 34g raw, so a recipe that weighs cooked strips against this raw row understates by well over half.",
+    "links": [
+      {
+        "url": "https://www.amazon.com/HORMEL-BLACK-LABEL-Original-Bacon/dp/B000Q3AEBG",
+        "label": "HORMEL Black Label Original Bacon, 16 oz (Amazon)"
+      },
+      {
+        "url": "https://www.amazon.com/Wellshire-Farms-Thick-Sliced-Dry-Rubbed/dp/B074VD2YC2",
+        "label": "Wellshire Farms Thick Sliced Uncured Bacon, 12 oz (Amazon)"
+      },
+      {
+        "url": "https://www.nutritionvalue.org/Hormel%2C_black_label%2C_original_bacon_by_Hormel_Foods_Corporation_376998_nutritional_value.html",
+        "label": "Hormel Black Label Original Bacon label (NutritionValue)"
+      }
+    ],
+    "order": 1032
+  }
+]

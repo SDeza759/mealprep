@@ -139,6 +139,8 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
   // so the solver can find optimal scale factors s_i ∈ [0.5, 3.0].
   var baseline = [0, 0, 0, 0]; // summed macros from non-adjustable ingredients
   var vars = []; // adjustable: {mi, ii, grams0, A:[cal,carbs,pro,fat], perGram:[...], isEgg, isBinderEgg}
+  var mealFixedCal = []; // per-meal calories from non-adjustable ingredients (for the balance pass)
+  allMealData.forEach(function() { mealFixedCal.push(0); });
 
   allMealData.forEach(function(meal, mi) {
     meal.ingredients.forEach(function(ing, ii) {
@@ -150,6 +152,7 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
           (ing.name !== "Egg" && isUnitBased(ing.name)) || cal < 50) {
         baseline[0] += cal; baseline[1] += carbs;
         baseline[2] += pro; baseline[3] += fat;
+        mealFixedCal[mi] += cal;
         return;
       }
 
@@ -301,6 +304,50 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
     }
   }
 
+  // ===== BALANCE PASS: prefer even meal sizes among equally-valid solutions =====
+  // The targets constrain only DAY totals, so solutions are non-unique: a base-balanced
+  // recipe pair can solve to a 3:1 calorie split and still land every macro in zone.
+  // One extra deterministic solve, started from scales that pre-size each meal toward an
+  // even calorie share, usually converges to a nearby balanced solution. Adopt it ONLY
+  // when all 4 macros land in [95%,105%] — balance never trades against macro accuracy,
+  // so day pass rates are structurally unaffected. No rng draws: solve() itself is
+  // deterministic, keeping --seed=N replays intact.
+  var M = allMealData.length;
+  function inZone5(macros) {
+    for (var z5 = 0; z5 < 4; z5++) {
+      if (targets[z5] > 0 && (macros[z5] < targets[z5] * 0.95 || macros[z5] > targets[z5] * 1.05)) return false;
+    }
+    return true;
+  }
+  function mealCalSpread(scales) {
+    var mc = mealFixedCal.slice();
+    for (var b = 0; b < K; b++) mc[vars[b].mi] += vars[b].A[0] * scales[b];
+    var mx = -Infinity, mn = Infinity;
+    for (var bm = 0; bm < M; bm++) { if (mc[bm] > mx) mx = mc[bm]; if (mc[bm] < mn) mn = mc[bm]; }
+    return mn > 0 ? mx / mn : Infinity;
+  }
+  if (M >= 2 && targetCal > 0) {
+    var mealAdjCal = [];
+    for (var bm0 = 0; bm0 < M; bm0++) mealAdjCal.push(0);
+    for (var bi0 = 0; bi0 < K; bi0++) mealAdjCal[vars[bi0].mi] += vars[bi0].A[0];
+    var evenShare = targetCal / M;
+    var balInit = [];
+    for (var bi1 = 0; bi1 < K; bi1++) {
+      var bmi = vars[bi1].mi;
+      var f = mealAdjCal[bmi] > 0 ? (evenShare - mealFixedCal[bmi]) / mealAdjCal[bmi] : 1.0;
+      balInit.push(Math.max(0.5, Math.min(3.0, f)));
+    }
+    var balScales = solve(balInit);
+    var balMacros = computeMacros(balScales);
+    if (inZone5(balMacros) &&
+        (!inZone5(bestMacros) || mealCalSpread(balScales) < mealCalSpread(bestScales))) {
+      bestScales = balScales;
+      bestMacros = balMacros;
+      bestLoss = loss(balMacros);
+      solverConverged = converged(balMacros, 0.03);
+    }
+  }
+
   // ===== DIAGNOSTIC: fires when any macro is outside [95%, 105%] =====
   // Suppressed during intermediate solver-as-filter attempts (only log final result).
   var inZone = true;
@@ -414,6 +461,64 @@ function adjustDayMeals(allMealData, targetCal, targetCarbs, targetProtein, targ
   }
 
   return allMealData;
+}
+
+// ===== PROTEIN SHAKE (single definition) =====
+// One scoop, max one per day. Used by the post-solve safety net, the shake-aware planner
+// below, and index.html's manual-edit paths.
+var PROTEIN_SHAKE = { scoops: 1, protein: 25, carbs: 3, fat: 1, calories: 120 };
+
+// ===== SHAKE-AWARE DAY SOLVE (used by index.html's manual-edit paths) =====
+// Solves a FIXED set of meals (no combo choice exists on swap/remove/group re-solve).
+// Order of preference, so shakes stay rare:
+//   1. shakeless solve that lands all 4 macros in [95%,105%]  -> planShake: false
+//   2. solve against targets minus one shake whose day PLUS the shake lands in zone
+//      -> planShake: true (caller must add the shake to the day)
+//   3. neither reaches the zone: keep the shakeless solve, re-run unsuppressed so the
+//      failure diagnostic is logged (mirrors generatePlan's diagnostic re-run)
+// Input mealData is never mutated; read results from the returned mealData clone.
+function solveDayShakeAware(mealData, tCal, tCarbs, tPro, tFat) {
+  function clone(src) {
+    return src.map(function(md) {
+      return { recipe: md.recipe, ingredients: md.ingredients.map(function(i) { return Object.assign({}, i); }) };
+    });
+  }
+  function totalsOf(md) {
+    var t = { calories: 0, carbs: 0, protein: 0, fat: 0 };
+    md.forEach(function(m) {
+      m.ingredients.forEach(function(i) {
+        if (i.isSpice) return;
+        t.calories += i.calories; t.carbs += i.carbs; t.protein += i.protein; t.fat += i.fat;
+      });
+    });
+    return t;
+  }
+  function inZone(t) {
+    var targets = [tCal, tCarbs, tPro, tFat];
+    var vals = [t.calories, t.carbs, t.protein, t.fat];
+    for (var k = 0; k < 4; k++) {
+      if (targets[k] > 0 && (vals[k] < targets[k] * 0.95 || vals[k] > targets[k] * 1.05)) return false;
+    }
+    return true;
+  }
+
+  var A = clone(mealData);
+  adjustDayMeals(A, tCal, tCarbs, tPro, tFat, true);
+  if (inZone(totalsOf(A))) return { mealData: A, planShake: false };
+
+  var S = PROTEIN_SHAKE;
+  if (tCal > S.calories && tCarbs > S.carbs && tPro > S.protein && tFat > S.fat) {
+    var B = clone(mealData);
+    adjustDayMeals(B, tCal - S.calories, tCarbs - S.carbs, tPro - S.protein, tFat - S.fat, true);
+    var tB = totalsOf(B);
+    var withShake = { calories: tB.calories + S.calories, carbs: tB.carbs + S.carbs,
+                      protein: tB.protein + S.protein, fat: tB.fat + S.fat };
+    if (inZone(withShake)) return { mealData: B, planShake: true };
+  }
+
+  var C = clone(mealData);
+  adjustDayMeals(C, tCal, tCarbs, tPro, tFat, false);
+  return { mealData: C, planShake: false };
 }
 
 // Picks the variant whose macros best fit the remaining budget. Pure — closes over nothing — and
@@ -819,14 +924,21 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     var MAX_SOLVE_ATTEMPTS = Math.min(10, scored.length);
     var bestSolveResult = null; // {allMealData, dayTotals, dayMeals, dayPicks, maxDev}
 
-    function trySolveCombo(picks, suppress) {
+    // shakePlan: solve the meals against targets minus one protein shake, then count the
+    // shake into the day totals before the zone check. The result carries planShake so the
+    // downstream shake block adds the shake object without double-counting the macros.
+    function trySolveCombo(picks, suppress, shakePlan) {
+      var S = PROTEIN_SHAKE;
+      var solveTargets = shakePlan
+        ? [targetCal - S.calories, targetCarbs - S.carbs, targetProtein - S.protein, targetFat - S.fat]
+        : [targetCal, targetCarbs, targetProtein, targetFat];
       var mealData = picks.map(function(recipe) {
         var srcIngs = (recipe.selectedVariant ? recipe.selectedVariant.ingredients : recipe.ingredients);
         var ings = srcIngs.map(function(ing) { return Object.assign({}, ing, { adjustment: null }); });
         applyIngredientOverrides(ings, overrides);
         return { recipe: recipe, ingredients: ings };
       });
-      adjustDayMeals(mealData, targetCal, targetCarbs, targetProtein, targetFat, suppress);
+      adjustDayMeals(mealData, solveTargets[0], solveTargets[1], solveTargets[2], solveTargets[3], suppress);
       var dt = { calories:0, carbs:0, protein:0, fat:0 };
       var dm = [];
       mealData.forEach(function(md) {
@@ -834,6 +946,9 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
         dt.calories += mt.calories; dt.carbs += mt.carbs; dt.protein += mt.protein; dt.fat += mt.fat;
         dm.push({ originalName: md.recipe.name, name: md.recipe.name, cuisine: md.recipe.cuisine, isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1, ingredients: md.ingredients, totalMacros: mt, variantLabel: (md.recipe.selectedVariant ? md.recipe.selectedVariant.label : null) });
       });
+      if (shakePlan) {
+        dt.calories += S.calories; dt.carbs += S.carbs; dt.protein += S.protein; dt.fat += S.fat;
+      }
       // Check if all macros are in [95%, 105%]
       var maxDev = 0;
       var targets4 = [targetCal, targetCarbs, targetProtein, targetFat];
@@ -844,20 +959,54 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
           if (dv > maxDev) maxDev = dv;
         }
       }
-      return { allMealData: mealData, dayTotals: dt, dayMeals: dm, dayPicks: picks, maxDev: maxDev, inZone: maxDev <= 0.05 };
+      // Meal-balance spread: max/min calories across the day's meals (1 = perfectly even).
+      var mxC = -Infinity, mnC = Infinity;
+      dm.forEach(function(mm) {
+        if (mm.totalMacros.calories > mxC) mxC = mm.totalMacros.calories;
+        if (mm.totalMacros.calories < mnC) mnC = mm.totalMacros.calories;
+      });
+      var calSpread = (dm.length >= 2 && mnC > 0) ? mxC / mnC : 1;
+      return { allMealData: mealData, dayTotals: dt, dayMeals: dm, dayPicks: picks, maxDev: maxDev, inZone: maxDev <= 0.05, calSpread: calSpread, planShake: !!shakePlan };
     }
 
+    // Balance-aware acceptance: an in-zone solve with an even meal split (spread <= 1.6)
+    // is accepted immediately, as before. An in-zone solve that is lopsided keeps its
+    // place as the best-so-far but lets the remaining top combos try to beat it on
+    // balance. Out-of-zone fallback semantics (lowest maxDev) are unchanged, so a day
+    // that solved before still solves — only the choice among valid days shifts.
+    var BALANCED_SPREAD = 1.35;
+    var bestInZoneResult = null; // among shakeless in-zone solves: lowest meal-calorie spread
+    var bestShakeResult = null;  // among in-zone-only-with-a-planned-shake solves: lowest spread
+    // Shake planning needs every shifted target to stay positive.
+    var SH = PROTEIN_SHAKE;
+    var canPlanShake = targetCal > SH.calories && targetCarbs > SH.carbs &&
+                       targetProtein > SH.protein && targetFat > SH.fat;
     for (var attempt = 0; attempt < MAX_SOLVE_ATTEMPTS; attempt++) {
-      var solveResult = trySolveCombo(scored[attempt].combo, true); // suppress diagnostics
+      var solveResult = trySolveCombo(scored[attempt].combo, true, false); // suppress diagnostics
       if (!bestSolveResult || solveResult.maxDev < bestSolveResult.maxDev) {
         bestSolveResult = solveResult;
       }
-      if (solveResult.inZone) break; // solved cleanly, accept
+      if (solveResult.inZone && (!bestInZoneResult || solveResult.calSpread < bestInZoneResult.calSpread)) {
+        bestInZoneResult = solveResult;
+      }
+      if (solveResult.inZone && solveResult.calSpread <= BALANCED_SPREAD) break; // solved cleanly AND balanced, accept
+      // Shake-aware rescue: re-solve this combo against targets minus one shake, but only
+      // while NO shakeless in-zone solve exists — a shakeless solution always outranks a
+      // planned shake, so shakes stay rare. Never an early break: a later combo still
+      // deserves its chance to solve shakeless.
+      if (!solveResult.inZone && !bestInZoneResult && canPlanShake) {
+        var shakeResult = trySolveCombo(scored[attempt].combo, true, true);
+        if (shakeResult.inZone && (!bestShakeResult || shakeResult.calSpread < bestShakeResult.calSpread)) {
+          bestShakeResult = shakeResult;
+        }
+      }
     }
+    if (bestInZoneResult) bestSolveResult = bestInZoneResult;
+    else if (bestShakeResult) bestSolveResult = bestShakeResult; // in zone WITH its shake beats an out-of-zone day
 
     // If the best result is out of zone, re-run it without suppression to log diagnostics
     if (!bestSolveResult.inZone) {
-      bestSolveResult = trySolveCombo(bestSolveResult.dayPicks, false);
+      bestSolveResult = trySolveCombo(bestSolveResult.dayPicks, false, bestSolveResult.planShake);
     }
 
     var dayPicks = bestSolveResult.dayPicks;
@@ -879,18 +1028,22 @@ function generatePlan(targetCal, targetCarbs, targetProtein, targetFat, override
     // calculations, grocery list aggregation, or any other logic — purely cosmetic ordering.
     dayMeals.sort(function(a, b) { return (b.isBreakfast ? 1 : 0) - (a.isBreakfast ? 1 : 0); });
 
-    // Protein Shake — FINAL SAFETY NET after combo selection + adjustment loop.
-    // Verified intact after combo-first rewrite and rescue phase removal.
-    // Triggers when protein is still >10% below target. Max one per day. Not a meal card.
-    // Macros: 1 scoop = 25g protein, 3g carbs, 1g fat, 120 calories.
+    // Protein Shake — two ways a day gets one, max one per day, never a meal card:
+    // 1. PLANNED (shake-aware solve): the meals were solved against targets minus the shake
+    //    and dayTotals already include it — just attach the object, don't re-add macros.
+    // 2. SAFETY NET (legacy): protein still >10% below target after a shakeless solve.
     var proteinShake = null;
-    var proteinDeficit = targetProtein - dayTotals.protein;
-    if (proteinDeficit > targetProtein * 0.10) {
-      proteinShake = { scoops: 1, protein: 25, carbs: 3, fat: 1, calories: 120 };
-      dayTotals.calories += 120;
-      dayTotals.carbs += 3;
-      dayTotals.protein += 25;
-      dayTotals.fat += 1;
+    if (bestSolveResult.planShake) {
+      proteinShake = Object.assign({}, PROTEIN_SHAKE);
+    } else {
+      var proteinDeficit = targetProtein - dayTotals.protein;
+      if (proteinDeficit > targetProtein * 0.10) {
+        proteinShake = Object.assign({}, PROTEIN_SHAKE);
+        dayTotals.calories += PROTEIN_SHAKE.calories;
+        dayTotals.carbs += PROTEIN_SHAKE.carbs;
+        dayTotals.protein += PROTEIN_SHAKE.protein;
+        dayTotals.fat += PROTEIN_SHAKE.fat;
+      }
     }
 
     var totalsObj = { calories: round1(dayTotals.calories), carbs: round1(dayTotals.carbs), protein: round1(dayTotals.protein), fat: round1(dayTotals.fat) };
@@ -919,6 +1072,8 @@ if (typeof module !== 'undefined' && module.exports) {
     adjustDayMeals,
     generatePlan,
     selectVariant,
+    solveDayShakeAware,
+    PROTEIN_SHAKE,
     initializeData,
     setRandomSeed,
     state,

@@ -120,6 +120,9 @@
   .wk-shake-cell:hover { background: linear-gradient(135deg, #EEEDFE, #E6F1FB); }
   .wk-shake-cell .wk-meal-name { color: #5b21b6; }
   .wk-shake-cell .wk-meal-macros { color: #6b21a8; }
+  .wk-shake-remove { border: none; background: transparent; color: #8b7fd4; font-size: 1rem; line-height: 1;
+    padding: 2px 6px; margin-left: auto; cursor: pointer; border-radius: 6px; }
+  .wk-shake-remove:hover { color: #b3402e; background: rgba(179, 64, 46, 0.08); }
   .wk-shake-cell .cuisine-tag { background: #ede9fe; color: #5b21b6; }
   .md-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.35); z-index: 1100; display: flex; align-items: center; justify-content: center; padding: 16px; }
   .md-modal { background: #fff; border-radius: 14px; max-width: 600px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 30px rgba(0,0,0,0.18); }
@@ -1478,6 +1481,24 @@ function App() {
     navigator.clipboard.writeText(text).then(function() { setCopyMsg("Copied!"); setTimeout(function() { setCopyMsg(""); }, 2000); });
   }
 
+  // Re-anchor a meal's solve window at the recipe AS WRITTEN (S18). Manual re-solves used to
+  // inherit the previous solution's grams as the next 0.5-3x scaling anchor, so repeated edits
+  // ratcheted ingredients into corners no solve could escape (a sesame-oil anchor that drifted
+  // to 21g forces >10g of pure fat at its floor and single-handedly made a day infeasible).
+  // Solver output should be a function of (recipes, targets), never of edit history. Falls back
+  // to the meal's current ingredients when the recipe name no longer exists (S15 renames
+  // orphaned old saved plans, and those must still re-solve rather than crash).
+  function baseMealIngredients(meal) {
+    var recipe = RECIPES.find(function(r) { return r.name === (meal.originalName || meal.name); });
+    if (!recipe) return meal.ingredients;
+    var src = recipe.ingredients;
+    if (meal.variantLabel && recipe.variants) {
+      var v = recipe.variants.find(function(x) { return x.label === meal.variantLabel; });
+      if (v) src = v.ingredients;
+    }
+    return src;
+  }
+
   function handleSwap(newRecipe) {
     if (!swapTarget || !plan) return;
     var di = swapTarget.dayIdx, mi = swapTarget.mealIdx;
@@ -1521,11 +1542,21 @@ function App() {
       ? srcDay.meals.map(cloneMeal).concat([newMealObj])
       : srcDay.meals.map(function(meal, mealI) { return mealI === mi ? newMealObj : cloneMeal(meal); });
     var mealData = newMeals.map(function(m) {
-      var ings = m.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
+      var ings = baseMealIngredients(m).map(function(i) { return Object.assign({}, i, { adjustment: null }); });
       applyIngredientOverrides(ings, ingredientOverrides);
       return { recipe: { name: m.name, tags: m.isBreakfast ? ["breakfast"] : [], selectedVariant: m.variantLabel ? { label: m.variantLabel } : null }, ingredients: ings };
     });
-    adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams);
+    // Shake-aware solve: shakeless when it reaches the zone; else try planning around one
+    // shake (a fixed meal set has no combo choice, so this is its only rescue). A day whose
+    // shake the user removed (noShake) gets the plain shakeless solve instead.
+    var solved;
+    if (srcDay.noShake) {
+      adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams);
+      solved = { mealData: mealData, planShake: false };
+    } else {
+      solved = solveDayShakeAware(mealData, calories, carbGrams, proteinGrams, fatGrams);
+    }
+    mealData = solved.mealData;
     var dayTotals = { calories:0, carbs:0, protein:0, fat:0 };
     var rebuilt = mealData.map(function(md, idx) {
       var mt = md.ingredients.filter(function(i){return !i.isSpice;}).reduce(function(a, i) { return { calories:a.calories+i.calories, carbs:a.carbs+i.carbs, protein:a.protein+i.protein, fat:a.fat+i.fat }; }, { calories:0, carbs:0, protein:0, fat:0 });
@@ -1537,12 +1568,14 @@ function App() {
         ingredients: md.ingredients, totalMacros: mt };
     });
     // Re-evaluate the protein shake from scratch (mirrors generatePlan and handleRemoveMeal).
-    // Adding or swapping a meal moves protein a lot, so a stale shake would leave the day's
-    // displayed totals and its shake column disagreeing.
+    // A PLANNED shake (solved.planShake) is unconditional — the solve already budgeted for it.
+    // Otherwise the legacy >10%-low safety net applies. Either way the shake lands in dayTotals
+    // here, exactly once.
     var proteinShake = null;
-    if (proteinGrams - dayTotals.protein > proteinGrams * 0.10) {
-      proteinShake = { scoops: 1, protein: 25, carbs: 3, fat: 1, calories: 120 };
-      dayTotals.calories += 120; dayTotals.carbs += 3; dayTotals.protein += 25; dayTotals.fat += 1;
+    if (!srcDay.noShake && (solved.planShake || proteinGrams - dayTotals.protein > proteinGrams * 0.10)) {
+      proteinShake = Object.assign({}, PROTEIN_SHAKE);
+      dayTotals.calories += proteinShake.calories; dayTotals.carbs += proteinShake.carbs;
+      dayTotals.protein += proteinShake.protein; dayTotals.fat += proteinShake.fat;
     }
     var computedDay = Object.assign({}, srcDay, { meals: rebuilt, totals: { calories: round1(dayTotals.calories), carbs: round1(dayTotals.carbs), protein: round1(dayTotals.protein), fat: round1(dayTotals.fat) }, proteinShake: proteinShake });
 
@@ -1593,12 +1626,24 @@ function App() {
 
     var remaining = srcDay.meals.filter(function(_, idx) { return idx !== mi; });
     var mealData = remaining.map(function(m) {
-      var ings = m.ingredients.map(function(i) { return Object.assign({}, i, { adjustment: null }); });
+      var ings = baseMealIngredients(m).map(function(i) { return Object.assign({}, i, { adjustment: null }); });
       applyIngredientOverrides(ings, ingredientOverrides);
       return { recipe: { name: m.name, tags: m.isBreakfast ? ["breakfast"] : [], selectedVariant: m.variantLabel ? { label: m.variantLabel } : null }, ingredients: ings };
     });
     var isNowEmpty = remaining.length === 0;
-    if (!isNowEmpty) adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams);
+    var removePlanShake = false;
+    if (!isNowEmpty) {
+      // Shake-aware solve, same preference order as handleSwap: shakeless first, planned
+      // shake only when the remaining fixed meals can't reach the zone without one. A day
+      // whose shake the user removed (noShake) gets the plain shakeless solve instead.
+      if (srcDay.noShake) {
+        adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams);
+      } else {
+        var removeSolved = solveDayShakeAware(mealData, calories, carbGrams, proteinGrams, fatGrams);
+        mealData = removeSolved.mealData;
+        removePlanShake = removeSolved.planShake;
+      }
+    }
     var dayTotals = { calories:0, carbs:0, protein:0, fat:0 };
     var rebuilt = mealData.map(function(md, idx) {
       var mt = md.ingredients.filter(function(i){return !i.isSpice;}).reduce(function(a, i) { return { calories:a.calories+i.calories, carbs:a.carbs+i.carbs, protein:a.protein+i.protein, fat:a.fat+i.fat }; }, { calories:0, carbs:0, protein:0, fat:0 });
@@ -1608,11 +1653,13 @@ function App() {
         ingredients: md.ingredients, totalMacros: mt };
     });
     // Re-evaluate protein shake from scratch (mirrors generatePlan) — but never bolt a shake
-    // onto a day the user just emptied.
+    // onto a day the user just emptied. A planned shake is unconditional (the solve budgeted
+    // for it); otherwise the legacy >10%-low safety net applies.
     var proteinShake = null;
-    if (!isNowEmpty && proteinGrams - dayTotals.protein > proteinGrams * 0.10) {
-      proteinShake = { scoops: 1, protein: 25, carbs: 3, fat: 1, calories: 120 };
-      dayTotals.calories += 120; dayTotals.carbs += 3; dayTotals.protein += 25; dayTotals.fat += 1;
+    if (!isNowEmpty && !srcDay.noShake && (removePlanShake || proteinGrams - dayTotals.protein > proteinGrams * 0.10)) {
+      proteinShake = Object.assign({}, PROTEIN_SHAKE);
+      dayTotals.calories += proteinShake.calories; dayTotals.carbs += proteinShake.carbs;
+      dayTotals.protein += proteinShake.protein; dayTotals.fat += proteinShake.fat;
     }
     var computedDay = Object.assign({}, srcDay, { meals: rebuilt, totals: { calories: round1(dayTotals.calories), carbs: round1(dayTotals.carbs), protein: round1(dayTotals.protein), fat: round1(dayTotals.fat) }, proteinShake: proteinShake });
 
@@ -1640,6 +1687,58 @@ function App() {
     Object.keys(nsv).forEach(function(key) { if (memberSet[parseInt(key, 10)]) delete nsv[key]; });
     setEatenMeals(ne); setMealServings(nsv);
     setDetailModal(null); setDetailInstrOpen(false); setPlan(newPlan);
+  }
+
+  // Remove a generated protein shake (user's call, S18): re-solve the day WITHOUT one and
+  // accept the best shakeless result even when it lands outside the zone — the user prefers
+  // that over meals + shake. Sets noShake on the day so later swap/remove edits don't sneak a
+  // shake back (both the planner and the >10%-low safety net respect it). Regenerating the day
+  // builds a fresh day object, which clears the opt-out. Group-aware like swap/remove.
+  function handleRemoveShake(di) {
+    if (!plan || !plan[di] || !plan[di].proteinShake) return;
+    var members = planGroupMembers(di);
+    var memberSet = {}; members.forEach(function(d) { memberSet[d] = true; });
+    var srcDay = plan[di];
+    var mealData = srcDay.meals.map(function(m) {
+      var ings = baseMealIngredients(m).map(function(i) { return Object.assign({}, i, { adjustment: null }); });
+      applyIngredientOverrides(ings, ingredientOverrides);
+      return { recipe: { name: m.name, tags: m.isBreakfast ? ["breakfast"] : [], selectedVariant: m.variantLabel ? { label: m.variantLabel } : null }, ingredients: ings };
+    });
+    adjustDayMeals(mealData, calories, carbGrams, proteinGrams, fatGrams); // plain shakeless solve
+    var dayTotals = { calories:0, carbs:0, protein:0, fat:0 };
+    var rebuilt = mealData.map(function(md, idx) {
+      var mt = md.ingredients.filter(function(i){return !i.isSpice;}).reduce(function(a, i) { return { calories:a.calories+i.calories, carbs:a.carbs+i.carbs, protein:a.protein+i.protein, fat:a.fat+i.fat }; }, { calories:0, carbs:0, protein:0, fat:0 });
+      dayTotals.calories += mt.calories; dayTotals.carbs += mt.carbs; dayTotals.protein += mt.protein; dayTotals.fat += mt.fat;
+      return { originalName: srcDay.meals[idx].originalName || srcDay.meals[idx].name, name: srcDay.meals[idx].name,
+        cuisine: srcDay.meals[idx].cuisine, isBreakfast: md.recipe.tags.indexOf("breakfast") !== -1,
+        variantLabel: srcDay.meals[idx].variantLabel || null,
+        ingredients: md.ingredients, totalMacros: mt };
+    });
+    var computedDay = Object.assign({}, srcDay, { meals: rebuilt, totals: { calories: round1(dayTotals.calories), carbs: round1(dayTotals.carbs), protein: round1(dayTotals.protein), fat: round1(dayTotals.fat) }, proteinShake: null, noShake: true });
+
+    // Array.from over all 7 indices, not plan.map — plan can be sparse and map skips holes.
+    var newPlan = Array.from({length: 7}, function(_, dayI) {
+      if (!memberSet[dayI]) return plan[dayI];
+      var cloned = JSON.parse(JSON.stringify(computedDay));
+      cloned.day = dayI;
+      return cloned;
+    });
+    // The shake occupied the slot AFTER the meals in each member's row; drop any eaten mark on it.
+    // Meal slots keep their marks — identities and indices are unchanged, only grams re-solved.
+    var shakeSlot = srcDay.meals.length;
+    var ne = Object.assign({}, eatenMeals);
+    members.forEach(function(d) { delete ne[d + "-" + shakeSlot]; });
+    setEatenMeals(ne);
+    var newDay = newPlan[di];
+    if (newDay) {
+      var t = newDay.totals;
+      var cp = t.calories / calories * 100, bp = t.carbs / carbGrams * 100, pp = t.protein / proteinGrams * 100, fp = t.fat / fatGrams * 100;
+      if (cp < 95 || cp > 105 || bp < 95 || bp > 105 || pp < 95 || pp > 105 || fp < 95 || fp > 105) {
+        setSwapWarning("Shake removed. This day's macros are outside the 95-105% range without it - that's the tradeoff. Regenerating the day re-enables shakes.");
+        setTimeout(function() { setSwapWarning(null); }, 6000);
+      }
+    }
+    setPlan(newPlan);
   }
 
   // Set slot `si`'s serving count for THIS DAY ONLY — deliberately NOT group-aware (S17, user's
@@ -1882,7 +1981,10 @@ function App() {
                       if (!slot) return <td className="wk-meal-cell wk-empty-cell" key={si}></td>;
                       if (slot._isShake) {
                         return (<td className="wk-meal-cell wk-shake-cell" key={si}>
-                          <div className="wk-name-row"><span className="wk-meal-name">{slot.name}</span></div>
+                          <div className="wk-name-row">
+                            <span className="wk-meal-name">{slot.name}</span>
+                            <button className="wk-shake-remove" title="Remove the shake and re-solve this day without it (macros may leave the 95-105% zone)" onClick={function(e){e.stopPropagation();handleRemoveShake(di);}}>&times;</button>
+                          </div>
                           <div className="wk-meal-meta"><span className="wk-meal-macros">{Math.round(slot.totalMacros.calories)} cal</span></div>
                         </td>);
                       }

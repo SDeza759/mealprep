@@ -1,11 +1,11 @@
 # CLAUDE.md — Project Context
 
 ## Last Updated
-2026-08-18 — S17. One change: the serving stepper is per-day again (see Key Decisions). **The macro
-audit is built and the user is doing the review OFF-SESSION** — they left S17 to tick all 76 rows in
-`audit/macro-audit.html` and will return with pasted decisions, so expect that paste as the opening
-move of S18 and don't rebuild or re-review the audit. `data.js` untouched since S15; 700/700 +
-7000/7000, 139/139, hygiene all-green.
+2026-08-30 — S18. Algorithm/UI session: meal balance, shake-aware solving, removable shakes,
+base-anchored re-solves (see Key Decisions). **The macro audit review is STILL pending OFF-SESSION** —
+the user left S17 to tick all 76 rows in `audit/macro-audit.html` and will return with pasted
+decisions; expect that paste and don't rebuild or re-review the audit. `data.js` untouched since
+S15; 700/700 + 7000/7000, 139/139, hygiene all-green.
 
 ## Project Overview
 Multi-file HTML meal-prep optimizer ("Actual Size Optimizer"). Weekly plans vs macro targets
@@ -30,8 +30,8 @@ Load order: data.js → algorithm.js → grocery.js → `initializeData()` → b
 
 ## Data Flow
 Set targets + meals/day → sample 100 combos/day → feasibility pre-filter → softmax rank → solver-as-filter
-(try top 10 combos until one solves to [95%,105%] on all 4 macros) → add protein shake if protein >10% low
-→ render table.
+over top 10 combos: accept first in-zone ([95%,105%] all 4 macros) solve with meal spread ≤1.35, else most
+balanced in-zone, else shake-planned in-zone, else least-bad + deficit shake → render table.
 
 ## User Constraints (non-negotiable)
 - **No nuts. No olives.** `Peanuts` (S11) and `Black Olives` (S13) removed from registry, categories and
@@ -78,6 +78,41 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
   only `di`'s key, so grouped days can carry different serving counts. Servings feed nothing but the
   grocery list (quantities + the `(×N)` appearances label) — day macros, stats and the shake ignore them,
   so per-day servings can't desync a group's plan. The "eaten" checkbox is likewise per-day.
+- **Meal balance is a preference, never a constraint** (S18). Targets constrain only DAY totals, so
+  solutions are non-unique — a base-balanced pair could solve to a 3:1 calorie split. Two mechanisms,
+  both of which only CHOOSE among already-in-zone solutions: (1) `adjustDayMeals` runs one extra
+  deterministic solve from an even-calorie-share init, adopted only if all 4 macros stay in [95,105];
+  (2) the solver-as-filter loop early-accepts an in-zone solve only at meal max/min calorie spread ≤
+  `BALANCED_SPREAD` (1.35, sweep-tuned; 1.25 bought nothing more), else tries all top 10 and takes the
+  most balanced in-zone result — the out-of-zone fallback (lowest maxDev) is untouched. Result: median
+  spread ~1.2, 0% of days ≥2x, verified for 2–6 meals/day. Neither mechanism consumes rng (`--seed=N`
+  intact). Don't turn the spread into a hard feasibility check — that WOULD cost solve rate. **6 meals
+  at 2000cal fails ~96% of days in old AND new code** — six recipes can't shrink to ~333cal each;
+  targets-vs-meal-count mismatch (fine at 3000cal), not a balance bug.
+- **Shake-aware solving; shakes stay rare** (S18, user's call). The solver PLANS around one shake
+  instead of only patching post-hoc. Preference order everywhere: (1) shakeless solve in [95,105];
+  (2) solve against targets-minus-one-shake whose day-plus-shake lands in zone (`planShake`); (3)
+  least-bad fallback + the legacy >10%-low deficit shake. `generatePlan` gates the shifted solve on no
+  shakeless in-zone solve existing yet across combos; `solveDayShakeAware` (exported) serves
+  index.html's manual edits — a fixed pair has no combo choice, which is where planning matters
+  (generation: 0 shakes in 1400 days at both tested target sets). `PROTEIN_SHAKE` (exported) is the
+  single macro definition. **Totals asymmetry trap**: `trySolveCombo(planShake)` counts the shake INTO
+  dayTotals (the shake block only attaches the object), while `solveDayShakeAware` returns meals-only
+  totals (index.html adds it exactly once). Don't "unify" one onto the other blindly.
+- **The shake is removable, per day** (S18, user's call). The shake cell's × (`handleRemoveShake`,
+  group-aware) re-solves the day shakeless, accepts the result even out of zone (the user's stated
+  tradeoff), clears the shake slot's eaten mark, and sets `day.noShake` — which suppresses BOTH the
+  planner and the deficit net on later edits of that day. Regenerating rebuilds the day object and so
+  clears the opt-out — intentional, not a bug.
+- **Manual re-solves anchor at the recipe's written grams** (S18, closes the bounds ratchet).
+  Re-solves used to inherit the previous solution's grams as the next 0.5–3x window; repeated edits
+  ratcheted anchors into infeasible corners (a sesame-oil anchor drifted to 21g forces >10g pure fat
+  at its floor and alone made a day unsolvable). `baseMealIngredients` (index.html) rebuilds every
+  meal from `RECIPES` by `originalName` (+ variant by `variantLabel`) before any swap/remove/
+  remove-shake solve — solver output is a function of (recipes, targets), never edit history, matching
+  generatePlan. Falls back to current ingredients when the name is missing (S15-renamed recipes in old
+  saved plans). Deliberate side effects: one edit re-anchors ALL meals in the day, and "adjusted from
+  Xg" always compares to the recipe as written.
 - **Peruvian recipes are research-backed** (S11): the specifics ARE the dish (aji amarillo not turmeric;
   fresh tomato and fried potato in lomo saltado; salsa criolla has no tomato; ceviche is white fish + aji
   limo, never mango). Don't simplify into generic adaptations. S14/S15 held the other 133 to the same bar.
@@ -106,10 +141,11 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
 - **Add-meal rides on the swap modal**: `swapTarget.isAdd` sets `mealIdx = day.meals.length` (one past the
   end), so the candidate is appended and every existing meal counts as used budget. Both paths leave
   `newMeals[mi]` holding the chosen recipe — everything downstream depends on that invariant.
-- **Protein shake on manual edits**: every manual-edit path re-solves then re-evaluates the shake from
-  scratch, mirroring `generatePlan`. Keep new paths on this pattern or the shake column and the day's
-  totals disagree. Remove clears `eatenMeals`/`mealServings` for every group member (indices shift); add
-  doesn't. Remove is always offered (can empty a day); add is hidden at ≥`MAX_MEALS` (6).
+- **Protein shake on manual edits**: every manual-edit path re-solves via `solveDayShakeAware`, then
+  applies the shake exactly once (planned OR deficit), honoring `day.noShake`. Keep new paths on this
+  pattern or the shake column and the day's totals disagree. Remove clears `eatenMeals`/`mealServings`
+  for every group member (indices shift); add doesn't. Remove is always offered (can empty a day);
+  add is hidden at ≥`MAX_MEALS` (6).
 - **`plan` is a SPARSE array**: `generatePlan` returns `new Array(7)` and only assigns non-excluded days.
   `Array.prototype.map` SKIPS holes, so `plan.map(...)` silently drops any day written at a hole index.
   Build new plans with `Array.from({length:7}, ...)`. (A saved plan turns holes into nulls — handle both.)
@@ -143,7 +179,8 @@ Set targets + meals/day → sample 100 combos/day → feasibility pre-filter →
   actual grams; a solver-shrunk 20g of lentils does not take 2 cups.
 - **Edit cooking steps**: only `RECIPE_COOKING_DATA` (legacy `COOKING_INSTRUCTIONS` deleted S5).
 - **canAdjust**: ≥50 cal, not spice, not soy sauce. Unit items (bread, tortillas, lime, lemon, banana) fixed.
-- **Protein shake**: auto if protein >10% low; 1/day, 25P/3C/1F/120cal.
+- **Protein shake**: 1/day, 25P/3C/1F/120cal (`PROTEIN_SHAKE`); planned by the solver or auto-added
+  at >10% protein deficit — preference order in Key Decisions.
 - **localStorage**: `mealprep_daygroups` (`{groups, excluded, mealCounts}` — one key holds all three),
   `mealprep_plans`, `mealprep_overrides`, `mealprep_stats`, `mealprep_stats_last_view`, `mealprep_favorites`.
 - **Workflow**: `node tests/run.js validator` (700/700), then `simulator` (7000/7000), then
@@ -184,9 +221,10 @@ Edit `audit/macro-audit/records.json`, run `node audit/macro-audit/build.js`. Ne
   (provenance) with an aggregator (values). Don't burn a session re-trying Amazon.
 - 72/76 rows have a label. Four cannot and say so: `Dry Sherry`, `Sake`, `White Wine` (alcohol is exempt
   from FDA labelling) and `Tteok` (imported, no US panel). Expected, not a gap.
-- **Review state**: `mealprep_macro_audit_decisions` (name → keep/adjust) and
-  `mealprep_macro_audit_notes` (name → text, plus `__general`). Note fields debounce **per field** and
-  flush on blur/pagehide; one shared timer silently dropped a note when the user moved between boxes.
+- **Review state**: `mealprep_macro_audit_decisions` (name → keep/adjust), `mealprep_macro_audit_notes`
+  (name → text, plus `__general`), `mealprep_macro_audit_sortmode` (Δ columns sort by percent or by
+  grams/100g — toggle above the summary table). Note fields debounce **per field** and flush on
+  blur/pagehide; one shared timer silently dropped a note when the user moved between boxes.
 - **localStorage is per-origin** — reviewing over `http://localhost:8777` then reopening as `file://`
   looks like the decisions vanished. Always review through the local server.
 - `extract.js` and `add-s16.js` are spent one-shots, both guarded against a second run.
@@ -221,3 +259,13 @@ refuses to write on any error); `out/*.jsonl` (every applied record + rationale 
 - **S17**: serving steppers unlinked from day groups (user's call) — `changeServing` writes one day's
   key instead of every group member's. Verified in the browser: a grouped pair kept identical meals
   while carrying 3 vs 1 servings, and the grocery list summed all 4. No data or algorithm change.
+- **S18**: the balance-and-shake session; algorithm + index.html, no data change. Five steps, each
+  gated (validator 700/700 at 5 target sets, simulator 7000/7000 + 139/139, A/B Δ0% pass rate with
+  recipe shifts ≤19%, seeded replays deterministic, browser-verified): (a) meal balance — measured
+  first: combos are PICKED balanced, the solver was creating the 3:1 days; (b) shake-aware solving —
+  the user hand-found a legal beef-down/chicken-up + shake config the solver couldn't see while the
+  shake was only a post-hoc patch; (c) removable shakes + `noShake`; (d) `BALANCED_SPREAD` 1.6→1.35
+  by sweep; (e) base-anchored re-solves, after the user's Thu/Fri pair degraded across repeated edits
+  (from base anchors it solves deterministically to 747/653 + shake, spread 1.14, macros 98–101%).
+  Lessons: measure base-vs-solved before blaming selection; the "Japchae × Yakitori" artifact (every
+  ingredient on a live slider) is what surfaced the shake insight — build the exploration tool.

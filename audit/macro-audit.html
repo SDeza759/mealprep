@@ -50,6 +50,13 @@
   th.sortable:hover { background: #e3e6ea; }
   th .arrow { font-size: 10px; opacity: .45; margin-left: 4px; }
   th .hint { font-weight: 400; font-size: 10px; color: #868e96; margin-left: 3px; }
+  th .hint b { color: #1971c2; }
+  .sortmode { display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-size:12px; color:#495057;
+              background:#f8f9fa; border:1px solid #e9ecef; border-radius:6px; padding:7px 12px; margin:0 0 10px; }
+  .sortmode .lbl { text-transform:uppercase; letter-spacing:.04em; font-size:11px; color:#868e96; }
+  .sortmode label { cursor:pointer; }
+  .sortmode input[type=radio] { margin-right:4px; }
+  .sortmode .why { color:#868e96; }
   .summary td[data-sort] { text-align: right; white-space: nowrap; }
 
   .decpanel { background:#fff; border:1px solid #dee2e6; border-radius:8px; padding:14px 16px; margin:16px 0 8px; box-shadow:0 1px 2px rgba(0,0,0,.05); }
@@ -88,17 +95,23 @@
     <span><i class="dot bad"></i> &gt;15%</span>
     <span><i class="dot na"></i> no data</span>
   </div>
-  <p style="font-size:13px;color:#495057;margin:4px 0 16px">Each Δ column shows <strong>Amazon − ours</strong> per 100 g as grams and percent (same as the detail tables), heat-mapped by magnitude. <strong>Click any column header to sort</strong> (Δ columns sort by <strong>percent</strong>; toggles ascending/descending; blank/no-percent cells sort last). Default view: largest calorie gap first. ⚠ marks items whose Amazon label is a different form (cooked/canned/drained) than our USDA raw/dry data, so a large delta is expected. Review each and tick a decision box; every card also has a free-text <strong>Notes</strong> field, and there is a general notes box in the panel below. Notes are copied out along with the decisions, and a ✎ in the Decision column marks a row you have annotated.</p>
+  <p style="font-size:13px;color:#495057;margin:4px 0 16px">Each Δ column shows <strong>Amazon − ours</strong> per 100 g as grams and percent (same as the detail tables), heat-mapped by magnitude. <strong>Click any column header to sort</strong> (toggles ascending/descending; blank cells sort last). Δ columns sort by <strong>percent or by grams</strong> — pick which with the toggle above the table. Default view: largest calorie gap first. ⚠ marks items whose Amazon label is a different form (cooked/canned/drained) than our USDA raw/dry data, so a large delta is expected. Review each and tick a decision box; every card also has a free-text <strong>Notes</strong> field, and there is a general notes box in the panel below. Notes are copied out along with the decisions, and a ✎ in the Decision column marks a row you have annotated.</p>
   <h2>Summary — all 76, biggest deltas first</h2>
+  <div class="sortmode">
+    <span class="lbl">Δ columns sort by</span>
+    <label><input type="radio" name="sortmode" value="pct" checked onchange="setSortMode('pct')"> percent</label>
+    <label><input type="radio" name="sortmode" value="g" onchange="setSortMode('g')"> grams per 100 g</label>
+    <span class="why">grams rank by how much the number actually moves; percent by how wrong it is relative to a small base</span>
+  </div>
   <table class="summary" id="summaryTable">
     <thead><tr><th class="sortable" onclick="sortTable(this,0,'text')">Ingredient<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,1,'text')">Category<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,2,'num')">Δ Cal<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,3,'num')">Δ Carbs<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,4,'num')">Δ Protein<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,5,'num')">Δ Fat<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,6,'text')">Form<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,7,'text')">Source<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,8,'text')">Conf.<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,9,'text')">Decision<span class="arrow">↕</span></th></tr></thead>
     <tbody><tr>
     <td><a href="#detail-32">Kidney Beans</a></td>
     <td class="cat">Canned &amp; Legumes</td>
-    <td class="bad" data-sort="-73.5">-247.6 <span class="pct">(-73.5%)</span></td>
-    <td class="bad" data-sort="-72.1">-44.2 <span class="pct">(-72.1%)</span></td>
-    <td class="bad" data-sort="-71.1">-16 <span class="pct">(-71.1%)</span></td>
-    <td class="bad" data-sort="-100">-1.1 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="-73.5" data-sort-g="-247.6">-247.6 <span class="pct">(-73.5%)</span></td>
+    <td class="bad" data-sort="-72.1" data-sort-g="-44.2">-44.2 <span class="pct">(-72.1%)</span></td>
+    <td class="bad" data-sort="-71.1" data-sort-g="-16">-16 <span class="pct">(-71.1%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-1.1">-1.1 <span class="pct">(-100%)</span></td>
     <td>canned ⚠</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -106,10 +119,10 @@
   </tr><tr>
     <td><a href="#detail-35">Cherry Sauce</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="178.4">162.3 <span class="pct">(+178.4%)</span></td>
-    <td class="bad" data-sort="166.1">38.7 <span class="pct">(+166.1%)</span></td>
-    <td class="bad" data-sort="-52.4">-0.4 <span class="pct">(-52.4%)</span></td>
-    <td class="bad" data-sort="-100">-0.1 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="178.4" data-sort-g="162.3">162.3 <span class="pct">(+178.4%)</span></td>
+    <td class="bad" data-sort="166.1" data-sort-g="38.7">38.7 <span class="pct">(+166.1%)</span></td>
+    <td class="bad" data-sort="-52.4" data-sort-g="-0.4">-0.4 <span class="pct">(-52.4%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.1">-0.1 <span class="pct">(-100%)</span></td>
     <td>as-sold</td>
     <td>mixed</td>
     <td>low</td>
@@ -117,10 +130,10 @@
   </tr><tr>
     <td><a href="#detail-43">Pesto Sauce</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="37.5">150 <span class="pct">(+37.5%)</span></td>
-    <td class="bad" data-sort="123.9">8.3 <span class="pct">(+123.9%)</span></td>
-    <td class="bad" data-sort="49.3">3.3 <span class="pct">(+49.3%)</span></td>
-    <td class="bad" data-sort="25">10 <span class="pct">(+25%)</span></td>
+    <td class="bad" data-sort="37.5" data-sort-g="150">150 <span class="pct">(+37.5%)</span></td>
+    <td class="bad" data-sort="123.9" data-sort-g="8.3">8.3 <span class="pct">(+123.9%)</span></td>
+    <td class="bad" data-sort="49.3" data-sort-g="3.3">3.3 <span class="pct">(+49.3%)</span></td>
+    <td class="bad" data-sort="25" data-sort-g="10">10 <span class="pct">(+25%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -128,10 +141,10 @@
   </tr><tr>
     <td><a href="#detail-38">Hummus</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="50.7">89.7 <span class="pct">(+50.7%)</span></td>
-    <td class="bad" data-sort="25">4 <span class="pct">(+25%)</span></td>
-    <td class="bad" data-sort="-16.7">-1.3 <span class="pct">(-16.7%)</span></td>
-    <td class="bad" data-sort="60.3">6.3 <span class="pct">(+60.3%)</span></td>
+    <td class="bad" data-sort="50.7" data-sort-g="89.7">89.7 <span class="pct">(+50.7%)</span></td>
+    <td class="bad" data-sort="25" data-sort-g="4">4 <span class="pct">(+25%)</span></td>
+    <td class="bad" data-sort="-16.7" data-sort-g="-1.3">-1.3 <span class="pct">(-16.7%)</span></td>
+    <td class="bad" data-sort="60.3" data-sort-g="6.3">6.3 <span class="pct">(+60.3%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -139,10 +152,10 @@
   </tr><tr>
     <td><a href="#detail-75">Bacon</a></td>
     <td class="cat">Meat &amp; Seafood</td>
-    <td class="bad" data-sort="16.4">75.3 <span class="pct">(+16.4%)</span></td>
-    <td class="bad" data-sort="-100">-1.3 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="187.4">21.7 <span class="pct">(+187.4%)</span></td>
-    <td class="ok" data-sort="3.7">1.7 <span class="pct">(+3.7%)</span></td>
+    <td class="bad" data-sort="16.4" data-sort-g="75.3">75.3 <span class="pct">(+16.4%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-1.3">-1.3 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="187.4" data-sort-g="21.7">21.7 <span class="pct">(+187.4%)</span></td>
+    <td class="ok" data-sort="3.7" data-sort-g="1.7">1.7 <span class="pct">(+3.7%)</span></td>
     <td>cooked ⚠</td>
     <td>aggregator</td>
     <td>high</td>
@@ -150,10 +163,10 @@
   </tr><tr>
     <td><a href="#detail-51">Fish Sauce</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="204.8">71.7 <span class="pct">(+204.8%)</span></td>
-    <td class="bad" data-sort="270.4">9.7 <span class="pct">(+270.4%)</span></td>
-    <td class="bad" data-sort="161.4">8.2 <span class="pct">(+161.4%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="bad" data-sort="204.8" data-sort-g="71.7">71.7 <span class="pct">(+204.8%)</span></td>
+    <td class="bad" data-sort="270.4" data-sort-g="9.7">9.7 <span class="pct">(+270.4%)</span></td>
+    <td class="bad" data-sort="161.4" data-sort-g="8.2">8.2 <span class="pct">(+161.4%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -161,10 +174,10 @@
   </tr><tr>
     <td><a href="#detail-23">Chickpeas</a></td>
     <td class="cat">Canned &amp; Legumes</td>
-    <td class="bad" data-sort="16.9">63.9 <span class="pct">(+16.9%)</span></td>
-    <td class="ok" data-sort="-0.3">-0.2 <span class="pct">(-0.3%)</span></td>
-    <td class="warn" data-sort="13.4">2.8 <span class="pct">(+13.4%)</span></td>
-    <td class="bad" data-sort="16.3">1 <span class="pct">(+16.3%)</span></td>
+    <td class="bad" data-sort="16.9" data-sort-g="63.9">63.9 <span class="pct">(+16.9%)</span></td>
+    <td class="ok" data-sort="-0.3" data-sort-g="-0.2">-0.2 <span class="pct">(-0.3%)</span></td>
+    <td class="warn" data-sort="13.4" data-sort-g="2.8">2.8 <span class="pct">(+13.4%)</span></td>
+    <td class="bad" data-sort="16.3" data-sort-g="1">1 <span class="pct">(+16.3%)</span></td>
     <td>dry</td>
     <td>mixed</td>
     <td>medium</td>
@@ -172,10 +185,10 @@
   </tr><tr>
     <td><a href="#detail-68">Paneer</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
-    <td class="bad" data-sort="23.6">61.4 <span class="pct">(+23.6%)</span></td>
-    <td class="bad" data-sort="19">0.6 <span class="pct">(+19%)</span></td>
-    <td class="bad" data-sort="17.1">3.1 <span class="pct">(+17.1%)</span></td>
-    <td class="bad" data-sort="25">5 <span class="pct">(+25%)</span></td>
+    <td class="bad" data-sort="23.6" data-sort-g="61.4">61.4 <span class="pct">(+23.6%)</span></td>
+    <td class="bad" data-sort="19" data-sort-g="0.6">0.6 <span class="pct">(+19%)</span></td>
+    <td class="bad" data-sort="17.1" data-sort-g="3.1">3.1 <span class="pct">(+17.1%)</span></td>
+    <td class="bad" data-sort="25" data-sort-g="5">5 <span class="pct">(+25%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -183,10 +196,10 @@
   </tr><tr>
     <td><a href="#detail-74">Tofu</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
-    <td class="bad" data-sort="-40.5">-58.3 <span class="pct">(-40.5%)</span></td>
-    <td class="bad" data-sort="-68.1">-1.9 <span class="pct">(-68.1%)</span></td>
-    <td class="bad" data-sort="-37">-6.4 <span class="pct">(-37%)</span></td>
-    <td class="bad" data-sort="-52.8">-4.6 <span class="pct">(-52.8%)</span></td>
+    <td class="bad" data-sort="-40.5" data-sort-g="-58.3">-58.3 <span class="pct">(-40.5%)</span></td>
+    <td class="bad" data-sort="-68.1" data-sort-g="-1.9">-1.9 <span class="pct">(-68.1%)</span></td>
+    <td class="bad" data-sort="-37" data-sort-g="-6.4">-6.4 <span class="pct">(-37%)</span></td>
+    <td class="bad" data-sort="-52.8" data-sort-g="-4.6">-4.6 <span class="pct">(-52.8%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -194,10 +207,10 @@
   </tr><tr>
     <td><a href="#detail-50">Duck Fat</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="warn" data-sort="5.3">46.6 <span class="pct">(+5.3%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0.2">0.2 <span class="pct">(+0.2%)</span></td>
+    <td class="warn" data-sort="5.3" data-sort-g="46.6">46.6 <span class="pct">(+5.3%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0.2" data-sort-g="0.2">0.2 <span class="pct">(+0.2%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -205,10 +218,10 @@
   </tr><tr>
     <td><a href="#detail-55">Palm Oil (Dendê)</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="warn" data-sort="5">44.6 <span class="pct">(+5%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="warn" data-sort="5" data-sort-g="44.6">44.6 <span class="pct">(+5%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -216,10 +229,10 @@
   </tr><tr>
     <td><a href="#detail-58">Tonkatsu Sauce</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="31.2">39.7 <span class="pct">(+31.2%)</span></td>
-    <td class="bad" data-sort="27">8.5 <span class="pct">(+27%)</span></td>
-    <td class="bad" data-sort="-100">-0.6 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="-100">-0.1 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="31.2" data-sort-g="39.7">39.7 <span class="pct">(+31.2%)</span></td>
+    <td class="bad" data-sort="27" data-sort-g="8.5">8.5 <span class="pct">(+27%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.6">-0.6 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.1">-0.1 <span class="pct">(-100%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -227,10 +240,10 @@
   </tr><tr>
     <td><a href="#detail-39">Kimchi</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="132.9">30.6 <span class="pct">(+132.9%)</span></td>
-    <td class="bad" data-sort="58.7">2.6 <span class="pct">(+58.7%)</span></td>
-    <td class="bad" data-sort="-79">-1.3 <span class="pct">(-79%)</span></td>
-    <td class="bad" data-sort="1090.5">3.3 <span class="pct">(+1090.5%)</span></td>
+    <td class="bad" data-sort="132.9" data-sort-g="30.6">30.6 <span class="pct">(+132.9%)</span></td>
+    <td class="bad" data-sort="58.7" data-sort-g="2.6">2.6 <span class="pct">(+58.7%)</span></td>
+    <td class="bad" data-sort="-79" data-sort-g="-1.3">-1.3 <span class="pct">(-79%)</span></td>
+    <td class="bad" data-sort="1090.5" data-sort-g="3.3">3.3 <span class="pct">(+1090.5%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -238,10 +251,10 @@
   </tr><tr>
     <td><a href="#detail-66">Greek Yogurt</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
-    <td class="bad" data-sort="-31.3">-30.3 <span class="pct">(-31.3%)</span></td>
-    <td class="bad" data-sort="-33.3">-2 <span class="pct">(-33.3%)</span></td>
-    <td class="bad" data-sort="20">2 <span class="pct">(+20%)</span></td>
-    <td class="bad" data-sort="-100">-0.7 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="-31.3" data-sort-g="-30.3">-30.3 <span class="pct">(-31.3%)</span></td>
+    <td class="bad" data-sort="-33.3" data-sort-g="-2">-2 <span class="pct">(-33.3%)</span></td>
+    <td class="bad" data-sort="20" data-sort-g="2">2 <span class="pct">(+20%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.7">-0.7 <span class="pct">(-100%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -249,10 +262,10 @@
   </tr><tr>
     <td><a href="#detail-42">Olive Oil</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="-3">-26.9 <span class="pct">(-3%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-3" data-sort-g="-26.9">-26.9 <span class="pct">(-3%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -260,10 +273,10 @@
   </tr><tr>
     <td><a href="#detail-44">Sesame Oil</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="-3">-26.9 <span class="pct">(-3%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-3" data-sort-g="-26.9">-26.9 <span class="pct">(-3%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -271,10 +284,10 @@
   </tr><tr>
     <td><a href="#detail-59">Vegetable Oil</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="-3">-26.9 <span class="pct">(-3%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-3" data-sort-g="-26.9">-26.9 <span class="pct">(-3%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -282,10 +295,10 @@
   </tr><tr>
     <td><a href="#detail-5">Rice Noodles</a></td>
     <td class="cat">Grains &amp; Pasta</td>
-    <td class="warn" data-sort="-7.4">-26.7 <span class="pct">(-7.4%)</span></td>
-    <td class="ok" data-sort="-3.5">-2.8 <span class="pct">(-3.5%)</span></td>
-    <td class="bad" data-sort="17">1 <span class="pct">(+17%)</span></td>
-    <td class="bad" data-sort="-100">-0.6 <span class="pct">(-100%)</span></td>
+    <td class="warn" data-sort="-7.4" data-sort-g="-26.7">-26.7 <span class="pct">(-7.4%)</span></td>
+    <td class="ok" data-sort="-3.5" data-sort-g="-2.8">-2.8 <span class="pct">(-3.5%)</span></td>
+    <td class="bad" data-sort="17" data-sort-g="1">1 <span class="pct">(+17%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.6">-0.6 <span class="pct">(-100%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -293,10 +306,10 @@
   </tr><tr>
     <td><a href="#detail-61">Worcestershire Sauce</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="28.2">22 <span class="pct">(+28.2%)</span></td>
-    <td class="warn" data-sort="12.8">2.5 <span class="pct">(+12.8%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="bad" data-sort="28.2" data-sort-g="22">22 <span class="pct">(+28.2%)</span></td>
+    <td class="warn" data-sort="12.8" data-sort-g="2.5">2.5 <span class="pct">(+12.8%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -304,10 +317,10 @@
   </tr><tr>
     <td><a href="#detail-28">White Beans</a></td>
     <td class="cat">Canned &amp; Legumes</td>
-    <td class="warn" data-sort="-6.2">-20.5 <span class="pct">(-6.2%)</span></td>
-    <td class="ok" data-sort="-3.3">-2 <span class="pct">(-3.3%)</span></td>
-    <td class="warn" data-sort="-11">-2.6 <span class="pct">(-11%)</span></td>
-    <td class="bad" data-sort="15.7">0.1 <span class="pct">(+15.7%)</span></td>
+    <td class="warn" data-sort="-6.2" data-sort-g="-20.5">-20.5 <span class="pct">(-6.2%)</span></td>
+    <td class="ok" data-sort="-3.3" data-sort-g="-2">-2 <span class="pct">(-3.3%)</span></td>
+    <td class="warn" data-sort="-11" data-sort-g="-2.6">-2.6 <span class="pct">(-11%)</span></td>
+    <td class="bad" data-sort="15.7" data-sort-g="0.1">0.1 <span class="pct">(+15.7%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -315,10 +328,10 @@
   </tr><tr>
     <td><a href="#detail-12">Gram Flour (Besan)</a></td>
     <td class="cat">Grains &amp; Pasta</td>
-    <td class="warn" data-sort="-5.3">-20.3 <span class="pct">(-5.3%)</span></td>
-    <td class="bad" data-sort="55.7">32.2 <span class="pct">(+55.7%)</span></td>
-    <td class="ok" data-sort="4.2">0.9 <span class="pct">(+4.2%)</span></td>
-    <td class="bad" data-sort="-50.2">-3.4 <span class="pct">(-50.2%)</span></td>
+    <td class="warn" data-sort="-5.3" data-sort-g="-20.3">-20.3 <span class="pct">(-5.3%)</span></td>
+    <td class="bad" data-sort="55.7" data-sort-g="32.2">32.2 <span class="pct">(+55.7%)</span></td>
+    <td class="ok" data-sort="4.2" data-sort-g="0.9">0.9 <span class="pct">(+4.2%)</span></td>
+    <td class="bad" data-sort="-50.2" data-sort-g="-3.4">-3.4 <span class="pct">(-50.2%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>low</td>
@@ -326,10 +339,10 @@
   </tr><tr>
     <td><a href="#detail-41">Miso Paste</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="warn" data-sort="9.9">19.8 <span class="pct">(+9.9%)</span></td>
-    <td class="warn" data-sort="-5.7">-1.5 <span class="pct">(-5.7%)</span></td>
-    <td class="warn" data-sort="6.8">0.8 <span class="pct">(+6.8%)</span></td>
-    <td class="ok" data-sort="4.2">0.3 <span class="pct">(+4.2%)</span></td>
+    <td class="warn" data-sort="9.9" data-sort-g="19.8">19.8 <span class="pct">(+9.9%)</span></td>
+    <td class="warn" data-sort="-5.7" data-sort-g="-1.5">-1.5 <span class="pct">(-5.7%)</span></td>
+    <td class="warn" data-sort="6.8" data-sort-g="0.8">0.8 <span class="pct">(+6.8%)</span></td>
+    <td class="ok" data-sort="4.2" data-sort-g="0.3">0.3 <span class="pct">(+4.2%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -337,10 +350,10 @@
   </tr><tr>
     <td><a href="#detail-25">Edamame</a></td>
     <td class="cat">Canned &amp; Legumes</td>
-    <td class="bad" data-sort="15.7">19 <span class="pct">(+15.7%)</span></td>
-    <td class="bad" data-sort="23.6">2.1 <span class="pct">(+23.6%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="-3.8">-0.2 <span class="pct">(-3.8%)</span></td>
+    <td class="bad" data-sort="15.7" data-sort-g="19">19 <span class="pct">(+15.7%)</span></td>
+    <td class="bad" data-sort="23.6" data-sort-g="2.1">2.1 <span class="pct">(+23.6%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-3.8" data-sort-g="-0.2">-0.2 <span class="pct">(-3.8%)</span></td>
     <td>cooked ⚠</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -348,10 +361,10 @@
   </tr><tr>
     <td><a href="#detail-26">Red Lentils</a></td>
     <td class="cat">Canned &amp; Legumes</td>
-    <td class="warn" data-sort="-5.3">-18.7 <span class="pct">(-5.3%)</span></td>
-    <td class="warn" data-sort="-5.4">-3.4 <span class="pct">(-5.4%)</span></td>
-    <td class="ok" data-sort="-0.6">-0.2 <span class="pct">(-0.6%)</span></td>
-    <td class="bad" data-sort="-100">-1.1 <span class="pct">(-100%)</span></td>
+    <td class="warn" data-sort="-5.3" data-sort-g="-18.7">-18.7 <span class="pct">(-5.3%)</span></td>
+    <td class="warn" data-sort="-5.4" data-sort-g="-3.4">-3.4 <span class="pct">(-5.4%)</span></td>
+    <td class="ok" data-sort="-0.6" data-sort-g="-0.2">-0.2 <span class="pct">(-0.6%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-1.1">-1.1 <span class="pct">(-100%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>high</td>
@@ -359,10 +372,10 @@
   </tr><tr>
     <td><a href="#detail-13">Ramen Noodles</a></td>
     <td class="cat">Grains &amp; Pasta</td>
-    <td class="ok" data-sort="-4.3">-15.5 <span class="pct">(-4.3%)</span></td>
-    <td class="ok" data-sort="-0.6">-0.5 <span class="pct">(-0.6%)</span></td>
-    <td class="warn" data-sort="11.9">1.5 <span class="pct">(+11.9%)</span></td>
-    <td class="bad" data-sort="-24.2">-0.3 <span class="pct">(-24.2%)</span></td>
+    <td class="ok" data-sort="-4.3" data-sort-g="-15.5">-15.5 <span class="pct">(-4.3%)</span></td>
+    <td class="ok" data-sort="-0.6" data-sort-g="-0.5">-0.5 <span class="pct">(-0.6%)</span></td>
+    <td class="warn" data-sort="11.9" data-sort-g="1.5">1.5 <span class="pct">(+11.9%)</span></td>
+    <td class="bad" data-sort="-24.2" data-sort-g="-0.3">-0.3 <span class="pct">(-24.2%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>high</td>
@@ -370,10 +383,10 @@
   </tr><tr>
     <td><a href="#detail-10">Cassava Flour</a></td>
     <td class="cat">Grains &amp; Pasta</td>
-    <td class="ok" data-sort="-4.2">-15.2 <span class="pct">(-4.2%)</span></td>
-    <td class="ok" data-sort="0.6">0.5 <span class="pct">(+0.6%)</span></td>
-    <td class="bad" data-sort="247.2">2.2 <span class="pct">(+247.2%)</span></td>
-    <td class="bad" data-sort="-100">-0.5 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="-4.2" data-sort-g="-15.2">-15.2 <span class="pct">(-4.2%)</span></td>
+    <td class="ok" data-sort="0.6" data-sort-g="0.5">0.5 <span class="pct">(+0.6%)</span></td>
+    <td class="bad" data-sort="247.2" data-sort-g="2.2">2.2 <span class="pct">(+247.2%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.5">-0.5 <span class="pct">(-100%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -381,10 +394,10 @@
   </tr><tr>
     <td><a href="#detail-40">Maple Syrup</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="warn" data-sort="5.8">15 <span class="pct">(+5.8%)</span></td>
-    <td class="ok" data-sort="0.7">0.5 <span class="pct">(+0.7%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="warn" data-sort="5.8" data-sort-g="15">15 <span class="pct">(+5.8%)</span></td>
+    <td class="ok" data-sort="0.7" data-sort-g="0.5">0.5 <span class="pct">(+0.7%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -392,10 +405,10 @@
   </tr><tr>
     <td><a href="#detail-1">Brown Rice</a></td>
     <td class="cat">Grains &amp; Pasta</td>
-    <td class="ok" data-sort="-3.9">-14.4 <span class="pct">(-3.9%)</span></td>
-    <td class="ok" data-sort="-2.1">-1.6 <span class="pct">(-2.1%)</span></td>
-    <td class="bad" data-sort="-15.6">-1.2 <span class="pct">(-15.6%)</span></td>
-    <td class="bad" data-sort="-23.4">-0.7 <span class="pct">(-23.4%)</span></td>
+    <td class="ok" data-sort="-3.9" data-sort-g="-14.4">-14.4 <span class="pct">(-3.9%)</span></td>
+    <td class="ok" data-sort="-2.1" data-sort-g="-1.6">-1.6 <span class="pct">(-2.1%)</span></td>
+    <td class="bad" data-sort="-15.6" data-sort-g="-1.2">-1.2 <span class="pct">(-15.6%)</span></td>
+    <td class="bad" data-sort="-23.4" data-sort-g="-0.7">-0.7 <span class="pct">(-23.4%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>high</td>
@@ -403,10 +416,10 @@
   </tr><tr>
     <td><a href="#detail-46">Tahini</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="2.4">14.1 <span class="pct">(+2.4%)</span></td>
-    <td class="bad" data-sort="26.1">4.4 <span class="pct">(+26.1%)</span></td>
-    <td class="warn" data-sort="5">0.9 <span class="pct">(+5%)</span></td>
-    <td class="warn" data-sort="6.2">3.3 <span class="pct">(+6.2%)</span></td>
+    <td class="ok" data-sort="2.4" data-sort-g="14.1">14.1 <span class="pct">(+2.4%)</span></td>
+    <td class="bad" data-sort="26.1" data-sort-g="4.4">4.4 <span class="pct">(+26.1%)</span></td>
+    <td class="warn" data-sort="5" data-sort-g="0.9">0.9 <span class="pct">(+5%)</span></td>
+    <td class="warn" data-sort="6.2" data-sort-g="3.3">3.3 <span class="pct">(+6.2%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -414,10 +427,10 @@
   </tr><tr>
     <td><a href="#detail-65">Feta Cheese</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
-    <td class="warn" data-sort="-5.3">-14 <span class="pct">(-5.3%)</span></td>
-    <td class="bad" data-sort="74.2">3 <span class="pct">(+74.2%)</span></td>
-    <td class="bad" data-sort="50.9">7.2 <span class="pct">(+50.9%)</span></td>
-    <td class="bad" data-sort="-32.9">-7 <span class="pct">(-32.9%)</span></td>
+    <td class="warn" data-sort="-5.3" data-sort-g="-14">-14 <span class="pct">(-5.3%)</span></td>
+    <td class="bad" data-sort="74.2" data-sort-g="3">3 <span class="pct">(+74.2%)</span></td>
+    <td class="bad" data-sort="50.9" data-sort-g="7.2">7.2 <span class="pct">(+50.9%)</span></td>
+    <td class="bad" data-sort="-32.9" data-sort-g="-7">-7 <span class="pct">(-32.9%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -425,10 +438,10 @@
   </tr><tr>
     <td><a href="#detail-4">Pasta</a></td>
     <td class="cat">Grains &amp; Pasta</td>
-    <td class="ok" data-sort="-3.7">-13.9 <span class="pct">(-3.7%)</span></td>
-    <td class="ok" data-sort="0.4">0.3 <span class="pct">(+0.4%)</span></td>
-    <td class="ok" data-sort="-3.8">-0.5 <span class="pct">(-3.8%)</span></td>
-    <td class="bad" data-sort="19">0.3 <span class="pct">(+19%)</span></td>
+    <td class="ok" data-sort="-3.7" data-sort-g="-13.9">-13.9 <span class="pct">(-3.7%)</span></td>
+    <td class="ok" data-sort="0.4" data-sort-g="0.3">0.3 <span class="pct">(+0.4%)</span></td>
+    <td class="ok" data-sort="-3.8" data-sort-g="-0.5">-0.5 <span class="pct">(-3.8%)</span></td>
+    <td class="bad" data-sort="19" data-sort-g="0.3">0.3 <span class="pct">(+19%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>high</td>
@@ -436,10 +449,10 @@
   </tr><tr>
     <td><a href="#detail-9">Bulgur</a></td>
     <td class="cat">Grains &amp; Pasta</td>
-    <td class="ok" data-sort="4">13.6 <span class="pct">(+4%)</span></td>
-    <td class="ok" data-sort="2.5">1.9 <span class="pct">(+2.5%)</span></td>
-    <td class="bad" data-sort="-27.7">-3.4 <span class="pct">(-27.7%)</span></td>
-    <td class="warn" data-sort="-14.5">-0.2 <span class="pct">(-14.5%)</span></td>
+    <td class="ok" data-sort="4" data-sort-g="13.6">13.6 <span class="pct">(+4%)</span></td>
+    <td class="ok" data-sort="2.5" data-sort-g="1.9">1.9 <span class="pct">(+2.5%)</span></td>
+    <td class="bad" data-sort="-27.7" data-sort-g="-3.4">-3.4 <span class="pct">(-27.7%)</span></td>
+    <td class="warn" data-sort="-14.5" data-sort-g="-0.2">-0.2 <span class="pct">(-14.5%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>high</td>
@@ -447,10 +460,10 @@
   </tr><tr>
     <td><a href="#detail-73">Queso Fresco</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
-    <td class="ok" data-sort="-4.4">-13.3 <span class="pct">(-4.4%)</span></td>
-    <td class="bad" data-sort="-100">-3 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="18.4">3.3 <span class="pct">(+18.4%)</span></td>
-    <td class="warn" data-sort="-10">-2.4 <span class="pct">(-10%)</span></td>
+    <td class="ok" data-sort="-4.4" data-sort-g="-13.3">-13.3 <span class="pct">(-4.4%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-3">-3 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="18.4" data-sort-g="3.3">3.3 <span class="pct">(+18.4%)</span></td>
+    <td class="warn" data-sort="-10" data-sort-g="-2.4">-2.4 <span class="pct">(-10%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -458,10 +471,10 @@
   </tr><tr>
     <td><a href="#detail-29">Canned Tuna</a></td>
     <td class="cat">Canned &amp; Legumes</td>
-    <td class="warn" data-sort="-11.6">-12.4 <span class="pct">(-11.6%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="-1">-0.2 <span class="pct">(-1%)</span></td>
-    <td class="bad" data-sort="-24.9">-0.2 <span class="pct">(-24.9%)</span></td>
+    <td class="warn" data-sort="-11.6" data-sort-g="-12.4">-12.4 <span class="pct">(-11.6%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-1" data-sort-g="-0.2">-0.2 <span class="pct">(-1%)</span></td>
+    <td class="bad" data-sort="-24.9" data-sort-g="-0.2">-0.2 <span class="pct">(-24.9%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -469,10 +482,10 @@
   </tr><tr>
     <td><a href="#detail-52">Mayonnaise</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="1.8">12.3 <span class="pct">(+1.8%)</span></td>
-    <td class="bad" data-sort="-100">-0.6 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="-100">-1 <span class="pct">(-100%)</span></td>
-    <td class="ok" data-sort="2.8">2.1 <span class="pct">(+2.8%)</span></td>
+    <td class="ok" data-sort="1.8" data-sort-g="12.3">12.3 <span class="pct">(+1.8%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.6">-0.6 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-1">-1 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="2.8" data-sort-g="2.1">2.1 <span class="pct">(+2.8%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -480,10 +493,10 @@
   </tr><tr>
     <td><a href="#detail-57">Sugar</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="-3.1">-12 <span class="pct">(-3.1%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-3.1" data-sort-g="-12">-12 <span class="pct">(-3.1%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -491,10 +504,10 @@
   </tr><tr>
     <td><a href="#detail-63">Cheddar Cheese</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
-    <td class="ok" data-sort="-2.5">-10.1 <span class="pct">(-2.5%)</span></td>
-    <td class="bad" data-sort="174.7">2.3 <span class="pct">(+174.7%)</span></td>
-    <td class="warn" data-sort="-14.3">-3.6 <span class="pct">(-14.3%)</span></td>
-    <td class="ok" data-sort="-2.6">-0.9 <span class="pct">(-2.6%)</span></td>
+    <td class="ok" data-sort="-2.5" data-sort-g="-10.1">-10.1 <span class="pct">(-2.5%)</span></td>
+    <td class="bad" data-sort="174.7" data-sort-g="2.3">2.3 <span class="pct">(+174.7%)</span></td>
+    <td class="warn" data-sort="-14.3" data-sort-g="-3.6">-3.6 <span class="pct">(-14.3%)</span></td>
+    <td class="ok" data-sort="-2.6" data-sort-g="-0.9">-0.9 <span class="pct">(-2.6%)</span></td>
     <td>as-sold</td>
     <td>mixed</td>
     <td>medium</td>
@@ -502,10 +515,10 @@
   </tr><tr>
     <td><a href="#detail-45">Soy Sauce</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="17.9">9.5 <span class="pct">(+17.9%)</span></td>
-    <td class="bad" data-sort="27.6">1.3 <span class="pct">(+27.6%)</span></td>
-    <td class="bad" data-sort="-22.8">-1.8 <span class="pct">(-22.8%)</span></td>
-    <td class="bad" data-sort="-100">-0.6 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="17.9" data-sort-g="9.5">9.5 <span class="pct">(+17.9%)</span></td>
+    <td class="bad" data-sort="27.6" data-sort-g="1.3">1.3 <span class="pct">(+27.6%)</span></td>
+    <td class="bad" data-sort="-22.8" data-sort-g="-1.8">-1.8 <span class="pct">(-22.8%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.6">-0.6 <span class="pct">(-100%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>low</td>
@@ -513,10 +526,10 @@
   </tr><tr>
     <td><a href="#detail-8">White Rice</a></td>
     <td class="cat">Grains &amp; Pasta</td>
-    <td class="ok" data-sort="-2.6">-9.4 <span class="pct">(-2.6%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="warn" data-sort="-6.1">-0.4 <span class="pct">(-6.1%)</span></td>
-    <td class="bad" data-sort="-100">-0.6 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="-2.6" data-sort-g="-9.4">-9.4 <span class="pct">(-2.6%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="warn" data-sort="-6.1" data-sort-g="-0.4">-0.4 <span class="pct">(-6.1%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.6">-0.6 <span class="pct">(-100%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -524,10 +537,10 @@
   </tr><tr>
     <td><a href="#detail-21">Flour Tortilla</a></td>
     <td class="cat">Bakery &amp; Bread</td>
-    <td class="ok" data-sort="3.1">9.1 <span class="pct">(+3.1%)</span></td>
-    <td class="ok" data-sort="-0.6">-0.3 <span class="pct">(-0.6%)</span></td>
-    <td class="bad" data-sort="-23.5">-1.9 <span class="pct">(-23.5%)</span></td>
-    <td class="bad" data-sort="20.8">1.6 <span class="pct">(+20.8%)</span></td>
+    <td class="ok" data-sort="3.1" data-sort-g="9.1">9.1 <span class="pct">(+3.1%)</span></td>
+    <td class="ok" data-sort="-0.6" data-sort-g="-0.3">-0.3 <span class="pct">(-0.6%)</span></td>
+    <td class="bad" data-sort="-23.5" data-sort-g="-1.9">-1.9 <span class="pct">(-23.5%)</span></td>
+    <td class="bad" data-sort="20.8" data-sort-g="1.6">1.6 <span class="pct">(+20.8%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -535,10 +548,10 @@
   </tr><tr>
     <td><a href="#detail-7">Sweet Potato Noodles</a></td>
     <td class="cat">Grains &amp; Pasta</td>
-    <td class="ok" data-sort="2.6">9 <span class="pct">(+2.6%)</span></td>
-    <td class="ok" data-sort="2.3">2 <span class="pct">(+2.3%)</span></td>
-    <td class="bad" data-sort="-100">-0.2 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="-100">-0.1 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="2.6" data-sort-g="9">9 <span class="pct">(+2.6%)</span></td>
+    <td class="ok" data-sort="2.3" data-sort-g="2">2 <span class="pct">(+2.3%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.2">-0.2 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.1">-0.1 <span class="pct">(-100%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -546,10 +559,10 @@
   </tr><tr>
     <td><a href="#detail-18">Whole Wheat Bread</a></td>
     <td class="cat">Bakery &amp; Bread</td>
-    <td class="ok" data-sort="-3.5">-9 <span class="pct">(-3.5%)</span></td>
-    <td class="warn" data-sort="7.2">3.1 <span class="pct">(+7.2%)</span></td>
-    <td class="bad" data-sort="19">1.7 <span class="pct">(+19%)</span></td>
-    <td class="bad" data-sort="-55.4">-2.2 <span class="pct">(-55.4%)</span></td>
+    <td class="ok" data-sort="-3.5" data-sort-g="-9">-9 <span class="pct">(-3.5%)</span></td>
+    <td class="warn" data-sort="7.2" data-sort-g="3.1">3.1 <span class="pct">(+7.2%)</span></td>
+    <td class="bad" data-sort="19" data-sort-g="1.7">1.7 <span class="pct">(+19%)</span></td>
+    <td class="bad" data-sort="-55.4" data-sort-g="-2.2">-2.2 <span class="pct">(-55.4%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -557,10 +570,10 @@
   </tr><tr>
     <td><a href="#detail-72">Evaporated Milk</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
-    <td class="warn" data-sort="-6.7">-9 <span class="pct">(-6.7%)</span></td>
-    <td class="warn" data-sort="-6.2">-0.6 <span class="pct">(-6.2%)</span></td>
-    <td class="warn" data-sort="-8.1">-0.5 <span class="pct">(-8.1%)</span></td>
-    <td class="bad" data-sort="-17.8">-1.3 <span class="pct">(-17.8%)</span></td>
+    <td class="warn" data-sort="-6.7" data-sort-g="-9">-9 <span class="pct">(-6.7%)</span></td>
+    <td class="warn" data-sort="-6.2" data-sort-g="-0.6">-0.6 <span class="pct">(-6.2%)</span></td>
+    <td class="warn" data-sort="-8.1" data-sort-g="-0.5">-0.5 <span class="pct">(-8.1%)</span></td>
+    <td class="bad" data-sort="-17.8" data-sort-g="-1.3">-1.3 <span class="pct">(-17.8%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -568,10 +581,10 @@
   </tr><tr>
     <td><a href="#detail-69">Parmesan Cheese</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
-    <td class="ok" data-sort="2">8 <span class="pct">(+2%)</span></td>
-    <td class="bad" data-sort="-100">-3.2 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="40.8">11.6 <span class="pct">(+40.8%)</span></td>
-    <td class="ok" data-sort="1">0.3 <span class="pct">(+1%)</span></td>
+    <td class="ok" data-sort="2" data-sort-g="8">8 <span class="pct">(+2%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-3.2">-3.2 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="40.8" data-sort-g="11.6">11.6 <span class="pct">(+40.8%)</span></td>
+    <td class="ok" data-sort="1" data-sort-g="0.3">0.3 <span class="pct">(+1%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -579,10 +592,10 @@
   </tr><tr>
     <td><a href="#detail-19">Whole Wheat Tortilla</a></td>
     <td class="cat">Bakery &amp; Bread</td>
-    <td class="ok" data-sort="-2.9">-7.8 <span class="pct">(-2.9%)</span></td>
-    <td class="ok" data-sort="-2.1">-1 <span class="pct">(-2.1%)</span></td>
-    <td class="warn" data-sort="11.2">0.8 <span class="pct">(+11.2%)</span></td>
-    <td class="warn" data-sort="11.2">0.8 <span class="pct">(+11.2%)</span></td>
+    <td class="ok" data-sort="-2.9" data-sort-g="-7.8">-7.8 <span class="pct">(-2.9%)</span></td>
+    <td class="ok" data-sort="-2.1" data-sort-g="-1">-1 <span class="pct">(-2.1%)</span></td>
+    <td class="warn" data-sort="11.2" data-sort-g="0.8">0.8 <span class="pct">(+11.2%)</span></td>
+    <td class="warn" data-sort="11.2" data-sort-g="0.8">0.8 <span class="pct">(+11.2%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -590,10 +603,10 @@
   </tr><tr>
     <td><a href="#detail-53">Mirin</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="-3.2">-7.7 <span class="pct">(-3.2%)</span></td>
-    <td class="bad" data-sort="23.5">10.1 <span class="pct">(+23.5%)</span></td>
-    <td class="bad" data-sort="-100">-0.3 <span class="pct">(-100%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-3.2" data-sort-g="-7.7">-7.7 <span class="pct">(-3.2%)</span></td>
+    <td class="bad" data-sort="23.5" data-sort-g="10.1">10.1 <span class="pct">(+23.5%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.3">-0.3 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -601,10 +614,10 @@
   </tr><tr>
     <td><a href="#detail-16">Panko Breadcrumbs</a></td>
     <td class="cat">Bakery &amp; Bread</td>
-    <td class="ok" data-sort="-2">-7.3 <span class="pct">(-2%)</span></td>
-    <td class="ok" data-sort="4.5">3.3 <span class="pct">(+4.5%)</span></td>
-    <td class="bad" data-sort="24.6">2.6 <span class="pct">(+24.6%)</span></td>
-    <td class="bad" data-sort="44.9">1 <span class="pct">(+44.9%)</span></td>
+    <td class="ok" data-sort="-2" data-sort-g="-7.3">-7.3 <span class="pct">(-2%)</span></td>
+    <td class="ok" data-sort="4.5" data-sort-g="3.3">3.3 <span class="pct">(+4.5%)</span></td>
+    <td class="bad" data-sort="24.6" data-sort-g="2.6">2.6 <span class="pct">(+24.6%)</span></td>
+    <td class="bad" data-sort="44.9" data-sort-g="1">1 <span class="pct">(+44.9%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -612,10 +625,10 @@
   </tr><tr>
     <td><a href="#detail-34">BBQ Sauce</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="4.2">6.7 <span class="pct">(+4.2%)</span></td>
-    <td class="warn" data-sort="6">2.2 <span class="pct">(+6%)</span></td>
-    <td class="bad" data-sort="-100">-1.3 <span class="pct">(-100%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="4.2" data-sort-g="6.7">6.7 <span class="pct">(+4.2%)</span></td>
+    <td class="warn" data-sort="6" data-sort-g="2.2">2.2 <span class="pct">(+6%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-1.3">-1.3 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -623,10 +636,10 @@
   </tr><tr>
     <td><a href="#detail-30">Grape Leaves</a></td>
     <td class="cat">Canned &amp; Legumes</td>
-    <td class="warn" data-sort="-9.4">-6.5 <span class="pct">(-9.4%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="bad" data-sort="-100">-4.5 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="-100">-2.1 <span class="pct">(-100%)</span></td>
+    <td class="warn" data-sort="-9.4" data-sort-g="-6.5">-6.5 <span class="pct">(-9.4%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-4.5">-4.5 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-2.1">-2.1 <span class="pct">(-100%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>low</td>
@@ -634,10 +647,10 @@
   </tr><tr>
     <td><a href="#detail-11">Cornstarch</a></td>
     <td class="cat">Grains &amp; Pasta</td>
-    <td class="ok" data-sort="-1.6">-6 <span class="pct">(-1.6%)</span></td>
-    <td class="ok" data-sort="-4.2">-3.8 <span class="pct">(-4.2%)</span></td>
-    <td class="bad" data-sort="-100">-0.3 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="-100">-0.1 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="-1.6" data-sort-g="-6">-6 <span class="pct">(-1.6%)</span></td>
+    <td class="ok" data-sort="-4.2" data-sort-g="-3.8">-3.8 <span class="pct">(-4.2%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.3">-0.3 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.1">-0.1 <span class="pct">(-100%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -645,10 +658,10 @@
   </tr><tr>
     <td><a href="#detail-36">Hoisin Sauce</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="-2.6">-5.7 <span class="pct">(-2.6%)</span></td>
-    <td class="warn" data-sort="-6.6">-3.4 <span class="pct">(-6.6%)</span></td>
-    <td class="bad" data-sort="-100">-3.3 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="-32">-1.1 <span class="pct">(-32%)</span></td>
+    <td class="ok" data-sort="-2.6" data-sort-g="-5.7">-5.7 <span class="pct">(-2.6%)</span></td>
+    <td class="warn" data-sort="-6.6" data-sort-g="-3.4">-3.4 <span class="pct">(-6.6%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-3.3">-3.3 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="-32" data-sort-g="-1.1">-1.1 <span class="pct">(-32%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -656,10 +669,10 @@
   </tr><tr>
     <td><a href="#detail-67">Mozzarella Cheese</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
-    <td class="ok" data-sort="2">5.7 <span class="pct">(+2%)</span></td>
-    <td class="bad" data-sort="62.3">1.4 <span class="pct">(+62.3%)</span></td>
-    <td class="bad" data-sort="25">5 <span class="pct">(+25%)</span></td>
-    <td class="bad" data-sort="-17.3">-3.7 <span class="pct">(-17.3%)</span></td>
+    <td class="ok" data-sort="2" data-sort-g="5.7">5.7 <span class="pct">(+2%)</span></td>
+    <td class="bad" data-sort="62.3" data-sort-g="1.4">1.4 <span class="pct">(+62.3%)</span></td>
+    <td class="bad" data-sort="25" data-sort-g="5">5 <span class="pct">(+25%)</span></td>
+    <td class="bad" data-sort="-17.3" data-sort-g="-3.7">-3.7 <span class="pct">(-17.3%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -667,10 +680,10 @@
   </tr><tr>
     <td><a href="#detail-54">Nori</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="1.2">4.6 <span class="pct">(+1.2%)</span></td>
-    <td class="warn" data-sort="-13.2">-5.8 <span class="pct">(-13.2%)</span></td>
-    <td class="warn" data-sort="-7.1">-2.9 <span class="pct">(-7.1%)</span></td>
-    <td class="bad" data-sort="-100">-3.5 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="1.2" data-sort-g="4.6">4.6 <span class="pct">(+1.2%)</span></td>
+    <td class="warn" data-sort="-13.2" data-sort-g="-5.8">-5.8 <span class="pct">(-13.2%)</span></td>
+    <td class="warn" data-sort="-7.1" data-sort-g="-2.9">-2.9 <span class="pct">(-7.1%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-3.5">-3.5 <span class="pct">(-100%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>low</td>
@@ -678,10 +691,10 @@
   </tr><tr>
     <td><a href="#detail-3">Granola</a></td>
     <td class="cat">Grains &amp; Pasta</td>
-    <td class="ok" data-sort="1">4.5 <span class="pct">(+1%)</span></td>
-    <td class="ok" data-sort="-3.6">-2.4 <span class="pct">(-3.6%)</span></td>
-    <td class="bad" data-sort="-27.3">-2.7 <span class="pct">(-27.3%)</span></td>
-    <td class="warn" data-sort="11.1">2 <span class="pct">(+11.1%)</span></td>
+    <td class="ok" data-sort="1" data-sort-g="4.5">4.5 <span class="pct">(+1%)</span></td>
+    <td class="ok" data-sort="-3.6" data-sort-g="-2.4">-2.4 <span class="pct">(-3.6%)</span></td>
+    <td class="bad" data-sort="-27.3" data-sort-g="-2.7">-2.7 <span class="pct">(-27.3%)</span></td>
+    <td class="warn" data-sort="11.1" data-sort-g="2">2 <span class="pct">(+11.1%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -689,10 +702,10 @@
   </tr><tr>
     <td><a href="#detail-71">Blue Cheese</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
-    <td class="ok" data-sort="1.2">4.1 <span class="pct">(+1.2%)</span></td>
-    <td class="bad" data-sort="55.3">1.3 <span class="pct">(+55.3%)</span></td>
-    <td class="ok" data-sort="0.1">0 <span class="pct">(+0.1%)</span></td>
-    <td class="ok" data-sort="-0.4">-0.1 <span class="pct">(-0.4%)</span></td>
+    <td class="ok" data-sort="1.2" data-sort-g="4.1">4.1 <span class="pct">(+1.2%)</span></td>
+    <td class="bad" data-sort="55.3" data-sort-g="1.3">1.3 <span class="pct">(+55.3%)</span></td>
+    <td class="ok" data-sort="0.1" data-sort-g="0">0 <span class="pct">(+0.1%)</span></td>
+    <td class="ok" data-sort="-0.4" data-sort-g="-0.1">-0.1 <span class="pct">(-0.4%)</span></td>
     <td>as-sold</td>
     <td>mixed</td>
     <td>medium</td>
@@ -700,10 +713,10 @@
   </tr><tr>
     <td><a href="#detail-6">Rolled Oats</a></td>
     <td class="cat">Grains &amp; Pasta</td>
-    <td class="ok" data-sort="-1.1">-4 <span class="pct">(-1.1%)</span></td>
-    <td class="ok" data-sort="-0.3">-0.2 <span class="pct">(-0.3%)</span></td>
-    <td class="warn" data-sort="-5.3">-0.7 <span class="pct">(-5.3%)</span></td>
-    <td class="ok" data-sort="-3.8">-0.2 <span class="pct">(-3.8%)</span></td>
+    <td class="ok" data-sort="-1.1" data-sort-g="-4">-4 <span class="pct">(-1.1%)</span></td>
+    <td class="ok" data-sort="-0.3" data-sort-g="-0.2">-0.2 <span class="pct">(-0.3%)</span></td>
+    <td class="warn" data-sort="-5.3" data-sort-g="-0.7">-0.7 <span class="pct">(-5.3%)</span></td>
+    <td class="ok" data-sort="-3.8" data-sort-g="-0.2">-0.2 <span class="pct">(-3.8%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>high</td>
@@ -711,10 +724,10 @@
   </tr><tr>
     <td><a href="#detail-24">Coconut Milk</a></td>
     <td class="cat">Canned &amp; Legumes</td>
-    <td class="ok" data-sort="-2.6">-4 <span class="pct">(-2.6%)</span></td>
-    <td class="bad" data-sort="-55.4">-1.5 <span class="pct">(-55.4%)</span></td>
-    <td class="bad" data-sort="-55.4">-0.8 <span class="pct">(-55.4%)</span></td>
-    <td class="warn" data-sort="-6.2">-1 <span class="pct">(-6.2%)</span></td>
+    <td class="ok" data-sort="-2.6" data-sort-g="-4">-4 <span class="pct">(-2.6%)</span></td>
+    <td class="bad" data-sort="-55.4" data-sort-g="-1.5">-1.5 <span class="pct">(-55.4%)</span></td>
+    <td class="bad" data-sort="-55.4" data-sort-g="-0.8">-0.8 <span class="pct">(-55.4%)</span></td>
+    <td class="warn" data-sort="-6.2" data-sort-g="-1">-1 <span class="pct">(-6.2%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -722,10 +735,10 @@
   </tr><tr>
     <td><a href="#detail-64">Egg</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
-    <td class="ok" data-sort="-2.8">-4 <span class="pct">(-2.8%)</span></td>
-    <td class="bad" data-sort="-100">-0.8 <span class="pct">(-100%)</span></td>
-    <td class="ok" data-sort="-4.8">-0.6 <span class="pct">(-4.8%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-2.8" data-sort-g="-4">-4 <span class="pct">(-2.8%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.8">-0.8 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="-4.8" data-sort-g="-0.6">-0.6 <span class="pct">(-4.8%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -733,10 +746,10 @@
   </tr><tr>
     <td><a href="#detail-31">Green Lentils</a></td>
     <td class="cat">Canned &amp; Legumes</td>
-    <td class="ok" data-sort="1">3.6 <span class="pct">(+1%)</span></td>
-    <td class="ok" data-sort="1.6">1 <span class="pct">(+1.6%)</span></td>
-    <td class="warn" data-sort="-9.7">-2.4 <span class="pct">(-9.7%)</span></td>
-    <td class="ok" data-sort="1">0 <span class="pct">(+1%)</span></td>
+    <td class="ok" data-sort="1" data-sort-g="3.6">3.6 <span class="pct">(+1%)</span></td>
+    <td class="ok" data-sort="1.6" data-sort-g="1">1 <span class="pct">(+1.6%)</span></td>
+    <td class="warn" data-sort="-9.7" data-sort-g="-2.4">-2.4 <span class="pct">(-9.7%)</span></td>
+    <td class="ok" data-sort="1" data-sort-g="0">0 <span class="pct">(+1%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>high</td>
@@ -744,10 +757,10 @@
   </tr><tr>
     <td><a href="#detail-27">Tomato Sauce</a></td>
     <td class="cat">Canned &amp; Legumes</td>
-    <td class="warn" data-sort="11.2">3.3 <span class="pct">(+11.2%)</span></td>
-    <td class="ok" data-sort="-2.2">-0.1 <span class="pct">(-2.2%)</span></td>
-    <td class="bad" data-sort="-19.4">-0.2 <span class="pct">(-19.4%)</span></td>
-    <td class="bad" data-sort="-100">-0.2 <span class="pct">(-100%)</span></td>
+    <td class="warn" data-sort="11.2" data-sort-g="3.3">3.3 <span class="pct">(+11.2%)</span></td>
+    <td class="ok" data-sort="-2.2" data-sort-g="-0.1">-0.1 <span class="pct">(-2.2%)</span></td>
+    <td class="bad" data-sort="-19.4" data-sort-g="-0.2">-0.2 <span class="pct">(-19.4%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.2">-0.2 <span class="pct">(-100%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -755,10 +768,10 @@
   </tr><tr>
     <td><a href="#detail-48">Doenjang</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="-2">-3.3 <span class="pct">(-2%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="2.6">0.3 <span class="pct">(+2.6%)</span></td>
-    <td class="bad" data-sort="-16.7">-0.7 <span class="pct">(-16.7%)</span></td>
+    <td class="ok" data-sort="-2" data-sort-g="-3.3">-3.3 <span class="pct">(-2%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="2.6" data-sort-g="0.3">0.3 <span class="pct">(+2.6%)</span></td>
+    <td class="bad" data-sort="-16.7" data-sort-g="-0.7">-0.7 <span class="pct">(-16.7%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -766,10 +779,10 @@
   </tr><tr>
     <td><a href="#detail-2">Flour</a></td>
     <td class="cat">Grains &amp; Pasta</td>
-    <td class="ok" data-sort="0.7">2.7 <span class="pct">(+0.7%)</span></td>
-    <td class="ok" data-sort="0.5">0.4 <span class="pct">(+0.5%)</span></td>
-    <td class="ok" data-sort="-2.9">-0.3 <span class="pct">(-2.9%)</span></td>
-    <td class="bad" data-sort="-100">-1 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="0.7" data-sort-g="2.7">2.7 <span class="pct">(+0.7%)</span></td>
+    <td class="ok" data-sort="0.5" data-sort-g="0.4">0.4 <span class="pct">(+0.5%)</span></td>
+    <td class="ok" data-sort="-2.9" data-sort-g="-0.3">-0.3 <span class="pct">(-2.9%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-1">-1 <span class="pct">(-100%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -777,10 +790,10 @@
   </tr><tr>
     <td><a href="#detail-62">Butter</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
-    <td class="ok" data-sort="-0.4">-2.7 <span class="pct">(-0.4%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="bad" data-sort="-100">-0.9 <span class="pct">(-100%)</span></td>
-    <td class="ok" data-sort="-3.1">-2.5 <span class="pct">(-3.1%)</span></td>
+    <td class="ok" data-sort="-0.4" data-sort-g="-2.7">-2.7 <span class="pct">(-0.4%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.9">-0.9 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="-3.1" data-sort-g="-2.5">-2.5 <span class="pct">(-3.1%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -788,10 +801,10 @@
   </tr><tr>
     <td><a href="#detail-15">Corn Tortillas</a></td>
     <td class="cat">Bakery &amp; Bread</td>
-    <td class="ok" data-sort="0.8">1.8 <span class="pct">(+0.8%)</span></td>
-    <td class="ok" data-sort="3.2">1.4 <span class="pct">(+3.2%)</span></td>
-    <td class="bad" data-sort="-24">-1.3 <span class="pct">(-24%)</span></td>
-    <td class="bad" data-sort="-18.2">-0.5 <span class="pct">(-18.2%)</span></td>
+    <td class="ok" data-sort="0.8" data-sort-g="1.8">1.8 <span class="pct">(+0.8%)</span></td>
+    <td class="ok" data-sort="3.2" data-sort-g="1.4">1.4 <span class="pct">(+3.2%)</span></td>
+    <td class="bad" data-sort="-24" data-sort-g="-1.3">-1.3 <span class="pct">(-24%)</span></td>
+    <td class="bad" data-sort="-18.2" data-sort-g="-0.5">-0.5 <span class="pct">(-18.2%)</span></td>
     <td>as-sold</td>
     <td>mixed</td>
     <td>high</td>
@@ -799,10 +812,10 @@
   </tr><tr>
     <td><a href="#detail-70">Whole Milk</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
-    <td class="ok" data-sort="-1.9">-1.2 <span class="pct">(-1.9%)</span></td>
-    <td class="warn" data-sort="-6.1">-0.3 <span class="pct">(-6.1%)</span></td>
-    <td class="ok" data-sort="1.2">0 <span class="pct">(+1.2%)</span></td>
-    <td class="ok" data-sort="-1.9">-0.1 <span class="pct">(-1.9%)</span></td>
+    <td class="ok" data-sort="-1.9" data-sort-g="-1.2">-1.2 <span class="pct">(-1.9%)</span></td>
+    <td class="warn" data-sort="-6.1" data-sort-g="-0.3">-0.3 <span class="pct">(-6.1%)</span></td>
+    <td class="ok" data-sort="1.2" data-sort-g="0">0 <span class="pct">(+1.2%)</span></td>
+    <td class="ok" data-sort="-1.9" data-sort-g="-0.1">-0.1 <span class="pct">(-1.9%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -810,10 +823,10 @@
   </tr><tr>
     <td><a href="#detail-20">Breadcrumbs</a></td>
     <td class="cat">Bakery &amp; Bread</td>
-    <td class="ok" data-sort="-0.3">-1.1 <span class="pct">(-0.3%)</span></td>
-    <td class="warn" data-sort="9.4">6.8 <span class="pct">(+9.4%)</span></td>
-    <td class="bad" data-sort="-32.2">-4.3 <span class="pct">(-32.2%)</span></td>
-    <td class="warn" data-sort="-14.2">-0.8 <span class="pct">(-14.2%)</span></td>
+    <td class="ok" data-sort="-0.3" data-sort-g="-1.1">-1.1 <span class="pct">(-0.3%)</span></td>
+    <td class="warn" data-sort="9.4" data-sort-g="6.8">6.8 <span class="pct">(+9.4%)</span></td>
+    <td class="bad" data-sort="-32.2" data-sort-g="-4.3">-4.3 <span class="pct">(-32.2%)</span></td>
+    <td class="warn" data-sort="-14.2" data-sort-g="-0.8">-0.8 <span class="pct">(-14.2%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -821,10 +834,10 @@
   </tr><tr>
     <td><a href="#detail-22">Black Beans</a></td>
     <td class="cat">Canned &amp; Legumes</td>
-    <td class="ok" data-sort="-0.3">-1 <span class="pct">(-0.3%)</span></td>
-    <td class="ok" data-sort="2.6">1.6 <span class="pct">(+2.6%)</span></td>
-    <td class="ok" data-sort="1.9">0.4 <span class="pct">(+1.9%)</span></td>
-    <td class="bad" data-sort="-100">-1.4 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="-0.3" data-sort-g="-1">-1 <span class="pct">(-0.3%)</span></td>
+    <td class="ok" data-sort="2.6" data-sort-g="1.6">1.6 <span class="pct">(+2.6%)</span></td>
+    <td class="ok" data-sort="1.9" data-sort-g="0.4">0.4 <span class="pct">(+1.9%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-1.4">-1.4 <span class="pct">(-100%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -832,10 +845,10 @@
   </tr><tr>
     <td><a href="#detail-37">Honey</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="0.3">0.8 <span class="pct">(+0.3%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="bad" data-sort="58.7">0.2 <span class="pct">(+58.7%)</span></td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0.3" data-sort-g="0.8">0.8 <span class="pct">(+0.3%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="bad" data-sort="58.7" data-sort-g="0.2">0.2 <span class="pct">(+58.7%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>high</td>
@@ -843,10 +856,10 @@
   </tr><tr>
     <td><a href="#detail-0">Basmati Rice</a></td>
     <td class="cat">Grains &amp; Pasta</td>
-    <td class="ok" data-sort="-0.1">-0.4 <span class="pct">(-0.1%)</span></td>
-    <td class="ok" data-sort="1.8">1.4 <span class="pct">(+1.8%)</span></td>
-    <td class="bad" data-sort="25.2">1.8 <span class="pct">(+25.2%)</span></td>
-    <td class="bad" data-sort="-100">-0.6 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="-0.1" data-sort-g="-0.4">-0.4 <span class="pct">(-0.1%)</span></td>
+    <td class="ok" data-sort="1.8" data-sort-g="1.4">1.4 <span class="pct">(+1.8%)</span></td>
+    <td class="bad" data-sort="25.2" data-sort-g="1.8">1.8 <span class="pct">(+25.2%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.6">-0.6 <span class="pct">(-100%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>high</td>
@@ -854,10 +867,10 @@
   </tr><tr>
     <td><a href="#detail-47">Aji Amarillo Paste</a></td>
     <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="-0.8">-0.3 <span class="pct">(-0.8%)</span></td>
-    <td class="bad" data-sort="-100">-7.9 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="-100">-1.7 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="-100">-0.4 <span class="pct">(-100%)</span></td>
+    <td class="ok" data-sort="-0.8" data-sort-g="-0.3">-0.3 <span class="pct">(-0.8%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-7.9">-7.9 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-1.7">-1.7 <span class="pct">(-100%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-0.4">-0.4 <span class="pct">(-100%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>low</td>
@@ -865,10 +878,10 @@
   </tr><tr>
     <td><a href="#detail-33">Toor Dal</a></td>
     <td class="cat">Canned &amp; Legumes</td>
-    <td class="ok" data-sort="0">-0.1 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0.1">0.1 <span class="pct">(+0.1%)</span></td>
-    <td class="warn" data-sort="5.3">1.2 <span class="pct">(+5.3%)</span></td>
-    <td class="ok" data-sort="-4.8">-0.1 <span class="pct">(-4.8%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="-0.1">-0.1 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0.1" data-sort-g="0.1">0.1 <span class="pct">(+0.1%)</span></td>
+    <td class="warn" data-sort="5.3" data-sort-g="1.2">1.2 <span class="pct">(+5.3%)</span></td>
+    <td class="ok" data-sort="-4.8" data-sort-g="-0.1">-0.1 <span class="pct">(-4.8%)</span></td>
     <td>dry</td>
     <td>aggregator</td>
     <td>high</td>
@@ -876,10 +889,10 @@
   </tr><tr>
     <td><a href="#detail-17">Pita Bread</a></td>
     <td class="cat">Bakery &amp; Bread</td>
-    <td class="ok" data-sort="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="-1.3">-0.7 <span class="pct">(-1.3%)</span></td>
-    <td class="warn" data-sort="-8.4">-0.8 <span class="pct">(-8.4%)</span></td>
-    <td class="bad" data-sort="38.9">0.5 <span class="pct">(+38.9%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-1.3" data-sort-g="-0.7">-0.7 <span class="pct">(-1.3%)</span></td>
+    <td class="warn" data-sort="-8.4" data-sort-g="-0.8">-0.8 <span class="pct">(-8.4%)</span></td>
+    <td class="bad" data-sort="38.9" data-sort-g="0.5">0.5 <span class="pct">(+38.9%)</span></td>
     <td>as-sold</td>
     <td>aggregator</td>
     <td>medium</td>
@@ -3154,11 +3167,27 @@
 </div>
 
 <script>
+// Delta cells carry both keys: data-sort (percent) and data-sort-g (grams per 100 g).
+// SORTMODE decides which one the numeric comparator reads. Percent answers "how wrong
+// is this number", grams "how much does it actually move" — a 100% error on 0.4 g of fat
+// and a 12% error on tofu protein swap places between the two, which is the whole point.
+var SORTMODE='pct';
+var SMKEY='mealprep_macro_audit_sortmode';
+var LASTSORT=null;   // {th, col, type, dir} — replayed when the mode changes
+
+function sortAttr(){ return SORTMODE==='g' ? 'data-sort-g' : 'data-sort'; }
+
+// sortTable is what the headers call: it flips direction. applySort is the same work with
+// an explicit direction, so switching mode can re-sort without reversing the column.
 function sortTable(th, col, type){
+  applySort(th, col, type, (th.getAttribute('data-dir')==='asc')?'desc':'asc');
+}
+
+function applySort(th, col, type, dir){
   var table=document.getElementById('summaryTable');
   var tbody=table.tBodies[0];
   var rows=Array.prototype.slice.call(tbody.rows);
-  var dir=(th.getAttribute('data-dir')==='asc')?'desc':'asc';
+  var attr=sortAttr();
   Array.prototype.forEach.call(table.querySelectorAll('th'),function(t){
     t.removeAttribute('data-dir');
     var a=t.querySelector('.arrow'); if(a) a.textContent='↕';
@@ -3168,7 +3197,7 @@ function sortTable(th, col, type){
   rows.sort(function(a,b){
     var x=a.cells[col], y=b.cells[col];
     if(type==='num'){
-      var xv=parseFloat(x.getAttribute('data-sort')), yv=parseFloat(y.getAttribute('data-sort'));
+      var xv=parseFloat(x.getAttribute(attr)), yv=parseFloat(y.getAttribute(attr));
       var xn=isNaN(xv), yn=isNaN(yv);
       if(xn&&yn) return 0; if(xn) return 1; if(yn) return -1;  // blanks always last
       return dir==='asc'? xv-yv : yv-xv;
@@ -3177,7 +3206,34 @@ function sortTable(th, col, type){
     return dir==='asc'? xt.localeCompare(yt) : yt.localeCompare(xt);
   });
   rows.forEach(function(r){ tbody.appendChild(r); });
+  LASTSORT={th:th, col:col, type:type, dir:dir};
 }
+
+function setSortMode(m){
+  SORTMODE = (m==='g') ? 'g' : 'pct';
+  try{ localStorage.setItem(SMKEY, SORTMODE); }catch(e){}
+  markSortMode();
+  // Re-sort in place if a delta column is currently active. Same column, same direction,
+  // new key — clicking the header again would flip the direction, which is not what a
+  // mode switch means.
+  if(LASTSORT && LASTSORT.type==='num') applySort(LASTSORT.th, LASTSORT.col, LASTSORT.type, LASTSORT.dir);
+}
+
+// Bold the unit the sort is keyed on, inside each delta header's "(g·%)" hint.
+function markSortMode(){
+  Array.prototype.forEach.call(document.querySelectorAll('#summaryTable th .hint'), function(h){
+    h.innerHTML = SORTMODE==='g' ? ' (<b>g</b>·%)' : ' (g·<b>%</b>)';
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.sortmode input[type=radio]'), function(r){
+    r.checked = (r.value===SORTMODE);
+  });
+}
+
+(function(){
+  try{ var v=localStorage.getItem(SMKEY); if(v==='g'||v==='pct') SORTMODE=v; }catch(e){}
+  if(document.readyState!=='loading') markSortMode();
+  else document.addEventListener('DOMContentLoaded', markSortMode);
+})();
 </script>
 
 <script>

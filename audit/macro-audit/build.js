@@ -83,10 +83,13 @@ function maxPct(deltas) {
 
 function summaryRow(rec, deltas) {
   const mp = maxPct(deltas);
+  // Two sort keys per delta cell: data-sort is the percent, data-sort-g the gram delta.
+  // The summary header toggle picks which one sortTable reads; both are the rounded
+  // values the cell prints, so the order never contradicts what is on screen.
   const cells = deltas
     .map((d) => {
       if (d.pct === null) return `    <td class="na">—</td>`;
-      return `    <td class="${d.cls}" data-sort="${d.pct}">${fmt(d.grams)} <span class="pct">(${d.pct > 0 ? "+" : ""}${d.pct}%)</span></td>`;
+      return `    <td class="${d.cls}" data-sort="${d.pct}" data-sort-g="${fmt(d.grams)}">${fmt(d.grams)} <span class="pct">(${d.pct > 0 ? "+" : ""}${d.pct}%)</span></td>`;
     })
     .join("\n");
   return [

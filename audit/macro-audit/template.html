@@ -50,6 +50,13 @@
   th.sortable:hover { background: #e3e6ea; }
   th .arrow { font-size: 10px; opacity: .45; margin-left: 4px; }
   th .hint { font-weight: 400; font-size: 10px; color: #868e96; margin-left: 3px; }
+  th .hint b { color: #1971c2; }
+  .sortmode { display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-size:12px; color:#495057;
+              background:#f8f9fa; border:1px solid #e9ecef; border-radius:6px; padding:7px 12px; margin:0 0 10px; }
+  .sortmode .lbl { text-transform:uppercase; letter-spacing:.04em; font-size:11px; color:#868e96; }
+  .sortmode label { cursor:pointer; }
+  .sortmode input[type=radio] { margin-right:4px; }
+  .sortmode .why { color:#868e96; }
   .summary td[data-sort] { text-align: right; white-space: nowrap; }
 
   .decpanel { background:#fff; border:1px solid #dee2e6; border-radius:8px; padding:14px 16px; margin:16px 0 8px; box-shadow:0 1px 2px rgba(0,0,0,.05); }
@@ -88,8 +95,14 @@
     <span><i class="dot bad"></i> &gt;15%</span>
     <span><i class="dot na"></i> no data</span>
   </div>
-  <p style="font-size:13px;color:#495057;margin:4px 0 16px">Each Δ column shows <strong>Amazon − ours</strong> per 100 g as grams and percent (same as the detail tables), heat-mapped by magnitude. <strong>Click any column header to sort</strong> (Δ columns sort by <strong>percent</strong>; toggles ascending/descending; blank/no-percent cells sort last). Default view: largest calorie gap first. ⚠ marks items whose Amazon label is a different form (cooked/canned/drained) than our USDA raw/dry data, so a large delta is expected. Review each and tick a decision box; every card also has a free-text <strong>Notes</strong> field, and there is a general notes box in the panel below. Notes are copied out along with the decisions, and a ✎ in the Decision column marks a row you have annotated.</p>
+  <p style="font-size:13px;color:#495057;margin:4px 0 16px">Each Δ column shows <strong>Amazon − ours</strong> per 100 g as grams and percent (same as the detail tables), heat-mapped by magnitude. <strong>Click any column header to sort</strong> (toggles ascending/descending; blank cells sort last). Δ columns sort by <strong>percent or by grams</strong> — pick which with the toggle above the table. Default view: largest calorie gap first. ⚠ marks items whose Amazon label is a different form (cooked/canned/drained) than our USDA raw/dry data, so a large delta is expected. Review each and tick a decision box; every card also has a free-text <strong>Notes</strong> field, and there is a general notes box in the panel below. Notes are copied out along with the decisions, and a ✎ in the Decision column marks a row you have annotated.</p>
   <h2>Summary — all 45, biggest deltas first</h2>
+  <div class="sortmode">
+    <span class="lbl">Δ columns sort by</span>
+    <label><input type="radio" name="sortmode" value="pct" checked onchange="setSortMode('pct')"> percent</label>
+    <label><input type="radio" name="sortmode" value="g" onchange="setSortMode('g')"> grams per 100 g</label>
+    <span class="why">grams rank by how much the number actually moves; percent by how wrong it is relative to a small base</span>
+  </div>
   <table class="summary" id="summaryTable">
     <thead><tr><th class="sortable" onclick="sortTable(this,0,'text')">Ingredient<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,1,'text')">Category<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,2,'num')">Δ Cal<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,3,'num')">Δ Carbs<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,4,'num')">Δ Protein<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,5,'num')">Δ Fat<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,6,'text')">Form<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,7,'text')">Source<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,8,'text')">Conf.<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,9,'text')">Decision<span class="arrow">↕</span></th></tr></thead>
 {{ROWS}}
@@ -115,11 +128,27 @@
 </div>
 
 <script>
+// Delta cells carry both keys: data-sort (percent) and data-sort-g (grams per 100 g).
+// SORTMODE decides which one the numeric comparator reads. Percent answers "how wrong
+// is this number", grams "how much does it actually move" — a 100% error on 0.4 g of fat
+// and a 12% error on tofu protein swap places between the two, which is the whole point.
+var SORTMODE='pct';
+var SMKEY='mealprep_macro_audit_sortmode';
+var LASTSORT=null;   // {th, col, type, dir} — replayed when the mode changes
+
+function sortAttr(){ return SORTMODE==='g' ? 'data-sort-g' : 'data-sort'; }
+
+// sortTable is what the headers call: it flips direction. applySort is the same work with
+// an explicit direction, so switching mode can re-sort without reversing the column.
 function sortTable(th, col, type){
+  applySort(th, col, type, (th.getAttribute('data-dir')==='asc')?'desc':'asc');
+}
+
+function applySort(th, col, type, dir){
   var table=document.getElementById('summaryTable');
   var tbody=table.tBodies[0];
   var rows=Array.prototype.slice.call(tbody.rows);
-  var dir=(th.getAttribute('data-dir')==='asc')?'desc':'asc';
+  var attr=sortAttr();
   Array.prototype.forEach.call(table.querySelectorAll('th'),function(t){
     t.removeAttribute('data-dir');
     var a=t.querySelector('.arrow'); if(a) a.textContent='↕';
@@ -129,7 +158,7 @@ function sortTable(th, col, type){
   rows.sort(function(a,b){
     var x=a.cells[col], y=b.cells[col];
     if(type==='num'){
-      var xv=parseFloat(x.getAttribute('data-sort')), yv=parseFloat(y.getAttribute('data-sort'));
+      var xv=parseFloat(x.getAttribute(attr)), yv=parseFloat(y.getAttribute(attr));
       var xn=isNaN(xv), yn=isNaN(yv);
       if(xn&&yn) return 0; if(xn) return 1; if(yn) return -1;  // blanks always last
       return dir==='asc'? xv-yv : yv-xv;
@@ -138,7 +167,34 @@ function sortTable(th, col, type){
     return dir==='asc'? xt.localeCompare(yt) : yt.localeCompare(xt);
   });
   rows.forEach(function(r){ tbody.appendChild(r); });
+  LASTSORT={th:th, col:col, type:type, dir:dir};
 }
+
+function setSortMode(m){
+  SORTMODE = (m==='g') ? 'g' : 'pct';
+  try{ localStorage.setItem(SMKEY, SORTMODE); }catch(e){}
+  markSortMode();
+  // Re-sort in place if a delta column is currently active. Same column, same direction,
+  // new key — clicking the header again would flip the direction, which is not what a
+  // mode switch means.
+  if(LASTSORT && LASTSORT.type==='num') applySort(LASTSORT.th, LASTSORT.col, LASTSORT.type, LASTSORT.dir);
+}
+
+// Bold the unit the sort is keyed on, inside each delta header's "(g·%)" hint.
+function markSortMode(){
+  Array.prototype.forEach.call(document.querySelectorAll('#summaryTable th .hint'), function(h){
+    h.innerHTML = SORTMODE==='g' ? ' (<b>g</b>·%)' : ' (g·<b>%</b>)';
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.sortmode input[type=radio]'), function(r){
+    r.checked = (r.value===SORTMODE);
+  });
+}
+
+(function(){
+  try{ var v=localStorage.getItem(SMKEY); if(v==='g'||v==='pct') SORTMODE=v; }catch(e){}
+  if(document.readyState!=='loading') markSortMode();
+  else document.addEventListener('DOMContentLoaded', markSortMode);
+})();
 </script>
 
 <script>

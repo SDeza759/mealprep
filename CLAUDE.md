@@ -1,11 +1,12 @@
 # CLAUDE.md — Project Context
 
 ## Last Updated
-2026-08-30 — S18. Algorithm/UI session: meal balance, shake-aware solving, removable shakes,
-base-anchored re-solves (see Key Decisions). **The macro audit review is STILL pending OFF-SESSION** —
-the user left S17 to tick all 76 rows in `audit/macro-audit.html` and will return with pasted
-decisions; expect that paste and don't rebuild or re-review the audit. `data.js` untouched since
-S15; 700/700 + 7000/7000, 139/139, hygiene all-green.
+2026-08-30 — S19. Grocery-display session: serving-macros line removed, store-scale lbs/oz
+weights, counts trimmed to eggs only (see Key Decisions). **The macro audit review is STILL
+pending OFF-SESSION** — the user left S17 to tick all 76 rows in `audit/macro-audit.html` and
+will return with pasted decisions; expect that paste and don't rebuild or re-review the audit.
+`data.js` touched only for `GROCERY_COUNTABLE` (display data, no macros); 700/700 + 7000/7000,
+139/139, hygiene all-green.
 
 ## Project Overview
 Multi-file HTML meal-prep optimizer ("Actual Size Optimizer"). Weekly plans vs macro targets
@@ -121,6 +122,27 @@ balanced in-zone, else shake-planned in-zone, else least-bad + deficit shake →
 - **All randomness goes through `rng()`** (S14), which defaults to `Math.random` so the browser is
   unchanged. `setRandomSeed(n)` (exported) swaps in mulberry32. Deliberately NOT named `seed` —
   `generatePlan`'s 8th arg already means the partial-regen dedup seed. Use `--seed=N` to replay a week.
+- **Grocery list shows store-scale units; counts are eggs-only** (S19, user's calls). (1) The
+  per-item serving-macros line is gone — `groceryServingMacros`/`groceryServingText` deleted.
+  (2) All weights print as decimal pounds + total ounces ("1.5lbs / 24oz", `formatImperial`),
+  no grams — grocery scales read decimal pounds. (3) Item counts survive ONLY for Egg (exact:
+  the solver snaps eggs to 50g): `GROCERY_COUNTABLE` is Egg-only and `getUnitDisplay`
+  (index.html — meal modal Qty + stats) is Egg-gated, so tortillas/pita/bread/banana and all
+  produce show weight (grams in the meal modal). Real sizes vary too much for assumed-average
+  counts — the old lime double-definition (15g/lime in `UNIT_INGREDIENTS` vs 70g/lime in
+  `GROCERY_COUNTABLE`) had the meal modal claiming "4 limes" for ONE meal while the grocery tab
+  claimed 4 limes for the whole week. `UNIT_INGREDIENTS` still exists for the solver (keeps unit
+  items fixed). Don't reintroduce produce counts.
+- **Citrus is juice + zest, never whole fruit** (S19, user's call). `Lime`/`Lemon` renamed
+  `Lime Juice`/`Lemon Juice`: registry macros are USDA raw juice (25/8.4/0.4/0.1 and
+  22/6.9/0.4/0.2), all 52 recipe references renamed, every cooking step reworded away from
+  wedges/whole-fruit squeezing (Ceviche keeps its don't-twist-the-rinds technique note, phrased
+  for fresh-squeezed juice). Both were removed from `UNIT_INGREDIENTS` — behavior-neutral: citrus
+  never reaches the 50-cal canAdjust floor, so it stays solver-fixed either way. `Lemon Zest` is
+  a zero-macro spice-override seasoning (category Fruit) on Shrimp Scampi, Greek Lemon Chicken
+  and Baked Cod with Lemon & Herbs. `Lime Zest` deliberately does NOT exist yet — no current
+  recipe uses it; add it with the first dish that does, not before. Old saved plans still carry
+  "Lime"/"Lemon" ingredient names (same S15-rename staleness) until regenerated.
 
 ## Fragile Areas
 - **Registry name match**: recipe `name` must exactly match a key or macros silently zero out. Two
@@ -178,7 +200,8 @@ balanced in-zone, else shake-planned in-zone, else least-bad + deficit shake →
 - **Cooking liquid belongs in the step text, never as a `Water` ingredient.** State it proportional to the
   actual grams; a solver-shrunk 20g of lentils does not take 2 cups.
 - **Edit cooking steps**: only `RECIPE_COOKING_DATA` (legacy `COOKING_INSTRUCTIONS` deleted S5).
-- **canAdjust**: ≥50 cal, not spice, not soy sauce. Unit items (bread, tortillas, lime, lemon, banana) fixed.
+- **canAdjust**: ≥50 cal, not spice, not soy sauce. Unit items (bread, tortillas, banana) fixed.
+  (Citrus juices sit under 50 cal at recipe amounts, so they are fixed by the calorie floor.)
 - **Protein shake**: 1/day, 25P/3C/1F/120cal (`PROTEIN_SHAKE`); planned by the solver or auto-added
   at >10% protein deficit — preference order in Key Decisions.
 - **localStorage**: `mealprep_daygroups` (`{groups, excluded, mealCounts}` — one key holds all three),
@@ -269,3 +292,10 @@ refuses to write on any error); `out/*.jsonl` (every applied record + rationale 
   (from base anchors it solves deterministically to 747/653 + shake, spread 1.14, macros 98–101%).
   Lessons: measure base-vs-solved before blaming selection; the "Japchae × Yakitori" artifact (every
   ingredient on a live slider) is what surfaced the shake insight — build the exploration tool.
+- **S19**: grocery-display pass + citrus rework, all user's calls (see Key Decisions): serving-macros
+  line deleted, weights → decimal-lbs + total-oz, item counts → eggs only across grocery/meal
+  modal/stats. The user's screenshots exposed the lime 15g-vs-70g double-definition ("4 limes" for
+  one meal AND for the whole week), which led to the citrus split: `Lime`/`Lemon` → `Lime Juice`/
+  `Lemon Juice` (USDA juice macros, 52 refs, all steps reworded), `Lemon Zest` added as a spice
+  seasoning on 3 recipes, `Lime Zest` intentionally deferred, both citrus rows dropped from
+  `UNIT_INGREDIENTS`. Full gate green, browser-verified.

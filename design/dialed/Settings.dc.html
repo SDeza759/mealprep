@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: var(--accent-text); } a:hover { color: var(--fg); }
+    .dl { font-family: 'Barlow', 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; font-size: 15px; line-height: 1.3; }
+    .num { font-family: 'Barlow Condensed', 'Arial Narrow', 'Helvetica Neue', sans-serif; font-weight: 700; line-height: 1; letter-spacing: -0.01em; }
+    .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    .muted { color: var(--muted); }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+    .row { display: flex; align-items: center; gap: 12px; height: 48px; }
+    .row-sub { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+    .val { font-size: 13px; color: var(--muted); }
+    .seg { flex: 1; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--muted); }
+    .seg-on { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,0.25); }
+    .tog { width: 46px; height: 28px; border-radius: 14px; position: relative; flex: 0 0 auto; }
+    .tog-on { background: var(--accent); }
+    .tog-off { background: var(--track); }
+    .knob { position: absolute; top: 3px; width: 22px; height: 22px; border-radius: 11px; }
+    .chev { color: var(--dim); display: flex; }
+  </style>
+</helmet>
+<div class="dl" style="--bg: {{t.bg}}; --surface: {{t.surface}}; --surface2: {{t.surface2}}; --line: {{t.line}}; --fg: {{t.fg}}; --muted: {{t.muted}}; --dim: {{t.dim}}; --accent: {{t.accent}}; --accent-ink: {{t.accentInk}}; --accent-text: {{t.accentText}}; --track: {{t.track}}; --protein: {{t.protein}}; --carbs: {{t.carbs}}; --fat: {{t.fat}}; --good: {{t.good}}; position: relative; width: 390px; height: 1360px; overflow: hidden; background: var(--bg); color: var(--fg);">
+
+  <div style="padding: 54px 20px 40px; display: flex; flex-direction: column; gap: 12px;">
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--fg); background: var(--surface); border: 1px solid var(--line);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></div>
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div class="eyebrow">More</div>
+        <div class="num" style="font-size: 34px;">Settings</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+      <div class="eyebrow">Appearance</div>
+      <div style="display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--line);">
+        <div class="seg">System</div>
+        <div class="seg"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>Light</div>
+        <div class="seg seg-on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>Dark</div>
+      </div>
+      <div class="row" style="height: 44px;">
+        <div class="row-sub"><div style="font-weight: 500;">Accent</div></div>
+        <div style="display: flex; gap: 8px;">
+          <div style="width: 28px; height: 28px; border-radius: 14px; background: var(--accent); box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--fg);"></div>
+          <div style="width: 28px; height: 28px; border-radius: 14px; background: #7CFF6B;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 14px; background: #5AB8FF;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="padding: 6px 16px; display: flex; flex-direction: column;">
+      <div class="row"><div class="row-sub"><div style="font-weight: 500;">Goal</div><div class="val">Cut · −0.5 lb a week</div></div><div class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></div></div>
+      <div style="height: 1px; background: var(--line);"></div>
+      <div class="row"><div class="row-sub"><div style="font-weight: 500;">Targets</div><div class="val">2,000 kcal · 175 C · 200 P · 56 F</div></div><div class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></div></div>
+      <div style="height: 1px; background: var(--line);"></div>
+      <div class="row"><div class="row-sub"><div style="font-weight: 500;">Adaptive targets</div><div class="val">Suggests next week from your trend</div></div><div class="tog tog-on"><div class="knob" style="right: 3px; background: var(--accent-ink);"></div></div></div>
+      <div style="height: 1px; background: var(--line);"></div>
+      <div class="row"><div class="row-sub"><div style="font-weight: 500;">Training-day carbs</div><div class="val">+20 g on lifting days</div></div><div class="tog tog-on"><div class="knob" style="right: 3px; background: var(--accent-ink);"></div></div></div>
+    </div>
+
+    <div class="card" style="padding: 6px 16px; display: flex; flex-direction: column;">
+      <div class="row"><div class="row-sub"><div style="font-weight: 500;">Day groups</div><div class="val">Mon–Wed · Thu–Sat · Sun free</div></div><div class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></div></div>
+      <div style="height: 1px; background: var(--line);"></div>
+      <div class="row"><div class="row-sub"><div style="font-weight: 500;">Cook days</div><div class="val">Sunday for Mon–Wed · Wednesday for Thu–Sat</div></div><div class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></div></div>
+      <div style="height: 1px; background: var(--line);"></div>
+      <div class="row"><div class="row-sub"><div style="font-weight: 500;">Meals per day</div><div class="val">2 · shake when needed</div></div><div class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></div></div>
+    </div>
+
+    <div class="card" style="padding: 6px 16px; display: flex; flex-direction: column;">
+      <div class="row"><div class="row-sub"><div style="font-weight: 600;">Notifications</div><div class="val">Off silences everything below</div></div><div class="tog tog-on"><div class="knob" style="right: 3px; background: var(--accent-ink);"></div></div></div>
+      <div style="height: 1px; background: var(--line);"></div>
+      <div class="row"><div class="row-sub" style="padding-left: 12px;"><div style="font-weight: 500;">Meal reminders</div><div class="val">10 min before each planned meal</div></div><div class="tog tog-on"><div class="knob" style="right: 3px; background: var(--accent-ink);"></div></div></div>
+      <div style="height: 1px; background: var(--line);"></div>
+      <div class="row"><div class="row-sub" style="padding-left: 12px;"><div style="font-weight: 500;">Protein nudge</div><div class="val">6:00 pm if you are 40 g or more short</div></div><div class="tog tog-off"><div class="knob" style="left: 3px; background: var(--muted);"></div></div></div>
+      <div style="height: 1px; background: var(--line);"></div>
+      <div class="row"><div class="row-sub" style="padding-left: 12px;"><div style="font-weight: 500;">Workout reminder</div><div class="val">On planned training days</div></div><div class="tog tog-on"><div class="knob" style="right: 3px; background: var(--accent-ink);"></div></div></div>
+      <div style="height: 1px; background: var(--line);"></div>
+      <div class="row"><div class="row-sub" style="padding-left: 12px;"><div style="font-weight: 500;">Weekly review</div><div class="val">Sunday evening</div></div><div class="tog tog-on"><div class="knob" style="right: 3px; background: var(--accent-ink);"></div></div></div>
+    </div>
+
+    <div class="card" style="padding: 6px 16px; display: flex; flex-direction: column;">
+      <div class="row"><div style="width: 32px; height: 32px; border-radius: 10px; background: var(--surface2); display: flex; align-items: center; justify-content: center; color: var(--fg);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z"></path></svg></div><div class="row-sub"><div style="font-weight: 500;">Apple Health</div><div class="val">Connected · workouts, sleep, steps, weight</div></div><div class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></div></div>
+      <div style="height: 1px; background: var(--line);"></div>
+      <div class="row"><div class="row-sub"><div style="font-weight: 500;">Write meals to Health</div><div class="val">Calories, protein, carbs, fat</div></div><div class="tog tog-on"><div class="knob" style="right: 3px; background: var(--accent-ink);"></div></div></div>
+    </div>
+
+    <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+      <div class="eyebrow">Units</div>
+      <div style="display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--line);">
+        <div class="seg seg-on">lb · oz</div>
+        <div class="seg">kg · g</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding: 6px 16px; display: flex; flex-direction: column;">
+      <div class="row"><div class="row-sub"><div style="font-weight: 500;">Export backup</div><div class="val">Plans, logs, weights, settings</div></div><div class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></div></div>
+      <div style="height: 1px; background: var(--line);"></div>
+      <div class="row"><div class="row-sub"><div style="font-weight: 500;">Import backup</div></div><div class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></div></div>
+      <div style="font-size: 13px; color: var(--muted); padding: 6px 0 10px;">Everything stays on this device. Nothing is sent anywhere.</div>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark","section":"Theme"},"accent":{"editor":"color","default":"#FF6B35","options":["#FF6B35","#7CFF6B","#5AB8FF"],"section":"Theme"},"$preview":{"width":390,"height":1360}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var light = (this.props.theme || 'dark') === 'light';
+    var accent = this.props.accent || '#FF6B35';
+    var lightAccents = { '#7CFF6B': '#2A8F1F', '#FF6B35': '#D9501B', '#5AB8FF': '#1F7FD6' };
+    var la = lightAccents[accent.toUpperCase()] || accent;
+    var t = light ? {
+      bg: '#F5F7F9', surface: '#FFFFFF', surface2: '#EEF2F5', line: '#DCE3EA', fg: '#0E141B', muted: '#5B6675', dim: '#8A97A6',
+      accent: la, accentInk: '#FFFFFF', accentText: la, track: '#E3E8EE',
+      protein: '#e87ba4', carbs: '#2a78d6', fat: '#eda100', good: '#0ca30c'
+    } : {
+      bg: '#0B0F14', surface: '#121820', surface2: '#1A222C', line: '#243040', fg: '#F2F5F7', muted: '#8A97A6', dim: '#5B6675',
+      accent: accent, accentInk: '#0B0F14', accentText: accent, track: '#1E2833',
+      protein: '#d55181', carbs: '#3987e5', fat: '#c98500', good: '#0ca30c'
+    };
+    return { t: t };
+  }
+}
+</script>
+</body>
+</html>

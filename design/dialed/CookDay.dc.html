@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: var(--accent-text); } a:hover { color: var(--fg); }
+    .dl { font-family: 'Barlow', 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; font-size: 15px; line-height: 1.3; }
+    .num { font-family: 'Barlow Condensed', 'Arial Narrow', 'Helvetica Neue', sans-serif; font-weight: 700; line-height: 1; letter-spacing: -0.01em; }
+    .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    .muted { color: var(--muted); }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+    .btn { height: 44px; padding: 0 18px; border-radius: 12px; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid transparent; box-sizing: border-box; }
+    .btn-primary { background: var(--accent); color: var(--accent-ink); }
+    .btn-ghost { background: transparent; border-color: var(--line); color: var(--fg); }
+    .row { display: flex; align-items: center; gap: 12px; height: 40px; }
+    .box { width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid var(--line); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+    .box-on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  </style>
+</helmet>
+<div class="dl" style="--bg: {{t.bg}}; --surface: {{t.surface}}; --surface2: {{t.surface2}}; --line: {{t.line}}; --fg: {{t.fg}}; --muted: {{t.muted}}; --dim: {{t.dim}}; --accent: {{t.accent}}; --accent-ink: {{t.accentInk}}; --accent-text: {{t.accentText}}; --track: {{t.track}}; --protein: {{t.protein}}; --carbs: {{t.carbs}}; --fat: {{t.fat}}; --good: {{t.good}}; position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--bg); color: var(--fg);">
+
+  <div style="position: absolute; left: 0; right: 0; top: 0; bottom: 0; overflow: hidden; padding: 54px 20px 0; display: flex; flex-direction: column; gap: 12px;">
+
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--fg); background: var(--surface); border: 1px solid var(--line);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+        <div class="eyebrow">Cook day · Wednesday</div>
+        <div class="num" style="font-size: 30px;">Thu – Sat batch</div>
+      </div>
+      <div class="num" style="font-size: 22px; color: var(--muted);">41:20</div>
+    </div>
+
+    <div style="font-size: 13px; color: var(--muted);">3 days · Chicken Pesto Pasta × 3 · fresh dinners are not in this list</div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; justify-content: space-between; font-size: 13px;"><span style="font-weight: 600;">Step 2 of 4</span><span class="muted">about 25 min left</span></div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px;">
+        <div style="height: 4px; border-radius: 2px; background: var(--accent);"></div>
+        <div style="height: 4px; border-radius: 2px; background: var(--accent);"></div>
+        <div style="height: 4px; border-radius: 2px; background: var(--track);"></div>
+        <div style="height: 4px; border-radius: 2px; background: var(--track);"></div>
+      </div>
+    </div>
+
+    <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px; border-color: var(--accent);">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="eyebrow" style="color: var(--accent-text);">Now</div>
+        <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2M9 2h6"></path></svg>8 min</div>
+      </div>
+      <div style="font-size: 20px; font-weight: 600;">Sear the chicken</div>
+      <div style="font-size: 14px; color: var(--muted); line-height: 1.4;">1.6 lb chicken breast, salt and black pepper. Sear in batches until cooked through, then slice — all three portions at once.</div>
+      <div style="display: flex; gap: 8px;">
+        <div class="btn btn-primary" style="flex: 1;">Start 8:00 timer</div>
+        <div class="btn btn-ghost" style="padding: 0 16px;">Done</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 6px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <div class="eyebrow">On the counter</div>
+        <div style="font-size: 13px; color: var(--muted);">merged across 3 servings</div>
+      </div>
+      <div class="row"><div class="box box-on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4L19 7"></path></svg></div><div style="flex: 1; color: var(--muted);">Pasta</div><div class="num" style="font-size: 16px; color: var(--muted);">9.9 oz</div></div>
+      <div class="row"><div class="box box-on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4L19 7"></path></svg></div><div style="flex: 1; color: var(--muted);">Potato · green beans</div><div class="num" style="font-size: 16px; color: var(--muted);">6.3 oz each</div></div>
+      <div class="row"><div class="box"></div><div style="flex: 1; font-weight: 600;">Chicken breast</div><div class="num" style="font-size: 16px;">1.6 lb</div></div>
+      <div class="row"><div class="box"></div><div style="flex: 1;">Basil · garlic</div><div class="num" style="font-size: 16px;">1.6 oz · 3 cloves</div></div>
+      <div class="row"><div class="box"></div><div style="flex: 1;">Parmesan · olive oil</div><div class="num" style="font-size: 16px;">2.3 oz · 1.2 oz</div></div>
+    </div>
+
+    <div class="card" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;">
+      <div class="eyebrow">Then portion</div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;">
+        <div style="height: 48px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;"><div class="num" style="font-size: 16px;">Thu</div><div class="eyebrow" style="font-size: 9px;">12:30</div></div>
+        <div style="height: 48px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;"><div class="num" style="font-size: 16px;">Fri</div><div class="eyebrow" style="font-size: 9px;">12:30</div></div>
+        <div style="height: 48px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;"><div class="num" style="font-size: 16px;">Sat</div><div class="eyebrow" style="font-size: 9px;">12:30</div></div>
+      </div>
+      <div style="font-size: 13px; color: var(--muted);">1,001 kcal per container · 87 C · 96 P · 28 F</div>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark","section":"Theme"},"accent":{"editor":"color","default":"#FF6B35","options":["#FF6B35","#7CFF6B","#5AB8FF"],"section":"Theme"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var light = (this.props.theme || 'dark') === 'light';
+    var accent = this.props.accent || '#FF6B35';
+    var lightAccents = { '#7CFF6B': '#2A8F1F', '#FF6B35': '#D9501B', '#5AB8FF': '#1F7FD6' };
+    var la = lightAccents[accent.toUpperCase()] || accent;
+    var t = light ? {
+      bg: '#F5F7F9', surface: '#FFFFFF', surface2: '#EEF2F5', line: '#DCE3EA', fg: '#0E141B', muted: '#5B6675', dim: '#8A97A6',
+      accent: la, accentInk: '#FFFFFF', accentText: la, track: '#E3E8EE',
+      protein: '#e87ba4', carbs: '#2a78d6', fat: '#eda100', good: '#0ca30c'
+    } : {
+      bg: '#0B0F14', surface: '#121820', surface2: '#1A222C', line: '#243040', fg: '#F2F5F7', muted: '#8A97A6', dim: '#5B6675',
+      accent: accent, accentInk: '#0B0F14', accentText: accent, track: '#1E2833',
+      protein: '#d55181', carbs: '#3987e5', fat: '#c98500', good: '#0ca30c'
+    };
+    return { t: t };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: var(--accent-text); } a:hover { color: var(--fg); }
+    .dl { font-family: 'Barlow', 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; font-size: 15px; line-height: 1.3; }
+    .num { font-family: 'Barlow Condensed', 'Arial Narrow', 'Helvetica Neue', sans-serif; font-weight: 700; line-height: 1; letter-spacing: -0.01em; }
+    .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    .muted { color: var(--muted); }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+    .btn { height: 44px; padding: 0 18px; border-radius: 12px; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid transparent; box-sizing: border-box; }
+    .btn-primary { background: var(--accent); color: var(--accent-ink); }
+    .btn-ghost { background: transparent; border-color: var(--line); color: var(--fg); }
+    .seg { flex: 1; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--muted); }
+    .seg-on { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0,0,0,0.25); }
+    .day { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0 6px; border-radius: 12px; }
+    .tab { flex: 1; height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--muted); }
+    .tab-on { color: var(--accent-text); }
+  </style>
+</helmet>
+<div class="dl" style="--bg: {{t.bg}}; --surface: {{t.surface}}; --surface2: {{t.surface2}}; --line: {{t.line}}; --fg: {{t.fg}}; --muted: {{t.muted}}; --dim: {{t.dim}}; --accent: {{t.accent}}; --accent-ink: {{t.accentInk}}; --accent-text: {{t.accentText}}; --track: {{t.track}}; --protein: {{t.protein}}; --carbs: {{t.carbs}}; --fat: {{t.fat}}; --good: {{t.good}}; position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--bg); color: var(--fg);">
+
+  <div style="position: absolute; left: 0; right: 0; top: 0; bottom: 84px; overflow: hidden; padding: 54px 20px 0; display: flex; flex-direction: column; gap: 12px;">
+
+    <div style="display: flex; align-items: flex-end; justify-content: space-between;">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div class="eyebrow">Week of Sep 1</div>
+        <div class="num" style="font-size: 34px;">Fuel</div>
+      </div>
+      <div class="btn btn-primary" style="height: 40px; padding: 0 16px;">Generate</div>
+    </div>
+
+    <div style="display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--surface2); border: 1px solid var(--line);">
+      <div class="seg seg-on">Plan</div>
+      <div class="seg">Grocery</div>
+      <div class="seg">Recipes</div>
+      <div class="seg">Log</div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px;">
+      <div class="day"><div class="eyebrow" style="font-size: 10px;">Mon</div><div class="num" style="font-size: 18px;">1</div><div style="width: 18px; height: 3px; border-radius: 2px; background: var(--accent);"></div></div>
+      <div class="day"><div class="eyebrow" style="font-size: 10px;">Tue</div><div class="num" style="font-size: 18px;">2</div><div style="width: 18px; height: 3px; border-radius: 2px; background: var(--accent);"></div></div>
+      <div class="day"><div class="eyebrow" style="font-size: 10px;">Wed</div><div class="num" style="font-size: 18px;">3</div><div style="width: 18px; height: 3px; border-radius: 2px; background: var(--accent);"></div></div>
+      <div class="day" style="background: var(--surface2); border: 1px solid var(--line);"><div class="eyebrow" style="font-size: 10px; color: var(--fg);">Thu</div><div class="num" style="font-size: 18px;">4</div><div style="width: 18px; height: 3px; border-radius: 2px; background: var(--fg);"></div></div>
+      <div class="day"><div class="eyebrow" style="font-size: 10px;">Fri</div><div class="num" style="font-size: 18px;">5</div><div style="width: 18px; height: 3px; border-radius: 2px; background: var(--fg);"></div></div>
+      <div class="day"><div class="eyebrow" style="font-size: 10px;">Sat</div><div class="num" style="font-size: 18px;">6</div><div style="width: 18px; height: 3px; border-radius: 2px; background: var(--fg);"></div></div>
+      <div class="day"><div class="eyebrow" style="font-size: 10px;">Sun</div><div class="num" style="font-size: 18px; color: var(--dim);">7</div><div class="eyebrow" style="font-size: 9px; color: var(--dim); letter-spacing: 0.08em;">free</div></div>
+    </div>
+
+    <div class="card" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <div style="display: flex; flex-direction: column; gap: 3px;">
+          <div style="font-size: 15px; font-weight: 600;">Thursday <span class="muted" style="font-weight: 500;">· Thu–Sat group · cook Wed</span></div>
+          <div style="font-size: 12px; color: var(--muted);">Lifting day · targets 2,080 kcal · 195 C · 200 P · 56 F</div>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;">
+        <div style="display: flex; flex-direction: column; gap: 6px;"><div class="eyebrow" style="font-size: 10px;">kcal</div><div class="num" style="font-size: 20px;">2,078</div><div style="height: 4px; border-radius: 2px; background: var(--track);"><div style="width: 100%; height: 4px; border-radius: 2px; background: var(--accent);"></div></div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px;"><div class="eyebrow" style="font-size: 10px;">Carbs</div><div class="num" style="font-size: 20px;">194 g</div><div style="height: 4px; border-radius: 2px; background: var(--track);"><div style="width: 99%; height: 4px; border-radius: 2px; background: var(--carbs);"></div></div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px;"><div class="eyebrow" style="font-size: 10px;">Protein</div><div class="num" style="font-size: 20px;">199 g</div><div style="height: 4px; border-radius: 2px; background: var(--track);"><div style="width: 100%; height: 4px; border-radius: 2px; background: var(--protein);"></div></div></div>
+        <div style="display: flex; flex-direction: column; gap: 6px;"><div class="eyebrow" style="font-size: 10px;">Fat</div><div class="num" style="font-size: 20px;">56 g</div><div style="height: 4px; border-radius: 2px; background: var(--track);"><div style="width: 100%; height: 4px; border-radius: 2px; background: var(--fat);"></div></div></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--good)" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 12l3 3 5-6"></path></svg>
+        <span>All four inside the 95–105% zone</span>
+      </div>
+    </div>
+
+    <div class="card" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; align-items: flex-start; gap: 12px;">
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+          <div class="eyebrow" style="font-size: 10px;">Meal 1 · 12:30</div>
+          <div style="font-size: 17px; font-weight: 600;">Chicken Pesto Pasta</div>
+          <div style="font-size: 13px; color: var(--muted);">1,001 kcal · 87 C · 96 P · 28 F</div>
+        </div>
+        <div style="display: flex; align-items: center; height: 36px; border-radius: 10px; border: 1px solid var(--line); overflow: hidden;">
+          <div style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--muted);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"><path d="M5 12h14"></path></svg></div>
+          <div class="num" style="font-size: 16px; width: 22px; text-align: center;">1</div>
+          <div style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--muted);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="height: 26px; padding: 0 10px; border-radius: 13px; background: var(--surface2); border: 1px solid var(--line); display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"></path><path d="M2 10h20M9 6l1-2M14 6l1-2"></path></svg>Batch · cook Wed</div>
+        <div style="flex: 1;"></div>
+        <div style="font-size: 13px; font-weight: 600; color: var(--accent-text);">Swap</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; align-items: flex-start; gap: 12px;">
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+          <div class="eyebrow" style="font-size: 10px;">Meal 2 · 19:00</div>
+          <div style="font-size: 17px; font-weight: 600;">Aji de Gallina</div>
+          <div style="font-size: 13px; color: var(--muted);">1,077 kcal · 107 C · 103 P · 28 F</div>
+        </div>
+        <div style="display: flex; align-items: center; height: 36px; border-radius: 10px; border: 1px solid var(--line); overflow: hidden;">
+          <div style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--muted);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"><path d="M5 12h14"></path></svg></div>
+          <div class="num" style="font-size: 16px; width: 22px; text-align: center;">1</div>
+          <div style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: var(--muted);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="height: 26px; padding: 0 10px; border-radius: 13px; background: transparent; border: 1px solid var(--line); display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted);">Fresh · cook tonight</div>
+        <div style="flex: 1;"></div>
+        <div style="font-size: 13px; font-weight: 600; color: var(--accent-text);">Swap</div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px;">
+      <div class="btn btn-ghost" style="flex: 1;">Re-solve day</div>
+      <div class="btn btn-ghost" style="flex: 1;">Log off-plan</div>
+    </div>
+
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 84px; box-sizing: border-box; padding: 8px 8px 30px; border-top: 1px solid var(--line); background: var(--surface); display: flex; align-items: center;">
+    <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 12l4-4"></path><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"></circle></svg>Today</div>
+    <div class="tab tab-on"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16a8 8 0 0 1-16 0z"></path><path d="M9 7l1-3M14 7l1-3"></path></svg>Fuel</div>
+    <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"></path></svg>Train</div>
+    <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 4 8-8"></path><path d="M14 8h6v6"></path></svg>Body</div>
+    <div class="tab"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg>More</div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["dark","light"],"default":"dark","section":"Theme"},"accent":{"editor":"color","default":"#FF6B35","options":["#FF6B35","#7CFF6B","#5AB8FF"],"section":"Theme"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var light = (this.props.theme || 'dark') === 'light';
+    var accent = this.props.accent || '#FF6B35';
+    var lightAccents = { '#7CFF6B': '#2A8F1F', '#FF6B35': '#D9501B', '#5AB8FF': '#1F7FD6' };
+    var la = lightAccents[accent.toUpperCase()] || accent;
+    var t = light ? {
+      bg: '#F5F7F9', surface: '#FFFFFF', surface2: '#EEF2F5', line: '#DCE3EA', fg: '#0E141B', muted: '#5B6675', dim: '#8A97A6',
+      accent: la, accentInk: '#FFFFFF', accentText: la, track: '#E3E8EE',
+      protein: '#e87ba4', carbs: '#2a78d6', fat: '#eda100', good: '#0ca30c'
+    } : {
+      bg: '#0B0F14', surface: '#121820', surface2: '#1A222C', line: '#243040', fg: '#F2F5F7', muted: '#8A97A6', dim: '#5B6675',
+      accent: accent, accentInk: '#0B0F14', accentText: accent, track: '#1E2833',
+      protein: '#d55181', carbs: '#3987e5', fat: '#c98500', good: '#0ca30c'
+    };
+    return { t: t };
+  }
+}
+</script>
+</body>
+</html>

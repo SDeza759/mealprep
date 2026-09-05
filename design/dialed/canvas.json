@@ -1,0 +1,17 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Today", "x": 0, "y": 0, "w": 390, "h": 844 },
+    { "file": "Fuel.dc.html", "title": "Fuel", "x": 490, "y": 0, "w": 390, "h": 844 },
+    { "file": "CookDay.dc.html", "title": "Cook Day", "x": 980, "y": 0, "w": 390, "h": 844 },
+    { "file": "Train.dc.html", "title": "Train", "x": 1470, "y": 0, "w": 390, "h": 844 },
+    { "file": "Body.dc.html", "title": "Body", "x": 1960, "y": 0, "w": 390, "h": 844 },
+    { "file": "Settings.dc.html", "title": "Settings", "x": 2450, "y": 0, "w": 390, "h": 1360 },
+    { "file": "Desktop.dc.html", "title": "Desktop · Fuel", "x": 0, "y": 1520, "w": 1440, "h": 900 }
+  ],
+  "annotations": [
+    { "id": "brief", "x": 0, "y": -170, "w": 430, "text": "Dialed — first pass, dark athletic.\nPhone screens left to right: Today, Fuel, Cook Day, Train, Body, Settings. Desktop below.\nAbove each screen: a Theme chip (dark / light) and an Accent chip (orange by default; lime and sky to compare)." },
+    { "id": "loop", "x": 520, "y": -170, "w": 430, "text": "The thread through every screen: the plan adapts.\nTraining day → carbs up. Weight trend → next week's calories. Off-plan meal → the rest of the day re-solves." },
+    { "id": "groups", "x": 1040, "y": -170, "w": 430, "text": "Day groups and cook days are settings, not assumptions — Mon–Wed / Thu–Sat / Sunday free is just the example. Meals are tagged batch or fresh; only batch meals reach Cook Day." }
+  ],
+  "launch": { "view": "canvas" }
+}

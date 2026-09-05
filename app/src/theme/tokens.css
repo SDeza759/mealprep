@@ -1,0 +1,84 @@
+/* Dialed design tokens — dark first, light as an override.
+   Theme: <html data-theme="dark|light"> forces a theme; no attribute follows the OS.
+   Accent: ThemeProvider sets --accent-dark / --accent-light on <html> (orange by default). */
+:root {
+  color-scheme: dark;
+  --bg: #0B0F14;
+  --surface: #121820;
+  --surface2: #1A222C;
+  --line: #243040;
+  --fg: #F2F5F7;
+  --muted: #8A97A6;
+  --dim: #5B6675;
+  --track: #1E2833;
+  --protein: #d55181;
+  --carbs: #3987e5;
+  --fat: #c98500;
+  --good: #0ca30c;
+  --warn: #e0a526;
+  --danger: #ef5350;
+  --accent-dark: #FF6B35;
+  --accent-light: #D9501B;
+  --accent: var(--accent-dark);
+  --accent-ink: #0B0F14;
+  --accent-text: var(--accent);
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --shadow-sheet: 0 -8px 40px rgba(0, 0, 0, 0.5);
+  --shadow-pop: 0 6px 24px rgba(0, 0, 0, 0.35);
+  --font: 'Barlow', 'Helvetica Neue', Arial, sans-serif;
+  --font-num: 'Barlow Condensed', 'Arial Narrow', 'Helvetica Neue', sans-serif;
+  --r: 16px;
+  --r-sm: 12px;
+  --r-xs: 10px;
+  --tabbar: 64px;
+  --sidebar: 240px;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #F5F7F9;
+  --surface: #FFFFFF;
+  --surface2: #EEF2F5;
+  --line: #DCE3EA;
+  --fg: #0E141B;
+  --muted: #5B6675;
+  --dim: #8A97A6;
+  --track: #E3E8EE;
+  --protein: #e87ba4;
+  --carbs: #2a78d6;
+  --fat: #eda100;
+  --good: #0ca30c;
+  --warn: #b47b0c;
+  --danger: #d32f2f;
+  --accent: var(--accent-light);
+  --accent-ink: #FFFFFF;
+  --overlay: rgba(14, 20, 27, 0.45);
+  --shadow-sheet: 0 -8px 40px rgba(0, 0, 0, 0.18);
+  --shadow-pop: 0 6px 24px rgba(0, 0, 0, 0.14);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #F5F7F9;
+    --surface: #FFFFFF;
+    --surface2: #EEF2F5;
+    --line: #DCE3EA;
+    --fg: #0E141B;
+    --muted: #5B6675;
+    --dim: #8A97A6;
+    --track: #E3E8EE;
+    --protein: #e87ba4;
+    --carbs: #2a78d6;
+    --fat: #eda100;
+    --good: #0ca30c;
+    --warn: #b47b0c;
+    --danger: #d32f2f;
+    --accent: var(--accent-light);
+    --accent-ink: #FFFFFF;
+    --overlay: rgba(14, 20, 27, 0.45);
+    --shadow-sheet: 0 -8px 40px rgba(0, 0, 0, 0.18);
+    --shadow-pop: 0 6px 24px rgba(0, 0, 0, 0.14);
+  }
+}

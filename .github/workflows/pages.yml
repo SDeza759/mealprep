@@ -1,22 +1,50 @@
+# Builds the Dialed app (app/) and publishes it to GitHub Pages. The old Actual Size Optimizer
+# ships alongside it at /legacy/ until Dialed reaches parity. The site's base path is the
+# repository name (a GitHub Pages project site lives at https://<user>.github.io/<repo>/).
 name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 permissions:
   contents: read
   pages: write
   id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install
+        working-directory: app
+        run: npm ci
+      - name: Build Dialed
+        working-directory: app
+        env:
+          DIALED_BASE: /${{ github.event.repository.name }}/
+        run: npm run build
+      - name: Keep the old app at /legacy/
+        run: |
+          mkdir -p app/dist/legacy
+          cp index.html data.js algorithm.js grocery.js app/dist/legacy/
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/dist
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v4
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
       - id: deployment
         uses: actions/deploy-pages@v4

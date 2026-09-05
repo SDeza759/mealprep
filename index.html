@@ -628,7 +628,10 @@ function StatsView(props) {
   var totalRecipes = Object.keys(recipeMap).length;
 
   function handleExport() {
-    var exportData = { stats: statsData, savedPlans: savedPlans, exportDate: new Date().toISOString() };
+    // Dialed (app/) imports this file: it also carries day groups, favorites and overrides so a
+    // move to the new app is one export + one import.
+    function lsJson(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch(e) { return null; } }
+    var exportData = { stats: statsData, savedPlans: savedPlans, daygroups: lsJson("mealprep_daygroups"), favorites: lsJson("mealprep_favorites"), overrides: lsJson("mealprep_overrides"), exportDate: new Date().toISOString() };
     var blob = new Blob([JSON.stringify(exportData,null,2)], {type:'application/json'});
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a'); a.href = url; a.download = 'mealprep-data.json'; a.click(); URL.revokeObjectURL(url);

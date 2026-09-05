@@ -449,7 +449,7 @@
   },
   {
     "idx": 15,
-    "name": "Black Beans",
+    "name": "Black Beans (Dry)",
     "category": "Canned & Legumes",
     "source": "aggregator",
     "confidence": "medium",
@@ -481,7 +481,7 @@
   },
   {
     "idx": 16,
-    "name": "Chickpeas",
+    "name": "Chickpeas (Dry)",
     "category": "Canned & Legumes",
     "source": "mixed",
     "confidence": "medium",
@@ -545,13 +545,13 @@
   },
   {
     "idx": 18,
-    "name": "Edamame",
+    "name": "Edamame (frozen)",
     "category": "Canned & Legumes",
     "source": "aggregator",
     "confidence": "medium",
     "form": "cooked",
     "formMismatch": true,
-    "notes": "365 by Whole Foods (Amazon-owned, sold on Amazon); frozen shelled edamame label is per 100g cooked/prepared, reads ~140 cal vs our 121 USDA raw, so not directly comparable.",
+    "notes": "365 by Whole Foods (Amazon-owned, sold on Amazon); frozen shelled edamame label is per 100g cooked/prepared, reads ~140 cal vs our 121 USDA raw, so not directly comparable. S20 decision: ADJUST — registry row adopted the label (140/11/11/5) and was renamed Edamame (frozen).",
     "links": [
       {
         "url": "https://us.amazon.com/365-Everyday-Value-Shelled-Edamame/dp/B074H6S8D8",
@@ -641,7 +641,7 @@
   },
   {
     "idx": 21,
-    "name": "White Beans",
+    "name": "White Beans (Dry)",
     "category": "Canned & Legumes",
     "source": "aggregator",
     "confidence": "medium",
@@ -702,38 +702,6 @@
       "fat": 0
     },
     "order": 22
-  },
-  {
-    "idx": 23,
-    "name": "Cherry Sauce",
-    "category": "Condiments & Oils",
-    "source": "mixed",
-    "confidence": "low",
-    "form": "as-sold",
-    "formMismatch": false,
-    "notes": "Sephra Cherry Topping Sauce (Amazon B08KFHV5VD); label is per-100g only (252kcal/61.9C/0.16P/0.05F), scaled to a standard 30g topping serving. Commercial topping is sugar-heavy (252 vs our USDA 91 cal/100g) — major variance; cherry sauces vary widely by brand.",
-    "links": [
-      {
-        "url": "https://www.amazon.com/Sephra-Cherry-Topping-Sauce-2-2lb/dp/B08KFHV5VD",
-        "label": "Sephra Cherry Topping/Dessert Sauce 2.2lb (Amazon.com)"
-      },
-      {
-        "url": "https://www.sephrausa.com/sephra-cherry-topping-sauce",
-        "label": "Sephra USA Cherry Topping Sauce product page"
-      },
-      {
-        "url": "https://foods.fatsecret.com/calories-nutrition/dairy-queen/cherry-topping",
-        "label": "FatSecret: Dairy Queen Cherry Topping (28g serving reference)"
-      }
-    ],
-    "serving": 30,
-    "label": {
-      "calories": 76,
-      "carbs": 18.6,
-      "protein": 0.1,
-      "fat": 0
-    },
-    "order": 23
   },
   {
     "idx": 24,
@@ -958,38 +926,6 @@
       "fat": 14
     },
     "order": 30
-  },
-  {
-    "idx": 32,
-    "name": "Pesto Sauce",
-    "category": "Condiments & Oils",
-    "source": "aggregator",
-    "confidence": "medium",
-    "form": "as-sold",
-    "formMismatch": false,
-    "notes": "No Amazon Fresh store-brand pesto exists; used Kirkland Signature (sold on Amazon) label per FatSecret: 60g serving = 330cal/9C/6P/30F, i.e. ~550cal/15C/10P/50F per 100g vs our 400/6.7/6.7/40 — our entry runs notably low on cal/fat/carbs. Pesto varies widely by brand.",
-    "links": [
-      {
-        "url": "https://www.amazon.com/ROI-Italian-Pesto-Sauce-6-3oz/dp/B0033PYYXS",
-        "label": "ROI Vegan Basil Pesto Sauce 6.3 oz (Amazon)"
-      },
-      {
-        "url": "https://www.amazon.com/Pesto-Sauces/b?ie=UTF8&node=6502789011",
-        "label": "Amazon Pesto Sauces category"
-      },
-      {
-        "url": "https://androidembeddedregional.fatsecret.com/calories-nutrition/kirkland-signature/pesto-sauce",
-        "label": "Kirkland Signature Pesto label (FatSecret)"
-      }
-    ],
-    "serving": 60,
-    "label": {
-      "calories": 330,
-      "carbs": 9,
-      "protein": 6,
-      "fat": 30
-    },
-    "order": 32
   },
   {
     "idx": 33,
@@ -1527,32 +1463,32 @@
     "order": 1004
   },
   {
-    "name": "Kidney Beans",
+    "name": "Kidney Beans (Dry)",
     "category": "Canned & Legumes",
     "source": "aggregator",
     "confidence": "medium",
-    "form": "canned",
-    "formMismatch": true,
-    "serving": 123,
+    "form": "dry",
+    "formMismatch": false,
+    "serving": 42,
     "label": {
-      "calories": 110,
-      "carbs": 21,
-      "protein": 8,
+      "calories": 140,
+      "carbs": 26,
+      "protein": 9,
       "fat": 0
     },
-    "notes": "Goya's only published kidney-bean label is the drained can, while our row is DRY — hence the ~73% gap, which is water, not a data error. It is still worth reading: at 89cal/100g drained vs 337 dry, a recipe that means canned beans and uses dry grams triples the entry. The registry comment already warns of the ~2.7x factor.",
+    "notes": "S20: re-based on the DRY bag after the user's review (the S16 row compared Goya's drained can, a ~73% water gap that said nothing about the data). Goya dry red kidney beans, 1/4 cup (42g) = 140cal/26C/9P/0F, scales to ~333/62/21/0 per 100g against our USDA dry 337/61.3/22.5/1.1 — every macro within 5%; the -100% fat is a 42g serving rounding 0.5g to zero. Decision was keep ours. The registry row is now named Kidney Beans (Dry); its comment still warns that a drained-can recipe needs grams divided by ~2.7.",
     "links": [
       {
         "url": "https://www.amazon.com/Goya-Kidney-Beans-Red-Pound/dp/B004XHLAGO",
-        "label": "Goya Red Kidney Beans, Dry, 1 lb (Amazon — matches our dry row)"
+        "label": "Goya Red Kidney Beans, Dry, 1 lb (Amazon — the labelled form)"
+      },
+      {
+        "url": "https://fitia.app/en/calories-nutritional-information/red-kidney-beans-20004219/",
+        "label": "Goya Red Kidney Beans, dry, 1/4 cup 42g label (Fitia)"
       },
       {
         "url": "https://www.amazon.com/Goya-Kidney-Beans-15-5-ounces/dp/B0004MZ28O",
-        "label": "Goya Red Kidney Beans, 15.5 oz can (Amazon — the labelled form)"
-      },
-      {
-        "url": "https://www.myfooddiary.com/foods/5126848/goya-red-kidney-beans",
-        "label": "Goya Red Kidney Beans (canned) label (MyFoodDiary)"
+        "label": "Goya Red Kidney Beans, 15.5 oz can (Amazon — the S16 comparison, drained ~89cal/100g)"
       }
     ],
     "order": 1005
@@ -2297,7 +2233,7 @@
       "protein": 5,
       "fat": 7
     },
-    "notes": "Hormel Black Label, but the label's serving is 2 PAN-FRIED slices while our row is USDA raw — so the +187% protein and +16% calorie deltas are rendered-out water and fat, not a data error. The practical warning stands: 15g of cooked bacon comes from roughly 34g raw, so a recipe that weighs cooked strips against this raw row understates by well over half.",
+    "notes": "Hormel Black Label, but the label's serving is 2 PAN-FRIED slices while our row is USDA raw — so the +187% protein and +16% calorie deltas are rendered-out water and fat, not a data error. The practical warning stands: 15g of cooked bacon comes from roughly 34g raw, so a recipe that weighs cooked strips against this raw row understates by well over half. S20 decision: ADJUST, but on a raw basis — the registry row moved from an unsourced 458/1.3/11.6/45 to USDA 'Pork, cured, bacon, unprepared' (FDC 168277: 417/1.3/12.6/39.7). The cooked Hormel label above is kept as provenance only; it is not a valid target for a raw-weighed row, so this card still shows the form mismatch.",
     "links": [
       {
         "url": "https://www.amazon.com/HORMEL-BLACK-LABEL-Original-Bacon/dp/B000Q3AEBG",

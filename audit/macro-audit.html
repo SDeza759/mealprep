@@ -84,8 +84,8 @@
 <body>
 <header>
   <h1>Amazon Fresh vs USDA — Macro Audit</h1>
-  <p>Packaged ingredients only (76). First generated 2026-06-07, expanded 2026-08-18. All values normalized to per 100 g.</p>
-  <p>72/76 ingredients matched to an Amazon listing · 3 flagged for raw-vs-cooked/canned form mismatch.</p>
+  <p>Packaged ingredients only (74). First generated 2026-06-07, expanded 2026-08-18. All values normalized to per 100 g.</p>
+  <p>70/74 ingredients matched to an Amazon listing · 2 flagged for raw-vs-cooked/canned form mismatch.</p>
 </header>
 <div class="wrap">
   <div class="legend">
@@ -96,7 +96,7 @@
     <span><i class="dot na"></i> no data</span>
   </div>
   <p style="font-size:13px;color:#495057;margin:4px 0 16px">Each Δ column shows <strong>Amazon − ours</strong> per 100 g as grams and percent (same as the detail tables), heat-mapped by magnitude. <strong>Click any column header to sort</strong> (toggles ascending/descending; blank cells sort last). Δ columns sort by <strong>percent or by grams</strong> — pick which with the toggle above the table. Default view: largest calorie gap first. ⚠ marks items whose Amazon label is a different form (cooked/canned/drained) than our USDA raw/dry data, so a large delta is expected. Review each and tick a decision box; every card also has a free-text <strong>Notes</strong> field, and there is a general notes box in the panel below. Notes are copied out along with the decisions, and a ✎ in the Decision column marks a row you have annotated.</p>
-  <h2>Summary — all 76, biggest deltas first</h2>
+  <h2>Summary — all 74, biggest deltas first</h2>
   <div class="sortmode">
     <span class="lbl">Δ columns sort by</span>
     <label><input type="radio" name="sortmode" value="pct" checked onchange="setSortMode('pct')"> percent</label>
@@ -106,73 +106,18 @@
   <table class="summary" id="summaryTable">
     <thead><tr><th class="sortable" onclick="sortTable(this,0,'text')">Ingredient<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,1,'text')">Category<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,2,'num')">Δ Cal<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,3,'num')">Δ Carbs<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,4,'num')">Δ Protein<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,5,'num')">Δ Fat<span class="hint"> (g·%)</span><span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,6,'text')">Form<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,7,'text')">Source<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,8,'text')">Conf.<span class="arrow">↕</span></th><th class="sortable" onclick="sortTable(this,9,'text')">Decision<span class="arrow">↕</span></th></tr></thead>
     <tbody><tr>
-    <td><a href="#detail-32">Kidney Beans</a></td>
-    <td class="cat">Canned &amp; Legumes</td>
-    <td class="bad" data-sort="-73.5" data-sort-g="-247.6">-247.6 <span class="pct">(-73.5%)</span></td>
-    <td class="bad" data-sort="-72.1" data-sort-g="-44.2">-44.2 <span class="pct">(-72.1%)</span></td>
-    <td class="bad" data-sort="-71.1" data-sort-g="-16">-16 <span class="pct">(-71.1%)</span></td>
-    <td class="bad" data-sort="-100" data-sort-g="-1.1">-1.1 <span class="pct">(-100%)</span></td>
-    <td>canned ⚠</td>
-    <td>aggregator</td>
-    <td>medium</td>
-    <td class="deccell" data-ing="Kidney Beans">—</td>
-  </tr><tr>
-    <td><a href="#detail-35">Cherry Sauce</a></td>
-    <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="178.4" data-sort-g="162.3">162.3 <span class="pct">(+178.4%)</span></td>
-    <td class="bad" data-sort="166.1" data-sort-g="38.7">38.7 <span class="pct">(+166.1%)</span></td>
-    <td class="bad" data-sort="-52.4" data-sort-g="-0.4">-0.4 <span class="pct">(-52.4%)</span></td>
-    <td class="bad" data-sort="-100" data-sort-g="-0.1">-0.1 <span class="pct">(-100%)</span></td>
-    <td>as-sold</td>
-    <td>mixed</td>
-    <td>low</td>
-    <td class="deccell" data-ing="Cherry Sauce">—</td>
-  </tr><tr>
-    <td><a href="#detail-43">Pesto Sauce</a></td>
-    <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="37.5" data-sort-g="150">150 <span class="pct">(+37.5%)</span></td>
-    <td class="bad" data-sort="123.9" data-sort-g="8.3">8.3 <span class="pct">(+123.9%)</span></td>
-    <td class="bad" data-sort="49.3" data-sort-g="3.3">3.3 <span class="pct">(+49.3%)</span></td>
-    <td class="bad" data-sort="25" data-sort-g="10">10 <span class="pct">(+25%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>medium</td>
-    <td class="deccell" data-ing="Pesto Sauce">—</td>
-  </tr><tr>
-    <td><a href="#detail-38">Hummus</a></td>
-    <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="50.7" data-sort-g="89.7">89.7 <span class="pct">(+50.7%)</span></td>
-    <td class="bad" data-sort="25" data-sort-g="4">4 <span class="pct">(+25%)</span></td>
-    <td class="bad" data-sort="-16.7" data-sort-g="-1.3">-1.3 <span class="pct">(-16.7%)</span></td>
-    <td class="bad" data-sort="60.3" data-sort-g="6.3">6.3 <span class="pct">(+60.3%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>medium</td>
-    <td class="deccell" data-ing="Hummus">—</td>
-  </tr><tr>
-    <td><a href="#detail-75">Bacon</a></td>
+    <td><a href="#detail-73">Bacon</a></td>
     <td class="cat">Meat &amp; Seafood</td>
-    <td class="bad" data-sort="16.4" data-sort-g="75.3">75.3 <span class="pct">(+16.4%)</span></td>
+    <td class="bad" data-sort="27.9" data-sort-g="116.3">116.3 <span class="pct">(+27.9%)</span></td>
     <td class="bad" data-sort="-100" data-sort-g="-1.3">-1.3 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="187.4" data-sort-g="21.7">21.7 <span class="pct">(+187.4%)</span></td>
-    <td class="ok" data-sort="3.7" data-sort-g="1.7">1.7 <span class="pct">(+3.7%)</span></td>
+    <td class="bad" data-sort="164.6" data-sort-g="20.7">20.7 <span class="pct">(+164.6%)</span></td>
+    <td class="bad" data-sort="17.5" data-sort-g="7">7 <span class="pct">(+17.5%)</span></td>
     <td>cooked ⚠</td>
     <td>aggregator</td>
     <td>high</td>
     <td class="deccell" data-ing="Bacon">—</td>
   </tr><tr>
-    <td><a href="#detail-51">Fish Sauce</a></td>
-    <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="204.8" data-sort-g="71.7">71.7 <span class="pct">(+204.8%)</span></td>
-    <td class="bad" data-sort="270.4" data-sort-g="9.7">9.7 <span class="pct">(+270.4%)</span></td>
-    <td class="bad" data-sort="161.4" data-sort-g="8.2">8.2 <span class="pct">(+161.4%)</span></td>
-    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>medium</td>
-    <td class="deccell" data-ing="Fish Sauce">—</td>
-  </tr><tr>
-    <td><a href="#detail-23">Chickpeas</a></td>
+    <td><a href="#detail-23">Chickpeas (Dry)</a></td>
     <td class="cat">Canned &amp; Legumes</td>
     <td class="bad" data-sort="16.9" data-sort-g="63.9">63.9 <span class="pct">(+16.9%)</span></td>
     <td class="ok" data-sort="-0.3" data-sort-g="-0.2">-0.2 <span class="pct">(-0.3%)</span></td>
@@ -181,20 +126,9 @@
     <td>dry</td>
     <td>mixed</td>
     <td>medium</td>
-    <td class="deccell" data-ing="Chickpeas">—</td>
+    <td class="deccell" data-ing="Chickpeas (Dry)">—</td>
   </tr><tr>
-    <td><a href="#detail-68">Paneer</a></td>
-    <td class="cat">Eggs &amp; Dairy</td>
-    <td class="bad" data-sort="23.6" data-sort-g="61.4">61.4 <span class="pct">(+23.6%)</span></td>
-    <td class="bad" data-sort="19" data-sort-g="0.6">0.6 <span class="pct">(+19%)</span></td>
-    <td class="bad" data-sort="17.1" data-sort-g="3.1">3.1 <span class="pct">(+17.1%)</span></td>
-    <td class="bad" data-sort="25" data-sort-g="5">5 <span class="pct">(+25%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>medium</td>
-    <td class="deccell" data-ing="Paneer">—</td>
-  </tr><tr>
-    <td><a href="#detail-74">Tofu</a></td>
+    <td><a href="#detail-72">Tofu</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
     <td class="bad" data-sort="-40.5" data-sort-g="-58.3">-58.3 <span class="pct">(-40.5%)</span></td>
     <td class="bad" data-sort="-68.1" data-sort-g="-1.9">-1.9 <span class="pct">(-68.1%)</span></td>
@@ -205,7 +139,7 @@
     <td>high</td>
     <td class="deccell" data-ing="Tofu">—</td>
   </tr><tr>
-    <td><a href="#detail-50">Duck Fat</a></td>
+    <td><a href="#detail-48">Duck Fat</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="warn" data-sort="5.3" data-sort-g="46.6">46.6 <span class="pct">(+5.3%)</span></td>
     <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
@@ -216,7 +150,7 @@
     <td>high</td>
     <td class="deccell" data-ing="Duck Fat">—</td>
   </tr><tr>
-    <td><a href="#detail-55">Palm Oil (Dendê)</a></td>
+    <td><a href="#detail-53">Palm Oil (Dendê)</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="warn" data-sort="5" data-sort-g="44.6">44.6 <span class="pct">(+5%)</span></td>
     <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
@@ -227,18 +161,7 @@
     <td>high</td>
     <td class="deccell" data-ing="Palm Oil (Dendê)">—</td>
   </tr><tr>
-    <td><a href="#detail-58">Tonkatsu Sauce</a></td>
-    <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="31.2" data-sort-g="39.7">39.7 <span class="pct">(+31.2%)</span></td>
-    <td class="bad" data-sort="27" data-sort-g="8.5">8.5 <span class="pct">(+27%)</span></td>
-    <td class="bad" data-sort="-100" data-sort-g="-0.6">-0.6 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="-100" data-sort-g="-0.1">-0.1 <span class="pct">(-100%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>medium</td>
-    <td class="deccell" data-ing="Tonkatsu Sauce">—</td>
-  </tr><tr>
-    <td><a href="#detail-39">Kimchi</a></td>
+    <td><a href="#detail-38">Kimchi</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="bad" data-sort="132.9" data-sort-g="30.6">30.6 <span class="pct">(+132.9%)</span></td>
     <td class="bad" data-sort="58.7" data-sort-g="2.6">2.6 <span class="pct">(+58.7%)</span></td>
@@ -249,7 +172,7 @@
     <td>medium</td>
     <td class="deccell" data-ing="Kimchi">—</td>
   </tr><tr>
-    <td><a href="#detail-66">Greek Yogurt</a></td>
+    <td><a href="#detail-64">Greek Yogurt</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
     <td class="bad" data-sort="-31.3" data-sort-g="-30.3">-30.3 <span class="pct">(-31.3%)</span></td>
     <td class="bad" data-sort="-33.3" data-sort-g="-2">-2 <span class="pct">(-33.3%)</span></td>
@@ -260,7 +183,7 @@
     <td>medium</td>
     <td class="deccell" data-ing="Greek Yogurt">—</td>
   </tr><tr>
-    <td><a href="#detail-42">Olive Oil</a></td>
+    <td><a href="#detail-41">Olive Oil</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="ok" data-sort="-3" data-sort-g="-26.9">-26.9 <span class="pct">(-3%)</span></td>
     <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
@@ -271,7 +194,7 @@
     <td>high</td>
     <td class="deccell" data-ing="Olive Oil">—</td>
   </tr><tr>
-    <td><a href="#detail-44">Sesame Oil</a></td>
+    <td><a href="#detail-42">Sesame Oil</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="ok" data-sort="-3" data-sort-g="-26.9">-26.9 <span class="pct">(-3%)</span></td>
     <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
@@ -282,7 +205,7 @@
     <td>high</td>
     <td class="deccell" data-ing="Sesame Oil">—</td>
   </tr><tr>
-    <td><a href="#detail-59">Vegetable Oil</a></td>
+    <td><a href="#detail-57">Vegetable Oil</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="ok" data-sort="-3" data-sort-g="-26.9">-26.9 <span class="pct">(-3%)</span></td>
     <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
@@ -304,18 +227,7 @@
     <td>medium</td>
     <td class="deccell" data-ing="Rice Noodles">—</td>
   </tr><tr>
-    <td><a href="#detail-61">Worcestershire Sauce</a></td>
-    <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="28.2" data-sort-g="22">22 <span class="pct">(+28.2%)</span></td>
-    <td class="warn" data-sort="12.8" data-sort-g="2.5">2.5 <span class="pct">(+12.8%)</span></td>
-    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>medium</td>
-    <td class="deccell" data-ing="Worcestershire Sauce">—</td>
-  </tr><tr>
-    <td><a href="#detail-28">White Beans</a></td>
+    <td><a href="#detail-28">White Beans (Dry)</a></td>
     <td class="cat">Canned &amp; Legumes</td>
     <td class="warn" data-sort="-6.2" data-sort-g="-20.5">-20.5 <span class="pct">(-6.2%)</span></td>
     <td class="ok" data-sort="-3.3" data-sort-g="-2">-2 <span class="pct">(-3.3%)</span></td>
@@ -324,7 +236,7 @@
     <td>dry</td>
     <td>aggregator</td>
     <td>medium</td>
-    <td class="deccell" data-ing="White Beans">—</td>
+    <td class="deccell" data-ing="White Beans (Dry)">—</td>
   </tr><tr>
     <td><a href="#detail-12">Gram Flour (Besan)</a></td>
     <td class="cat">Grains &amp; Pasta</td>
@@ -336,28 +248,6 @@
     <td>aggregator</td>
     <td>low</td>
     <td class="deccell" data-ing="Gram Flour (Besan)">—</td>
-  </tr><tr>
-    <td><a href="#detail-41">Miso Paste</a></td>
-    <td class="cat">Condiments &amp; Oils</td>
-    <td class="warn" data-sort="9.9" data-sort-g="19.8">19.8 <span class="pct">(+9.9%)</span></td>
-    <td class="warn" data-sort="-5.7" data-sort-g="-1.5">-1.5 <span class="pct">(-5.7%)</span></td>
-    <td class="warn" data-sort="6.8" data-sort-g="0.8">0.8 <span class="pct">(+6.8%)</span></td>
-    <td class="ok" data-sort="4.2" data-sort-g="0.3">0.3 <span class="pct">(+4.2%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>medium</td>
-    <td class="deccell" data-ing="Miso Paste">—</td>
-  </tr><tr>
-    <td><a href="#detail-25">Edamame</a></td>
-    <td class="cat">Canned &amp; Legumes</td>
-    <td class="bad" data-sort="15.7" data-sort-g="19">19 <span class="pct">(+15.7%)</span></td>
-    <td class="bad" data-sort="23.6" data-sort-g="2.1">2.1 <span class="pct">(+23.6%)</span></td>
-    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
-    <td class="ok" data-sort="-3.8" data-sort-g="-0.2">-0.2 <span class="pct">(-3.8%)</span></td>
-    <td>cooked ⚠</td>
-    <td>aggregator</td>
-    <td>medium</td>
-    <td class="deccell" data-ing="Edamame">—</td>
   </tr><tr>
     <td><a href="#detail-26">Red Lentils</a></td>
     <td class="cat">Canned &amp; Legumes</td>
@@ -392,7 +282,7 @@
     <td>high</td>
     <td class="deccell" data-ing="Cassava Flour">—</td>
   </tr><tr>
-    <td><a href="#detail-40">Maple Syrup</a></td>
+    <td><a href="#detail-39">Maple Syrup</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="warn" data-sort="5.8" data-sort-g="15">15 <span class="pct">(+5.8%)</span></td>
     <td class="ok" data-sort="0.7" data-sort-g="0.5">0.5 <span class="pct">(+0.7%)</span></td>
@@ -414,7 +304,7 @@
     <td>high</td>
     <td class="deccell" data-ing="Brown Rice">—</td>
   </tr><tr>
-    <td><a href="#detail-46">Tahini</a></td>
+    <td><a href="#detail-44">Tahini</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="ok" data-sort="2.4" data-sort-g="14.1">14.1 <span class="pct">(+2.4%)</span></td>
     <td class="bad" data-sort="26.1" data-sort-g="4.4">4.4 <span class="pct">(+26.1%)</span></td>
@@ -424,17 +314,6 @@
     <td>aggregator</td>
     <td>medium</td>
     <td class="deccell" data-ing="Tahini">—</td>
-  </tr><tr>
-    <td><a href="#detail-65">Feta Cheese</a></td>
-    <td class="cat">Eggs &amp; Dairy</td>
-    <td class="warn" data-sort="-5.3" data-sort-g="-14">-14 <span class="pct">(-5.3%)</span></td>
-    <td class="bad" data-sort="74.2" data-sort-g="3">3 <span class="pct">(+74.2%)</span></td>
-    <td class="bad" data-sort="50.9" data-sort-g="7.2">7.2 <span class="pct">(+50.9%)</span></td>
-    <td class="bad" data-sort="-32.9" data-sort-g="-7">-7 <span class="pct">(-32.9%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>medium</td>
-    <td class="deccell" data-ing="Feta Cheese">—</td>
   </tr><tr>
     <td><a href="#detail-4">Pasta</a></td>
     <td class="cat">Grains &amp; Pasta</td>
@@ -458,17 +337,6 @@
     <td>high</td>
     <td class="deccell" data-ing="Bulgur">—</td>
   </tr><tr>
-    <td><a href="#detail-73">Queso Fresco</a></td>
-    <td class="cat">Eggs &amp; Dairy</td>
-    <td class="ok" data-sort="-4.4" data-sort-g="-13.3">-13.3 <span class="pct">(-4.4%)</span></td>
-    <td class="bad" data-sort="-100" data-sort-g="-3">-3 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="18.4" data-sort-g="3.3">3.3 <span class="pct">(+18.4%)</span></td>
-    <td class="warn" data-sort="-10" data-sort-g="-2.4">-2.4 <span class="pct">(-10%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>high</td>
-    <td class="deccell" data-ing="Queso Fresco">—</td>
-  </tr><tr>
     <td><a href="#detail-29">Canned Tuna</a></td>
     <td class="cat">Canned &amp; Legumes</td>
     <td class="warn" data-sort="-11.6" data-sort-g="-12.4">-12.4 <span class="pct">(-11.6%)</span></td>
@@ -480,18 +348,7 @@
     <td>medium</td>
     <td class="deccell" data-ing="Canned Tuna">—</td>
   </tr><tr>
-    <td><a href="#detail-52">Mayonnaise</a></td>
-    <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="1.8" data-sort-g="12.3">12.3 <span class="pct">(+1.8%)</span></td>
-    <td class="bad" data-sort="-100" data-sort-g="-0.6">-0.6 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="-100" data-sort-g="-1">-1 <span class="pct">(-100%)</span></td>
-    <td class="ok" data-sort="2.8" data-sort-g="2.1">2.1 <span class="pct">(+2.8%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>high</td>
-    <td class="deccell" data-ing="Mayonnaise">—</td>
-  </tr><tr>
-    <td><a href="#detail-57">Sugar</a></td>
+    <td><a href="#detail-55">Sugar</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="ok" data-sort="-3.1" data-sort-g="-12">-12 <span class="pct">(-3.1%)</span></td>
     <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
@@ -502,7 +359,7 @@
     <td>high</td>
     <td class="deccell" data-ing="Sugar">—</td>
   </tr><tr>
-    <td><a href="#detail-63">Cheddar Cheese</a></td>
+    <td><a href="#detail-61">Cheddar Cheese</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
     <td class="ok" data-sort="-2.5" data-sort-g="-10.1">-10.1 <span class="pct">(-2.5%)</span></td>
     <td class="bad" data-sort="174.7" data-sort-g="2.3">2.3 <span class="pct">(+174.7%)</span></td>
@@ -512,17 +369,6 @@
     <td>mixed</td>
     <td>medium</td>
     <td class="deccell" data-ing="Cheddar Cheese">—</td>
-  </tr><tr>
-    <td><a href="#detail-45">Soy Sauce</a></td>
-    <td class="cat">Condiments &amp; Oils</td>
-    <td class="bad" data-sort="17.9" data-sort-g="9.5">9.5 <span class="pct">(+17.9%)</span></td>
-    <td class="bad" data-sort="27.6" data-sort-g="1.3">1.3 <span class="pct">(+27.6%)</span></td>
-    <td class="bad" data-sort="-22.8" data-sort-g="-1.8">-1.8 <span class="pct">(-22.8%)</span></td>
-    <td class="bad" data-sort="-100" data-sort-g="-0.6">-0.6 <span class="pct">(-100%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>low</td>
-    <td class="deccell" data-ing="Soy Sauce">—</td>
   </tr><tr>
     <td><a href="#detail-8">White Rice</a></td>
     <td class="cat">Grains &amp; Pasta</td>
@@ -534,17 +380,6 @@
     <td>aggregator</td>
     <td>medium</td>
     <td class="deccell" data-ing="White Rice">—</td>
-  </tr><tr>
-    <td><a href="#detail-21">Flour Tortilla</a></td>
-    <td class="cat">Bakery &amp; Bread</td>
-    <td class="ok" data-sort="3.1" data-sort-g="9.1">9.1 <span class="pct">(+3.1%)</span></td>
-    <td class="ok" data-sort="-0.6" data-sort-g="-0.3">-0.3 <span class="pct">(-0.6%)</span></td>
-    <td class="bad" data-sort="-23.5" data-sort-g="-1.9">-1.9 <span class="pct">(-23.5%)</span></td>
-    <td class="bad" data-sort="20.8" data-sort-g="1.6">1.6 <span class="pct">(+20.8%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>high</td>
-    <td class="deccell" data-ing="Flour Tortilla">—</td>
   </tr><tr>
     <td><a href="#detail-7">Sweet Potato Noodles</a></td>
     <td class="cat">Grains &amp; Pasta</td>
@@ -568,7 +403,7 @@
     <td>medium</td>
     <td class="deccell" data-ing="Whole Wheat Bread">—</td>
   </tr><tr>
-    <td><a href="#detail-72">Evaporated Milk</a></td>
+    <td><a href="#detail-70">Evaporated Milk</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
     <td class="warn" data-sort="-6.7" data-sort-g="-9">-9 <span class="pct">(-6.7%)</span></td>
     <td class="warn" data-sort="-6.2" data-sort-g="-0.6">-0.6 <span class="pct">(-6.2%)</span></td>
@@ -579,7 +414,7 @@
     <td>medium</td>
     <td class="deccell" data-ing="Evaporated Milk">—</td>
   </tr><tr>
-    <td><a href="#detail-69">Parmesan Cheese</a></td>
+    <td><a href="#detail-67">Parmesan Cheese</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
     <td class="ok" data-sort="2" data-sort-g="8">8 <span class="pct">(+2%)</span></td>
     <td class="bad" data-sort="-100" data-sort-g="-3.2">-3.2 <span class="pct">(-100%)</span></td>
@@ -601,28 +436,6 @@
     <td>medium</td>
     <td class="deccell" data-ing="Whole Wheat Tortilla">—</td>
   </tr><tr>
-    <td><a href="#detail-53">Mirin</a></td>
-    <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="-3.2" data-sort-g="-7.7">-7.7 <span class="pct">(-3.2%)</span></td>
-    <td class="bad" data-sort="23.5" data-sort-g="10.1">10.1 <span class="pct">(+23.5%)</span></td>
-    <td class="bad" data-sort="-100" data-sort-g="-0.3">-0.3 <span class="pct">(-100%)</span></td>
-    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>medium</td>
-    <td class="deccell" data-ing="Mirin">—</td>
-  </tr><tr>
-    <td><a href="#detail-16">Panko Breadcrumbs</a></td>
-    <td class="cat">Bakery &amp; Bread</td>
-    <td class="ok" data-sort="-2" data-sort-g="-7.3">-7.3 <span class="pct">(-2%)</span></td>
-    <td class="ok" data-sort="4.5" data-sort-g="3.3">3.3 <span class="pct">(+4.5%)</span></td>
-    <td class="bad" data-sort="24.6" data-sort-g="2.6">2.6 <span class="pct">(+24.6%)</span></td>
-    <td class="bad" data-sort="44.9" data-sort-g="1">1 <span class="pct">(+44.9%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>high</td>
-    <td class="deccell" data-ing="Panko Breadcrumbs">—</td>
-  </tr><tr>
     <td><a href="#detail-34">BBQ Sauce</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="ok" data-sort="4.2" data-sort-g="6.7">6.7 <span class="pct">(+4.2%)</span></td>
@@ -633,17 +446,6 @@
     <td>aggregator</td>
     <td>high</td>
     <td class="deccell" data-ing="BBQ Sauce">—</td>
-  </tr><tr>
-    <td><a href="#detail-30">Grape Leaves</a></td>
-    <td class="cat">Canned &amp; Legumes</td>
-    <td class="warn" data-sort="-9.4" data-sort-g="-6.5">-6.5 <span class="pct">(-9.4%)</span></td>
-    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
-    <td class="bad" data-sort="-100" data-sort-g="-4.5">-4.5 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="-100" data-sort-g="-2.1">-2.1 <span class="pct">(-100%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>low</td>
-    <td class="deccell" data-ing="Grape Leaves">—</td>
   </tr><tr>
     <td><a href="#detail-11">Cornstarch</a></td>
     <td class="cat">Grains &amp; Pasta</td>
@@ -656,18 +458,7 @@
     <td>high</td>
     <td class="deccell" data-ing="Cornstarch">—</td>
   </tr><tr>
-    <td><a href="#detail-36">Hoisin Sauce</a></td>
-    <td class="cat">Condiments &amp; Oils</td>
-    <td class="ok" data-sort="-2.6" data-sort-g="-5.7">-5.7 <span class="pct">(-2.6%)</span></td>
-    <td class="warn" data-sort="-6.6" data-sort-g="-3.4">-3.4 <span class="pct">(-6.6%)</span></td>
-    <td class="bad" data-sort="-100" data-sort-g="-3.3">-3.3 <span class="pct">(-100%)</span></td>
-    <td class="bad" data-sort="-32" data-sort-g="-1.1">-1.1 <span class="pct">(-32%)</span></td>
-    <td>as-sold</td>
-    <td>aggregator</td>
-    <td>medium</td>
-    <td class="deccell" data-ing="Hoisin Sauce">—</td>
-  </tr><tr>
-    <td><a href="#detail-67">Mozzarella Cheese</a></td>
+    <td><a href="#detail-65">Mozzarella Cheese</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
     <td class="ok" data-sort="2" data-sort-g="5.7">5.7 <span class="pct">(+2%)</span></td>
     <td class="bad" data-sort="62.3" data-sort-g="1.4">1.4 <span class="pct">(+62.3%)</span></td>
@@ -678,7 +469,7 @@
     <td>medium</td>
     <td class="deccell" data-ing="Mozzarella Cheese">—</td>
   </tr><tr>
-    <td><a href="#detail-54">Nori</a></td>
+    <td><a href="#detail-52">Nori</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="ok" data-sort="1.2" data-sort-g="4.6">4.6 <span class="pct">(+1.2%)</span></td>
     <td class="warn" data-sort="-13.2" data-sort-g="-5.8">-5.8 <span class="pct">(-13.2%)</span></td>
@@ -700,7 +491,7 @@
     <td>high</td>
     <td class="deccell" data-ing="Granola">—</td>
   </tr><tr>
-    <td><a href="#detail-71">Blue Cheese</a></td>
+    <td><a href="#detail-69">Blue Cheese</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
     <td class="ok" data-sort="1.2" data-sort-g="4.1">4.1 <span class="pct">(+1.2%)</span></td>
     <td class="bad" data-sort="55.3" data-sort-g="1.3">1.3 <span class="pct">(+55.3%)</span></td>
@@ -733,7 +524,7 @@
     <td>medium</td>
     <td class="deccell" data-ing="Coconut Milk">—</td>
   </tr><tr>
-    <td><a href="#detail-64">Egg</a></td>
+    <td><a href="#detail-62">Egg</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
     <td class="ok" data-sort="-2.8" data-sort-g="-4">-4 <span class="pct">(-2.8%)</span></td>
     <td class="bad" data-sort="-100" data-sort-g="-0.8">-0.8 <span class="pct">(-100%)</span></td>
@@ -743,6 +534,17 @@
     <td>aggregator</td>
     <td>high</td>
     <td class="deccell" data-ing="Egg">—</td>
+  </tr><tr>
+    <td><a href="#detail-32">Kidney Beans (Dry)</a></td>
+    <td class="cat">Canned &amp; Legumes</td>
+    <td class="ok" data-sort="-1.1" data-sort-g="-3.7">-3.7 <span class="pct">(-1.1%)</span></td>
+    <td class="ok" data-sort="1" data-sort-g="0.6">0.6 <span class="pct">(+1%)</span></td>
+    <td class="ok" data-sort="-4.8" data-sort-g="-1.1">-1.1 <span class="pct">(-4.8%)</span></td>
+    <td class="bad" data-sort="-100" data-sort-g="-1.1">-1.1 <span class="pct">(-100%)</span></td>
+    <td>dry</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Kidney Beans (Dry)">—</td>
   </tr><tr>
     <td><a href="#detail-31">Green Lentils</a></td>
     <td class="cat">Canned &amp; Legumes</td>
@@ -766,7 +568,7 @@
     <td>medium</td>
     <td class="deccell" data-ing="Tomato Sauce">—</td>
   </tr><tr>
-    <td><a href="#detail-48">Doenjang</a></td>
+    <td><a href="#detail-46">Doenjang</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="ok" data-sort="-2" data-sort-g="-3.3">-3.3 <span class="pct">(-2%)</span></td>
     <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
@@ -788,7 +590,7 @@
     <td>medium</td>
     <td class="deccell" data-ing="Flour">—</td>
   </tr><tr>
-    <td><a href="#detail-62">Butter</a></td>
+    <td><a href="#detail-60">Butter</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
     <td class="ok" data-sort="-0.4" data-sort-g="-2.7">-2.7 <span class="pct">(-0.4%)</span></td>
     <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
@@ -810,7 +612,7 @@
     <td>high</td>
     <td class="deccell" data-ing="Corn Tortillas">—</td>
   </tr><tr>
-    <td><a href="#detail-70">Whole Milk</a></td>
+    <td><a href="#detail-68">Whole Milk</a></td>
     <td class="cat">Eggs &amp; Dairy</td>
     <td class="ok" data-sort="-1.9" data-sort-g="-1.2">-1.2 <span class="pct">(-1.9%)</span></td>
     <td class="warn" data-sort="-6.1" data-sort-g="-0.3">-0.3 <span class="pct">(-6.1%)</span></td>
@@ -832,7 +634,7 @@
     <td>medium</td>
     <td class="deccell" data-ing="Breadcrumbs">—</td>
   </tr><tr>
-    <td><a href="#detail-22">Black Beans</a></td>
+    <td><a href="#detail-22">Black Beans (Dry)</a></td>
     <td class="cat">Canned &amp; Legumes</td>
     <td class="ok" data-sort="-0.3" data-sort-g="-1">-1 <span class="pct">(-0.3%)</span></td>
     <td class="ok" data-sort="2.6" data-sort-g="1.6">1.6 <span class="pct">(+2.6%)</span></td>
@@ -841,9 +643,9 @@
     <td>dry</td>
     <td>aggregator</td>
     <td>medium</td>
-    <td class="deccell" data-ing="Black Beans">—</td>
+    <td class="deccell" data-ing="Black Beans (Dry)">—</td>
   </tr><tr>
-    <td><a href="#detail-37">Honey</a></td>
+    <td><a href="#detail-36">Honey</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="ok" data-sort="0.3" data-sort-g="0.8">0.8 <span class="pct">(+0.3%)</span></td>
     <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
@@ -865,7 +667,7 @@
     <td>high</td>
     <td class="deccell" data-ing="Basmati Rice">—</td>
   </tr><tr>
-    <td><a href="#detail-47">Aji Amarillo Paste</a></td>
+    <td><a href="#detail-45">Aji Amarillo Paste</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="ok" data-sort="-0.8" data-sort-g="-0.3">-0.3 <span class="pct">(-0.8%)</span></td>
     <td class="bad" data-sort="-100" data-sort-g="-7.9">-7.9 <span class="pct">(-100%)</span></td>
@@ -887,6 +689,28 @@
     <td>high</td>
     <td class="deccell" data-ing="Toor Dal">—</td>
   </tr><tr>
+    <td><a href="#detail-40">Miso Paste</a></td>
+    <td class="cat">Condiments &amp; Oils</td>
+    <td class="ok" data-sort="0" data-sort-g="-0.1">-0.1 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-0.8" data-sort-g="0">0 <span class="pct">(-0.8%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Miso Paste">—</td>
+  </tr><tr>
+    <td><a href="#detail-16">Panko Breadcrumbs</a></td>
+    <td class="cat">Bakery &amp; Bread</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0.3" data-sort-g="0">0 <span class="pct">(+0.3%)</span></td>
+    <td class="ok" data-sort="1" data-sort-g="0">0 <span class="pct">(+1%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Panko Breadcrumbs">—</td>
+  </tr><tr>
     <td><a href="#detail-17">Pita Bread</a></td>
     <td class="cat">Bakery &amp; Bread</td>
     <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
@@ -897,6 +721,160 @@
     <td>aggregator</td>
     <td>medium</td>
     <td class="deccell" data-ing="Pita Bread">—</td>
+  </tr><tr>
+    <td><a href="#detail-21">Flour Tortilla</a></td>
+    <td class="cat">Bakery &amp; Bread</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0.4" data-sort-g="0">0 <span class="pct">(+0.4%)</span></td>
+    <td class="ok" data-sort="-0.2" data-sort-g="0">0 <span class="pct">(-0.2%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Flour Tortilla">—</td>
+  </tr><tr>
+    <td><a href="#detail-25">Edamame (frozen)</a></td>
+    <td class="cat">Canned &amp; Legumes</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td>cooked ⚠</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Edamame (frozen)">—</td>
+  </tr><tr>
+    <td><a href="#detail-30">Grape Leaves</a></td>
+    <td class="cat">Canned &amp; Legumes</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>low</td>
+    <td class="deccell" data-ing="Grape Leaves">—</td>
+  </tr><tr>
+    <td><a href="#detail-35">Hoisin Sauce</a></td>
+    <td class="cat">Condiments &amp; Oils</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-0.8" data-sort-g="0">0 <span class="pct">(-0.8%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Hoisin Sauce">—</td>
+  </tr><tr>
+    <td><a href="#detail-37">Hummus</a></td>
+    <td class="cat">Condiments &amp; Oils</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-0.5" data-sort-g="0">0 <span class="pct">(-0.5%)</span></td>
+    <td class="ok" data-sort="-0.2" data-sort-g="0">0 <span class="pct">(-0.2%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Hummus">—</td>
+  </tr><tr>
+    <td><a href="#detail-43">Soy Sauce</a></td>
+    <td class="cat">Condiments &amp; Oils</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-0.8" data-sort-g="0">0 <span class="pct">(-0.8%)</span></td>
+    <td class="ok" data-sort="-0.8" data-sort-g="0">0 <span class="pct">(-0.8%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>low</td>
+    <td class="deccell" data-ing="Soy Sauce">—</td>
+  </tr><tr>
+    <td><a href="#detail-49">Fish Sauce</a></td>
+    <td class="cat">Condiments &amp; Oils</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0.3" data-sort-g="0">0 <span class="pct">(+0.3%)</span></td>
+    <td class="ok" data-sort="0.3" data-sort-g="0">0 <span class="pct">(+0.3%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Fish Sauce">—</td>
+  </tr><tr>
+    <td><a href="#detail-50">Mayonnaise</a></td>
+    <td class="cat">Condiments &amp; Oils</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Mayonnaise">—</td>
+  </tr><tr>
+    <td><a href="#detail-51">Mirin</a></td>
+    <td class="cat">Condiments &amp; Oils</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0.1" data-sort-g="0">0 <span class="pct">(+0.1%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Mirin">—</td>
+  </tr><tr>
+    <td><a href="#detail-56">Tonkatsu Sauce</a></td>
+    <td class="cat">Condiments &amp; Oils</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Tonkatsu Sauce">—</td>
+  </tr><tr>
+    <td><a href="#detail-59">Worcestershire Sauce</a></td>
+    <td class="cat">Condiments &amp; Oils</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Worcestershire Sauce">—</td>
+  </tr><tr>
+    <td><a href="#detail-63">Feta Cheese</a></td>
+    <td class="cat">Eggs &amp; Dairy</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0.6" data-sort-g="0">0 <span class="pct">(+0.6%)</span></td>
+    <td class="ok" data-sort="0.1" data-sort-g="0">0 <span class="pct">(+0.1%)</span></td>
+    <td class="ok" data-sort="-0.1" data-sort-g="0">0 <span class="pct">(-0.1%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Feta Cheese">—</td>
+  </tr><tr>
+    <td><a href="#detail-66">Paneer</a></td>
+    <td class="cat">Eggs &amp; Dairy</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="-0.8" data-sort-g="0">0 <span class="pct">(-0.8%)</span></td>
+    <td class="ok" data-sort="0.1" data-sort-g="0">0 <span class="pct">(+0.1%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>medium</td>
+    <td class="deccell" data-ing="Paneer">—</td>
+  </tr><tr>
+    <td><a href="#detail-71">Queso Fresco</a></td>
+    <td class="cat">Eggs &amp; Dairy</td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0" data-sort-g="0">0 <span class="pct">(0%)</span></td>
+    <td class="ok" data-sort="0.1" data-sort-g="0">0 <span class="pct">(+0.1%)</span></td>
+    <td class="ok" data-sort="0.1" data-sort-g="0">0 <span class="pct">(+0.1%)</span></td>
+    <td>as-sold</td>
+    <td>aggregator</td>
+    <td>high</td>
+    <td class="deccell" data-ing="Queso Fresco">—</td>
   </tr><tr>
     <td><a href="#detail-14">Tteok</a></td>
     <td class="cat">Grains &amp; Pasta</td>
@@ -909,7 +887,7 @@
     <td>low</td>
     <td class="deccell" data-ing="Tteok">—</td>
   </tr><tr>
-    <td><a href="#detail-49">Dry Sherry</a></td>
+    <td><a href="#detail-47">Dry Sherry</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="na">—</td>
     <td class="na">—</td>
@@ -920,7 +898,7 @@
     <td>low</td>
     <td class="deccell" data-ing="Dry Sherry">—</td>
   </tr><tr>
-    <td><a href="#detail-56">Sake</a></td>
+    <td><a href="#detail-54">Sake</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="na">—</td>
     <td class="na">—</td>
@@ -931,7 +909,7 @@
     <td>low</td>
     <td class="deccell" data-ing="Sake">—</td>
   </tr><tr>
-    <td><a href="#detail-60">White Wine</a></td>
+    <td><a href="#detail-58">White Wine</a></td>
     <td class="cat">Condiments &amp; Oils</td>
     <td class="na">—</td>
     <td class="na">—</td>
@@ -1425,7 +1403,7 @@
     </div>
   </section>
   <section class="card" id="detail-16">
-    <h3><span class="badge bad">max 44.9%</span> Panko Breadcrumbs <span class="cat">Bakery &amp; Bread</span></h3>
+    <h3><span class="badge ok">max 1%</span> Panko Breadcrumbs <span class="cat">Bakery &amp; Bread</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: high</span>
@@ -1437,10 +1415,10 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>374</td><td>73.4</td><td>10.7</td><td>2.3</td></tr>
+        <tr><th>Our data (USDA)</th><td>366.7</td><td>76.7</td><td>13.3</td><td>3.3</td></tr>
         <tr><th>Amazon (as labeled, 30 g serving)</th><td>110</td><td>23</td><td>4</td><td>1</td></tr>
         <tr><th>Amazon → per 100 g</th><td>366.7</td><td>76.7</td><td>13.3</td><td>3.3</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-7.3 <span class="pct">(-2%)</span></td><td class="ok">3.3 <span class="pct">(+4.5%)</span></td><td class="bad">2.6 <span class="pct">(+24.6%)</span></td><td class="bad">1 <span class="pct">(+44.9%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(+0.3%)</span></td><td class="ok">0 <span class="pct">(+1%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Panko Breadcrumbs">Decision:
@@ -1570,7 +1548,7 @@
     </div>
   </section>
   <section class="card" id="detail-21">
-    <h3><span class="badge bad">max 23.5%</span> Flour Tortilla <span class="cat">Bakery &amp; Bread</span></h3>
+    <h3><span class="badge ok">max 0.4%</span> Flour Tortilla <span class="cat">Bakery &amp; Bread</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: high</span>
@@ -1582,10 +1560,10 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>297</td><td>49.3</td><td>8</td><td>7.6</td></tr>
+        <tr><th>Our data (USDA)</th><td>306.1</td><td>49</td><td>6.1</td><td>9.2</td></tr>
         <tr><th>Amazon (as labeled, 49 g serving)</th><td>150</td><td>24</td><td>3</td><td>4.5</td></tr>
         <tr><th>Amazon → per 100 g</th><td>306.1</td><td>49</td><td>6.1</td><td>9.2</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">9.1 <span class="pct">(+3.1%)</span></td><td class="ok">-0.3 <span class="pct">(-0.6%)</span></td><td class="bad">-1.9 <span class="pct">(-23.5%)</span></td><td class="bad">1.6 <span class="pct">(+20.8%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(+0.4%)</span></td><td class="ok">0 <span class="pct">(-0.2%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Flour Tortilla">Decision:
@@ -1599,7 +1577,7 @@
     </div>
   </section>
   <section class="card" id="detail-22">
-    <h3><span class="badge bad">max 100%</span> Black Beans <span class="cat">Canned &amp; Legumes</span></h3>
+    <h3><span class="badge bad">max 100%</span> Black Beans (Dry) <span class="cat">Canned &amp; Legumes</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: medium</span>
@@ -1617,18 +1595,18 @@
         <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-1 <span class="pct">(-0.3%)</span></td><td class="ok">1.6 <span class="pct">(+2.6%)</span></td><td class="ok">0.4 <span class="pct">(+1.9%)</span></td><td class="bad">-1.4 <span class="pct">(-100%)</span></td></tr>
       </tbody>
     </table>
-    <div class="decision" data-ing="Black Beans">Decision:
+    <div class="decision" data-ing="Black Beans (Dry)">Decision:
       <label><input type="radio" name="dec_23" value="keep" onchange="setDec(this)"> keep ours</label>
       <label><input type="radio" name="dec_23" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_23">Notes on Black Beans</label>
-      <textarea id="note_23" data-ing="Black Beans" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_23">Notes on Black Beans (Dry)</label>
+      <textarea id="note_23" data-ing="Black Beans (Dry)" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
   <section class="card" id="detail-23">
-    <h3><span class="badge bad">max 16.9%</span> Chickpeas <span class="cat">Canned &amp; Legumes</span></h3>
+    <h3><span class="badge bad">max 16.9%</span> Chickpeas (Dry) <span class="cat">Canned &amp; Legumes</span></h3>
     <div class="meta">
       <span class="tag tag-mixed">source: mixed</span>
       <span class="tag">confidence: medium</span>
@@ -1646,14 +1624,14 @@
         <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">63.9 <span class="pct">(+16.9%)</span></td><td class="ok">-0.2 <span class="pct">(-0.3%)</span></td><td class="warn">2.8 <span class="pct">(+13.4%)</span></td><td class="bad">1 <span class="pct">(+16.3%)</span></td></tr>
       </tbody>
     </table>
-    <div class="decision" data-ing="Chickpeas">Decision:
+    <div class="decision" data-ing="Chickpeas (Dry)">Decision:
       <label><input type="radio" name="dec_24" value="keep" onchange="setDec(this)"> keep ours</label>
       <label><input type="radio" name="dec_24" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_24">Notes on Chickpeas</label>
-      <textarea id="note_24" data-ing="Chickpeas" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_24">Notes on Chickpeas (Dry)</label>
+      <textarea id="note_24" data-ing="Chickpeas (Dry)" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
   <section class="card" id="detail-24">
@@ -1686,32 +1664,32 @@
     </div>
   </section>
   <section class="card" id="detail-25">
-    <h3><span class="badge bad">max 23.6%</span> Edamame <span class="cat">Canned &amp; Legumes</span></h3>
+    <h3><span class="badge ok">max 0%</span> Edamame (frozen) <span class="cat">Canned &amp; Legumes</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: medium</span>
       <span class="tag">form: cooked</span>
       <span class="tag mismatch">⚠ form differs from USDA raw/dry — delta expected</span>
     </div>
-    <p class="notes">365 by Whole Foods (Amazon-owned, sold on Amazon); frozen shelled edamame label is per 100g cooked/prepared, reads ~140 cal vs our 121 USDA raw, so not directly comparable.</p>
+    <p class="notes">365 by Whole Foods (Amazon-owned, sold on Amazon); frozen shelled edamame label is per 100g cooked/prepared, reads ~140 cal vs our 121 USDA raw, so not directly comparable. S20 decision: ADJUST — registry row adopted the label (140/11/11/5) and was renamed Edamame (frozen).</p>
     <div class="links"><strong>Amazon:</strong><br><a href="https://us.amazon.com/365-Everyday-Value-Shelled-Edamame/dp/B074H6S8D8" target="_blank" rel="noopener">365 by Whole Foods Market Shelled Edamame (Amazon)</a><br><a href="https://www.amazon.com/Amazon-Brand-Happy-Frozen-Edamame/dp/B089DTNYK7" target="_blank" rel="noopener">Amazon Grocery Edamame Pods, 12 Oz, Frozen</a><br><a href="https://foods.fatsecret.com/calories-nutrition/365/shelled-edamame" target="_blank" rel="noopener">FatSecret: 365 Shelled Edamame nutrition</a></div>
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>121</td><td>8.9</td><td>11</td><td>5.2</td></tr>
+        <tr><th>Our data (USDA)</th><td>140</td><td>11</td><td>11</td><td>5</td></tr>
         <tr><th>Amazon (as labeled, 100 g serving)</th><td>140</td><td>11</td><td>11</td><td>5</td></tr>
         <tr><th>Amazon → per 100 g</th><td>140</td><td>11</td><td>11</td><td>5</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">19 <span class="pct">(+15.7%)</span></td><td class="bad">2.1 <span class="pct">(+23.6%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">-0.2 <span class="pct">(-3.8%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
       </tbody>
     </table>
-    <div class="decision" data-ing="Edamame">Decision:
+    <div class="decision" data-ing="Edamame (frozen)">Decision:
       <label><input type="radio" name="dec_26" value="keep" onchange="setDec(this)"> keep ours</label>
       <label><input type="radio" name="dec_26" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_26">Notes on Edamame</label>
-      <textarea id="note_26" data-ing="Edamame" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_26">Notes on Edamame (frozen)</label>
+      <textarea id="note_26" data-ing="Edamame (frozen)" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
   <section class="card" id="detail-26">
@@ -1773,7 +1751,7 @@
     </div>
   </section>
   <section class="card" id="detail-28">
-    <h3><span class="badge bad">max 15.7%</span> White Beans <span class="cat">Canned &amp; Legumes</span></h3>
+    <h3><span class="badge bad">max 15.7%</span> White Beans (Dry) <span class="cat">Canned &amp; Legumes</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: medium</span>
@@ -1791,14 +1769,14 @@
         <tr class="delta"><th>Δ (Amazon − ours)</th><td class="warn">-20.5 <span class="pct">(-6.2%)</span></td><td class="ok">-2 <span class="pct">(-3.3%)</span></td><td class="warn">-2.6 <span class="pct">(-11%)</span></td><td class="bad">0.1 <span class="pct">(+15.7%)</span></td></tr>
       </tbody>
     </table>
-    <div class="decision" data-ing="White Beans">Decision:
+    <div class="decision" data-ing="White Beans (Dry)">Decision:
       <label><input type="radio" name="dec_29" value="keep" onchange="setDec(this)"> keep ours</label>
       <label><input type="radio" name="dec_29" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_29">Notes on White Beans</label>
-      <textarea id="note_29" data-ing="White Beans" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_29">Notes on White Beans (Dry)</label>
+      <textarea id="note_29" data-ing="White Beans (Dry)" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
   <section class="card" id="detail-29">
@@ -1831,7 +1809,7 @@
     </div>
   </section>
   <section class="card" id="detail-30">
-    <h3><span class="badge bad">max 100%</span> Grape Leaves <span class="cat">Canned &amp; Legumes</span></h3>
+    <h3><span class="badge ok">max 0%</span> Grape Leaves <span class="cat">Canned &amp; Legumes</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: low</span>
@@ -1843,10 +1821,10 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>69</td><td>12.5</td><td>4.5</td><td>2.1</td></tr>
+        <tr><th>Our data (USDA)</th><td>62.5</td><td>12.5</td><td>0</td><td>0</td></tr>
         <tr><th>Amazon (as labeled, 8 g serving)</th><td>5</td><td>1</td><td>0</td><td>0</td></tr>
         <tr><th>Amazon → per 100 g</th><td>62.5</td><td>12.5</td><td>0</td><td>0</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="warn">-6.5 <span class="pct">(-9.4%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="bad">-4.5 <span class="pct">(-100%)</span></td><td class="bad">-2.1 <span class="pct">(-100%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Grape Leaves">Decision:
@@ -1889,32 +1867,32 @@
     </div>
   </section>
   <section class="card" id="detail-32">
-    <h3><span class="badge bad">max 100%</span> Kidney Beans <span class="cat">Canned &amp; Legumes</span></h3>
+    <h3><span class="badge bad">max 100%</span> Kidney Beans (Dry) <span class="cat">Canned &amp; Legumes</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: medium</span>
-      <span class="tag">form: canned</span>
-      <span class="tag mismatch">⚠ form differs from USDA raw/dry — delta expected</span>
+      <span class="tag">form: dry</span>
+      
     </div>
-    <p class="notes">Goya&#39;s only published kidney-bean label is the drained can, while our row is DRY — hence the ~73% gap, which is water, not a data error. It is still worth reading: at 89cal/100g drained vs 337 dry, a recipe that means canned beans and uses dry grams triples the entry. The registry comment already warns of the ~2.7x factor.</p>
-    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Goya-Kidney-Beans-Red-Pound/dp/B004XHLAGO" target="_blank" rel="noopener">Goya Red Kidney Beans, Dry, 1 lb (Amazon — matches our dry row)</a><br><a href="https://www.amazon.com/Goya-Kidney-Beans-15-5-ounces/dp/B0004MZ28O" target="_blank" rel="noopener">Goya Red Kidney Beans, 15.5 oz can (Amazon — the labelled form)</a><br><a href="https://www.myfooddiary.com/foods/5126848/goya-red-kidney-beans" target="_blank" rel="noopener">Goya Red Kidney Beans (canned) label (MyFoodDiary)</a></div>
+    <p class="notes">S20: re-based on the DRY bag after the user&#39;s review (the S16 row compared Goya&#39;s drained can, a ~73% water gap that said nothing about the data). Goya dry red kidney beans, 1/4 cup (42g) = 140cal/26C/9P/0F, scales to ~333/62/21/0 per 100g against our USDA dry 337/61.3/22.5/1.1 — every macro within 5%; the -100% fat is a 42g serving rounding 0.5g to zero. Decision was keep ours. The registry row is now named Kidney Beans (Dry); its comment still warns that a drained-can recipe needs grams divided by ~2.7.</p>
+    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Goya-Kidney-Beans-Red-Pound/dp/B004XHLAGO" target="_blank" rel="noopener">Goya Red Kidney Beans, Dry, 1 lb (Amazon — the labelled form)</a><br><a href="https://fitia.app/en/calories-nutritional-information/red-kidney-beans-20004219/" target="_blank" rel="noopener">Goya Red Kidney Beans, dry, 1/4 cup 42g label (Fitia)</a><br><a href="https://www.amazon.com/Goya-Kidney-Beans-15-5-ounces/dp/B0004MZ28O" target="_blank" rel="noopener">Goya Red Kidney Beans, 15.5 oz can (Amazon — the S16 comparison, drained ~89cal/100g)</a></div>
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
         <tr><th>Our data (USDA)</th><td>337</td><td>61.3</td><td>22.5</td><td>1.1</td></tr>
-        <tr><th>Amazon (as labeled, 123 g serving)</th><td>110</td><td>21</td><td>8</td><td>0</td></tr>
-        <tr><th>Amazon → per 100 g</th><td>89.4</td><td>17.1</td><td>6.5</td><td>0</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">-247.6 <span class="pct">(-73.5%)</span></td><td class="bad">-44.2 <span class="pct">(-72.1%)</span></td><td class="bad">-16 <span class="pct">(-71.1%)</span></td><td class="bad">-1.1 <span class="pct">(-100%)</span></td></tr>
+        <tr><th>Amazon (as labeled, 42 g serving)</th><td>140</td><td>26</td><td>9</td><td>0</td></tr>
+        <tr><th>Amazon → per 100 g</th><td>333.3</td><td>61.9</td><td>21.4</td><td>0</td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-3.7 <span class="pct">(-1.1%)</span></td><td class="ok">0.6 <span class="pct">(+1%)</span></td><td class="ok">-1.1 <span class="pct">(-4.8%)</span></td><td class="bad">-1.1 <span class="pct">(-100%)</span></td></tr>
       </tbody>
     </table>
-    <div class="decision" data-ing="Kidney Beans">Decision:
+    <div class="decision" data-ing="Kidney Beans (Dry)">Decision:
       <label><input type="radio" name="dec_33" value="keep" onchange="setDec(this)"> keep ours</label>
       <label><input type="radio" name="dec_33" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_33">Notes on Kidney Beans</label>
-      <textarea id="note_33" data-ing="Kidney Beans" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_33">Notes on Kidney Beans (Dry)</label>
+      <textarea id="note_33" data-ing="Kidney Beans (Dry)" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
   <section class="card" id="detail-33">
@@ -1976,36 +1954,7 @@
     </div>
   </section>
   <section class="card" id="detail-35">
-    <h3><span class="badge bad">max 178.4%</span> Cherry Sauce <span class="cat">Condiments &amp; Oils</span></h3>
-    <div class="meta">
-      <span class="tag tag-mixed">source: mixed</span>
-      <span class="tag">confidence: low</span>
-      <span class="tag">form: as-sold</span>
-      
-    </div>
-    <p class="notes">Sephra Cherry Topping Sauce (Amazon B08KFHV5VD); label is per-100g only (252kcal/61.9C/0.16P/0.05F), scaled to a standard 30g topping serving. Commercial topping is sugar-heavy (252 vs our USDA 91 cal/100g) — major variance; cherry sauces vary widely by brand.</p>
-    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/Sephra-Cherry-Topping-Sauce-2-2lb/dp/B08KFHV5VD" target="_blank" rel="noopener">Sephra Cherry Topping/Dessert Sauce 2.2lb (Amazon.com)</a><br><a href="https://www.sephrausa.com/sephra-cherry-topping-sauce" target="_blank" rel="noopener">Sephra USA Cherry Topping Sauce product page</a><br><a href="https://foods.fatsecret.com/calories-nutrition/dairy-queen/cherry-topping" target="_blank" rel="noopener">FatSecret: Dairy Queen Cherry Topping (28g serving reference)</a></div>
-    <table class="cmp">
-      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
-      <tbody>
-        <tr><th>Our data (USDA)</th><td>91</td><td>23.3</td><td>0.7</td><td>0.1</td></tr>
-        <tr><th>Amazon (as labeled, 30 g serving)</th><td>76</td><td>18.6</td><td>0.1</td><td>0</td></tr>
-        <tr><th>Amazon → per 100 g</th><td>253.3</td><td>62</td><td>0.3</td><td>0</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">162.3 <span class="pct">(+178.4%)</span></td><td class="bad">38.7 <span class="pct">(+166.1%)</span></td><td class="bad">-0.4 <span class="pct">(-52.4%)</span></td><td class="bad">-0.1 <span class="pct">(-100%)</span></td></tr>
-      </tbody>
-    </table>
-    <div class="decision" data-ing="Cherry Sauce">Decision:
-      <label><input type="radio" name="dec_36" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_36" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
-      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
-    </div>
-    <div class="rownote">
-      <label for="note_36">Notes on Cherry Sauce</label>
-      <textarea id="note_36" data-ing="Cherry Sauce" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
-    </div>
-  </section>
-  <section class="card" id="detail-36">
-    <h3><span class="badge bad">max 100%</span> Hoisin Sauce <span class="cat">Condiments &amp; Oils</span></h3>
+    <h3><span class="badge ok">max 0.8%</span> Hoisin Sauce <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: medium</span>
@@ -2017,23 +1966,23 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>220</td><td>51</td><td>3.3</td><td>3.5</td></tr>
+        <tr><th>Our data (USDA)</th><td>214.3</td><td>47.6</td><td>0</td><td>2.4</td></tr>
         <tr><th>Amazon (as labeled, 42 g serving)</th><td>90</td><td>20</td><td>0</td><td>1</td></tr>
         <tr><th>Amazon → per 100 g</th><td>214.3</td><td>47.6</td><td>0</td><td>2.4</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-5.7 <span class="pct">(-2.6%)</span></td><td class="warn">-3.4 <span class="pct">(-6.6%)</span></td><td class="bad">-3.3 <span class="pct">(-100%)</span></td><td class="bad">-1.1 <span class="pct">(-32%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(-0.8%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Hoisin Sauce">Decision:
-      <label><input type="radio" name="dec_37" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_37" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_36" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_36" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_37">Notes on Hoisin Sauce</label>
-      <textarea id="note_37" data-ing="Hoisin Sauce" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_36">Notes on Hoisin Sauce</label>
+      <textarea id="note_36" data-ing="Hoisin Sauce" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-37">
+  <section class="card" id="detail-36">
     <h3><span class="badge bad">max 58.7%</span> Honey <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2053,17 +2002,17 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Honey">Decision:
-      <label><input type="radio" name="dec_38" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_38" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_37" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_37" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_38">Notes on Honey</label>
-      <textarea id="note_38" data-ing="Honey" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_37">Notes on Honey</label>
+      <textarea id="note_37" data-ing="Honey" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-38">
-    <h3><span class="badge bad">max 60.3%</span> Hummus <span class="cat">Condiments &amp; Oils</span></h3>
+  <section class="card" id="detail-37">
+    <h3><span class="badge ok">max 0.5%</span> Hummus <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: medium</span>
@@ -2075,23 +2024,23 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>177</td><td>16</td><td>8</td><td>10.4</td></tr>
+        <tr><th>Our data (USDA)</th><td>266.7</td><td>20</td><td>6.7</td><td>16.7</td></tr>
         <tr><th>Amazon (as labeled, 30 g serving)</th><td>80</td><td>6</td><td>2</td><td>5</td></tr>
         <tr><th>Amazon → per 100 g</th><td>266.7</td><td>20</td><td>6.7</td><td>16.7</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">89.7 <span class="pct">(+50.7%)</span></td><td class="bad">4 <span class="pct">(+25%)</span></td><td class="bad">-1.3 <span class="pct">(-16.7%)</span></td><td class="bad">6.3 <span class="pct">(+60.3%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(-0.5%)</span></td><td class="ok">0 <span class="pct">(-0.2%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Hummus">Decision:
-      <label><input type="radio" name="dec_39" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_39" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_38" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_38" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_39">Notes on Hummus</label>
-      <textarea id="note_39" data-ing="Hummus" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_38">Notes on Hummus</label>
+      <textarea id="note_38" data-ing="Hummus" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-39">
+  <section class="card" id="detail-38">
     <h3><span class="badge bad">max 1090.5%</span> Kimchi <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2111,16 +2060,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Kimchi">Decision:
-      <label><input type="radio" name="dec_40" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_40" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_39" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_39" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_40">Notes on Kimchi</label>
-      <textarea id="note_40" data-ing="Kimchi" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_39">Notes on Kimchi</label>
+      <textarea id="note_39" data-ing="Kimchi" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-40">
+  <section class="card" id="detail-39">
     <h3><span class="badge warn">max 5.8%</span> Maple Syrup <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2140,17 +2089,17 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Maple Syrup">Decision:
-      <label><input type="radio" name="dec_41" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_41" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_40" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_40" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_41">Notes on Maple Syrup</label>
-      <textarea id="note_41" data-ing="Maple Syrup" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_40">Notes on Maple Syrup</label>
+      <textarea id="note_40" data-ing="Maple Syrup" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-41">
-    <h3><span class="badge warn">max 9.9%</span> Miso Paste <span class="cat">Condiments &amp; Oils</span></h3>
+  <section class="card" id="detail-40">
+    <h3><span class="badge ok">max 0.8%</span> Miso Paste <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: medium</span>
@@ -2162,23 +2111,23 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>199</td><td>26.5</td><td>11.7</td><td>6</td></tr>
+        <tr><th>Our data (USDA)</th><td>218.8</td><td>25</td><td>12.5</td><td>6.3</td></tr>
         <tr><th>Amazon (as labeled, 16 g serving)</th><td>35</td><td>4</td><td>2</td><td>1</td></tr>
         <tr><th>Amazon → per 100 g</th><td>218.8</td><td>25</td><td>12.5</td><td>6.3</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="warn">19.8 <span class="pct">(+9.9%)</span></td><td class="warn">-1.5 <span class="pct">(-5.7%)</span></td><td class="warn">0.8 <span class="pct">(+6.8%)</span></td><td class="ok">0.3 <span class="pct">(+4.2%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-0.1 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(-0.8%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Miso Paste">Decision:
-      <label><input type="radio" name="dec_42" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_42" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_41" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_41" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_42">Notes on Miso Paste</label>
-      <textarea id="note_42" data-ing="Miso Paste" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_41">Notes on Miso Paste</label>
+      <textarea id="note_41" data-ing="Miso Paste" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-42">
+  <section class="card" id="detail-41">
     <h3><span class="badge ok">max 3%</span> Olive Oil <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2198,45 +2147,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Olive Oil">Decision:
-      <label><input type="radio" name="dec_43" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_43" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_42" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_42" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_43">Notes on Olive Oil</label>
-      <textarea id="note_43" data-ing="Olive Oil" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_42">Notes on Olive Oil</label>
+      <textarea id="note_42" data-ing="Olive Oil" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-43">
-    <h3><span class="badge bad">max 123.9%</span> Pesto Sauce <span class="cat">Condiments &amp; Oils</span></h3>
-    <div class="meta">
-      <span class="tag tag-aggregator">source: aggregator</span>
-      <span class="tag">confidence: medium</span>
-      <span class="tag">form: as-sold</span>
-      
-    </div>
-    <p class="notes">No Amazon Fresh store-brand pesto exists; used Kirkland Signature (sold on Amazon) label per FatSecret: 60g serving = 330cal/9C/6P/30F, i.e. ~550cal/15C/10P/50F per 100g vs our 400/6.7/6.7/40 — our entry runs notably low on cal/fat/carbs. Pesto varies widely by brand.</p>
-    <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/ROI-Italian-Pesto-Sauce-6-3oz/dp/B0033PYYXS" target="_blank" rel="noopener">ROI Vegan Basil Pesto Sauce 6.3 oz (Amazon)</a><br><a href="https://www.amazon.com/Pesto-Sauces/b?ie=UTF8&amp;node=6502789011" target="_blank" rel="noopener">Amazon Pesto Sauces category</a><br><a href="https://androidembeddedregional.fatsecret.com/calories-nutrition/kirkland-signature/pesto-sauce" target="_blank" rel="noopener">Kirkland Signature Pesto label (FatSecret)</a></div>
-    <table class="cmp">
-      <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
-      <tbody>
-        <tr><th>Our data (USDA)</th><td>400</td><td>6.7</td><td>6.7</td><td>40</td></tr>
-        <tr><th>Amazon (as labeled, 60 g serving)</th><td>330</td><td>9</td><td>6</td><td>30</td></tr>
-        <tr><th>Amazon → per 100 g</th><td>550</td><td>15</td><td>10</td><td>50</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">150 <span class="pct">(+37.5%)</span></td><td class="bad">8.3 <span class="pct">(+123.9%)</span></td><td class="bad">3.3 <span class="pct">(+49.3%)</span></td><td class="bad">10 <span class="pct">(+25%)</span></td></tr>
-      </tbody>
-    </table>
-    <div class="decision" data-ing="Pesto Sauce">Decision:
-      <label><input type="radio" name="dec_44" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_44" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
-      <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
-    </div>
-    <div class="rownote">
-      <label for="note_44">Notes on Pesto Sauce</label>
-      <textarea id="note_44" data-ing="Pesto Sauce" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
-    </div>
-  </section>
-  <section class="card" id="detail-44">
+  <section class="card" id="detail-42">
     <h3><span class="badge ok">max 3%</span> Sesame Oil <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2256,17 +2176,17 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Sesame Oil">Decision:
-      <label><input type="radio" name="dec_45" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_45" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_43" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_43" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_45">Notes on Sesame Oil</label>
-      <textarea id="note_45" data-ing="Sesame Oil" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_43">Notes on Sesame Oil</label>
+      <textarea id="note_43" data-ing="Sesame Oil" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-45">
-    <h3><span class="badge bad">max 100%</span> Soy Sauce <span class="cat">Condiments &amp; Oils</span></h3>
+  <section class="card" id="detail-43">
+    <h3><span class="badge ok">max 0.8%</span> Soy Sauce <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: low</span>
@@ -2278,23 +2198,23 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>53</td><td>4.9</td><td>8.1</td><td>0.6</td></tr>
+        <tr><th>Our data (USDA)</th><td>62.5</td><td>6.3</td><td>6.3</td><td>0</td></tr>
         <tr><th>Amazon (as labeled, 16 g serving)</th><td>10</td><td>1</td><td>1</td><td>0</td></tr>
         <tr><th>Amazon → per 100 g</th><td>62.5</td><td>6.3</td><td>6.3</td><td>0</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">9.5 <span class="pct">(+17.9%)</span></td><td class="bad">1.3 <span class="pct">(+27.6%)</span></td><td class="bad">-1.8 <span class="pct">(-22.8%)</span></td><td class="bad">-0.6 <span class="pct">(-100%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(-0.8%)</span></td><td class="ok">0 <span class="pct">(-0.8%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Soy Sauce">Decision:
-      <label><input type="radio" name="dec_46" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_46" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_44" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_44" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_46">Notes on Soy Sauce</label>
-      <textarea id="note_46" data-ing="Soy Sauce" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_44">Notes on Soy Sauce</label>
+      <textarea id="note_44" data-ing="Soy Sauce" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-46">
+  <section class="card" id="detail-44">
     <h3><span class="badge bad">max 26.1%</span> Tahini <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2314,16 +2234,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Tahini">Decision:
-      <label><input type="radio" name="dec_47" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_47" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_45" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_45" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_47">Notes on Tahini</label>
-      <textarea id="note_47" data-ing="Tahini" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_45">Notes on Tahini</label>
+      <textarea id="note_45" data-ing="Tahini" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-47">
+  <section class="card" id="detail-45">
     <h3><span class="badge bad">max 100%</span> Aji Amarillo Paste <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2343,16 +2263,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Aji Amarillo Paste">Decision:
-      <label><input type="radio" name="dec_48" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_48" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_46" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_46" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_48">Notes on Aji Amarillo Paste</label>
-      <textarea id="note_48" data-ing="Aji Amarillo Paste" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_46">Notes on Aji Amarillo Paste</label>
+      <textarea id="note_46" data-ing="Aji Amarillo Paste" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-48">
+  <section class="card" id="detail-46">
     <h3><span class="badge bad">max 16.7%</span> Doenjang <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2372,16 +2292,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Doenjang">Decision:
-      <label><input type="radio" name="dec_49" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_49" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_47" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_47" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_49">Notes on Doenjang</label>
-      <textarea id="note_49" data-ing="Doenjang" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_47">Notes on Doenjang</label>
+      <textarea id="note_47" data-ing="Doenjang" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-49">
+  <section class="card" id="detail-47">
     <h3><span class="badge na">no data</span> Dry Sherry <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-none">source: none</span>
@@ -2401,16 +2321,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Dry Sherry">Decision:
-      <label><input type="radio" name="dec_50" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_50" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_48" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_48" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_50">Notes on Dry Sherry</label>
-      <textarea id="note_50" data-ing="Dry Sherry" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_48">Notes on Dry Sherry</label>
+      <textarea id="note_48" data-ing="Dry Sherry" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-50">
+  <section class="card" id="detail-48">
     <h3><span class="badge warn">max 5.3%</span> Duck Fat <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2430,17 +2350,17 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Duck Fat">Decision:
-      <label><input type="radio" name="dec_51" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_51" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_49" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_49" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_51">Notes on Duck Fat</label>
-      <textarea id="note_51" data-ing="Duck Fat" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_49">Notes on Duck Fat</label>
+      <textarea id="note_49" data-ing="Duck Fat" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-51">
-    <h3><span class="badge bad">max 270.4%</span> Fish Sauce <span class="cat">Condiments &amp; Oils</span></h3>
+  <section class="card" id="detail-49">
+    <h3><span class="badge ok">max 0.3%</span> Fish Sauce <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: medium</span>
@@ -2452,24 +2372,24 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>35</td><td>3.6</td><td>5.1</td><td>0</td></tr>
+        <tr><th>Our data (USDA)</th><td>106.7</td><td>13.3</td><td>13.3</td><td>0</td></tr>
         <tr><th>Amazon (as labeled, 15 g serving)</th><td>16</td><td>2</td><td>2</td><td>0</td></tr>
         <tr><th>Amazon → per 100 g</th><td>106.7</td><td>13.3</td><td>13.3</td><td>0</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">71.7 <span class="pct">(+204.8%)</span></td><td class="bad">9.7 <span class="pct">(+270.4%)</span></td><td class="bad">8.2 <span class="pct">(+161.4%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(+0.3%)</span></td><td class="ok">0 <span class="pct">(+0.3%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Fish Sauce">Decision:
-      <label><input type="radio" name="dec_52" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_52" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_50" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_50" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_52">Notes on Fish Sauce</label>
-      <textarea id="note_52" data-ing="Fish Sauce" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_50">Notes on Fish Sauce</label>
+      <textarea id="note_50" data-ing="Fish Sauce" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-52">
-    <h3><span class="badge bad">max 100%</span> Mayonnaise <span class="cat">Condiments &amp; Oils</span></h3>
+  <section class="card" id="detail-50">
+    <h3><span class="badge ok">max 0%</span> Mayonnaise <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: high</span>
@@ -2481,24 +2401,24 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>680</td><td>0.6</td><td>1</td><td>74.8</td></tr>
+        <tr><th>Our data (USDA)</th><td>692.3</td><td>0</td><td>0</td><td>76.9</td></tr>
         <tr><th>Amazon (as labeled, 13 g serving)</th><td>90</td><td>0</td><td>0</td><td>10</td></tr>
         <tr><th>Amazon → per 100 g</th><td>692.3</td><td>0</td><td>0</td><td>76.9</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">12.3 <span class="pct">(+1.8%)</span></td><td class="bad">-0.6 <span class="pct">(-100%)</span></td><td class="bad">-1 <span class="pct">(-100%)</span></td><td class="ok">2.1 <span class="pct">(+2.8%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Mayonnaise">Decision:
-      <label><input type="radio" name="dec_53" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_53" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_51" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_51" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_53">Notes on Mayonnaise</label>
-      <textarea id="note_53" data-ing="Mayonnaise" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_51">Notes on Mayonnaise</label>
+      <textarea id="note_51" data-ing="Mayonnaise" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-53">
-    <h3><span class="badge bad">max 100%</span> Mirin <span class="cat">Condiments &amp; Oils</span></h3>
+  <section class="card" id="detail-51">
+    <h3><span class="badge ok">max 0.1%</span> Mirin <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: medium</span>
@@ -2510,23 +2430,23 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>241</td><td>43.2</td><td>0.3</td><td>0</td></tr>
+        <tr><th>Our data (USDA)</th><td>233.3</td><td>53.3</td><td>0</td><td>0</td></tr>
         <tr><th>Amazon (as labeled, 15 g serving)</th><td>35</td><td>8</td><td>0</td><td>0</td></tr>
         <tr><th>Amazon → per 100 g</th><td>233.3</td><td>53.3</td><td>0</td><td>0</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-7.7 <span class="pct">(-3.2%)</span></td><td class="bad">10.1 <span class="pct">(+23.5%)</span></td><td class="bad">-0.3 <span class="pct">(-100%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(+0.1%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Mirin">Decision:
-      <label><input type="radio" name="dec_54" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_54" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_52" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_52" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_54">Notes on Mirin</label>
-      <textarea id="note_54" data-ing="Mirin" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_52">Notes on Mirin</label>
+      <textarea id="note_52" data-ing="Mirin" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-54">
+  <section class="card" id="detail-52">
     <h3><span class="badge bad">max 100%</span> Nori <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2546,16 +2466,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Nori">Decision:
-      <label><input type="radio" name="dec_55" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_55" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_53" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_53" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_55">Notes on Nori</label>
-      <textarea id="note_55" data-ing="Nori" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_53">Notes on Nori</label>
+      <textarea id="note_53" data-ing="Nori" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-55">
+  <section class="card" id="detail-53">
     <h3><span class="badge warn">max 5%</span> Palm Oil (Dendê) <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2575,16 +2495,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Palm Oil (Dendê)">Decision:
-      <label><input type="radio" name="dec_56" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_56" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_54" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_54" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_56">Notes on Palm Oil (Dendê)</label>
-      <textarea id="note_56" data-ing="Palm Oil (Dendê)" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_54">Notes on Palm Oil (Dendê)</label>
+      <textarea id="note_54" data-ing="Palm Oil (Dendê)" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-56">
+  <section class="card" id="detail-54">
     <h3><span class="badge na">no data</span> Sake <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-none">source: none</span>
@@ -2604,16 +2524,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Sake">Decision:
-      <label><input type="radio" name="dec_57" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_57" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_55" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_55" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_57">Notes on Sake</label>
-      <textarea id="note_57" data-ing="Sake" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_55">Notes on Sake</label>
+      <textarea id="note_55" data-ing="Sake" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-57">
+  <section class="card" id="detail-55">
     <h3><span class="badge ok">max 3.1%</span> Sugar <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2633,17 +2553,17 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Sugar">Decision:
-      <label><input type="radio" name="dec_58" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_58" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_56" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_56" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_58">Notes on Sugar</label>
-      <textarea id="note_58" data-ing="Sugar" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_56">Notes on Sugar</label>
+      <textarea id="note_56" data-ing="Sugar" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-58">
-    <h3><span class="badge bad">max 100%</span> Tonkatsu Sauce <span class="cat">Condiments &amp; Oils</span></h3>
+  <section class="card" id="detail-56">
+    <h3><span class="badge ok">max 0%</span> Tonkatsu Sauce <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: medium</span>
@@ -2655,23 +2575,23 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>127</td><td>31.5</td><td>0.6</td><td>0.1</td></tr>
+        <tr><th>Our data (USDA)</th><td>166.7</td><td>40</td><td>0</td><td>0</td></tr>
         <tr><th>Amazon (as labeled, 15 g serving)</th><td>25</td><td>6</td><td>0</td><td>0</td></tr>
         <tr><th>Amazon → per 100 g</th><td>166.7</td><td>40</td><td>0</td><td>0</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">39.7 <span class="pct">(+31.2%)</span></td><td class="bad">8.5 <span class="pct">(+27%)</span></td><td class="bad">-0.6 <span class="pct">(-100%)</span></td><td class="bad">-0.1 <span class="pct">(-100%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Tonkatsu Sauce">Decision:
-      <label><input type="radio" name="dec_59" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_59" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_57" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_57" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_59">Notes on Tonkatsu Sauce</label>
-      <textarea id="note_59" data-ing="Tonkatsu Sauce" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_57">Notes on Tonkatsu Sauce</label>
+      <textarea id="note_57" data-ing="Tonkatsu Sauce" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-59">
+  <section class="card" id="detail-57">
     <h3><span class="badge ok">max 3%</span> Vegetable Oil <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2691,16 +2611,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Vegetable Oil">Decision:
-      <label><input type="radio" name="dec_60" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_60" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_58" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_58" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_60">Notes on Vegetable Oil</label>
-      <textarea id="note_60" data-ing="Vegetable Oil" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_58">Notes on Vegetable Oil</label>
+      <textarea id="note_58" data-ing="Vegetable Oil" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-60">
+  <section class="card" id="detail-58">
     <h3><span class="badge na">no data</span> White Wine <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-none">source: none</span>
@@ -2720,17 +2640,17 @@
       </tbody>
     </table>
     <div class="decision" data-ing="White Wine">Decision:
-      <label><input type="radio" name="dec_61" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_61" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_59" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_59" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_61">Notes on White Wine</label>
-      <textarea id="note_61" data-ing="White Wine" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_59">Notes on White Wine</label>
+      <textarea id="note_59" data-ing="White Wine" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-61">
-    <h3><span class="badge bad">max 28.2%</span> Worcestershire Sauce <span class="cat">Condiments &amp; Oils</span></h3>
+  <section class="card" id="detail-59">
+    <h3><span class="badge ok">max 0%</span> Worcestershire Sauce <span class="cat">Condiments &amp; Oils</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: medium</span>
@@ -2742,23 +2662,23 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>78</td><td>19.5</td><td>0</td><td>0</td></tr>
+        <tr><th>Our data (USDA)</th><td>100</td><td>22</td><td>0</td><td>0</td></tr>
         <tr><th>Amazon (as labeled, 5 g serving)</th><td>5</td><td>1.1</td><td>0</td><td>0</td></tr>
         <tr><th>Amazon → per 100 g</th><td>100</td><td>22</td><td>0</td><td>0</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">22 <span class="pct">(+28.2%)</span></td><td class="warn">2.5 <span class="pct">(+12.8%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Worcestershire Sauce">Decision:
-      <label><input type="radio" name="dec_62" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_62" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_60" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_60" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_62">Notes on Worcestershire Sauce</label>
-      <textarea id="note_62" data-ing="Worcestershire Sauce" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_60">Notes on Worcestershire Sauce</label>
+      <textarea id="note_60" data-ing="Worcestershire Sauce" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-62">
+  <section class="card" id="detail-60">
     <h3><span class="badge bad">max 100%</span> Butter <span class="cat">Eggs &amp; Dairy</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2778,16 +2698,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Butter">Decision:
-      <label><input type="radio" name="dec_63" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_63" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_61" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_61" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_63">Notes on Butter</label>
-      <textarea id="note_63" data-ing="Butter" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_61">Notes on Butter</label>
+      <textarea id="note_61" data-ing="Butter" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-63">
+  <section class="card" id="detail-61">
     <h3><span class="badge bad">max 174.7%</span> Cheddar Cheese <span class="cat">Eggs &amp; Dairy</span></h3>
     <div class="meta">
       <span class="tag tag-mixed">source: mixed</span>
@@ -2807,16 +2727,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Cheddar Cheese">Decision:
-      <label><input type="radio" name="dec_64" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_64" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_62" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_62" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_64">Notes on Cheddar Cheese</label>
-      <textarea id="note_64" data-ing="Cheddar Cheese" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_62">Notes on Cheddar Cheese</label>
+      <textarea id="note_62" data-ing="Cheddar Cheese" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-64">
+  <section class="card" id="detail-62">
     <h3><span class="badge bad">max 100%</span> Egg <span class="cat">Eggs &amp; Dairy</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2836,17 +2756,17 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Egg">Decision:
-      <label><input type="radio" name="dec_65" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_65" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_63" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_63" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_65">Notes on Egg</label>
-      <textarea id="note_65" data-ing="Egg" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_63">Notes on Egg</label>
+      <textarea id="note_63" data-ing="Egg" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-65">
-    <h3><span class="badge bad">max 74.2%</span> Feta Cheese <span class="cat">Eggs &amp; Dairy</span></h3>
+  <section class="card" id="detail-63">
+    <h3><span class="badge ok">max 0.6%</span> Feta Cheese <span class="cat">Eggs &amp; Dairy</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: medium</span>
@@ -2858,23 +2778,23 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>264</td><td>4.1</td><td>14.2</td><td>21.3</td></tr>
+        <tr><th>Our data (USDA)</th><td>250</td><td>7.1</td><td>21.4</td><td>14.3</td></tr>
         <tr><th>Amazon (as labeled, 28 g serving)</th><td>70</td><td>2</td><td>6</td><td>4</td></tr>
         <tr><th>Amazon → per 100 g</th><td>250</td><td>7.1</td><td>21.4</td><td>14.3</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="warn">-14 <span class="pct">(-5.3%)</span></td><td class="bad">3 <span class="pct">(+74.2%)</span></td><td class="bad">7.2 <span class="pct">(+50.9%)</span></td><td class="bad">-7 <span class="pct">(-32.9%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(+0.6%)</span></td><td class="ok">0 <span class="pct">(+0.1%)</span></td><td class="ok">0 <span class="pct">(-0.1%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Feta Cheese">Decision:
-      <label><input type="radio" name="dec_66" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_66" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_64" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_64" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_66">Notes on Feta Cheese</label>
-      <textarea id="note_66" data-ing="Feta Cheese" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_64">Notes on Feta Cheese</label>
+      <textarea id="note_64" data-ing="Feta Cheese" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-66">
+  <section class="card" id="detail-64">
     <h3><span class="badge bad">max 100%</span> Greek Yogurt <span class="cat">Eggs &amp; Dairy</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2894,16 +2814,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Greek Yogurt">Decision:
-      <label><input type="radio" name="dec_67" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_67" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_65" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_65" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_67">Notes on Greek Yogurt</label>
-      <textarea id="note_67" data-ing="Greek Yogurt" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_65">Notes on Greek Yogurt</label>
+      <textarea id="note_65" data-ing="Greek Yogurt" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-67">
+  <section class="card" id="detail-65">
     <h3><span class="badge bad">max 62.3%</span> Mozzarella Cheese <span class="cat">Eggs &amp; Dairy</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2923,17 +2843,17 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Mozzarella Cheese">Decision:
-      <label><input type="radio" name="dec_68" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_68" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_66" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_66" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_68">Notes on Mozzarella Cheese</label>
-      <textarea id="note_68" data-ing="Mozzarella Cheese" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_66">Notes on Mozzarella Cheese</label>
+      <textarea id="note_66" data-ing="Mozzarella Cheese" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-68">
-    <h3><span class="badge bad">max 25%</span> Paneer <span class="cat">Eggs &amp; Dairy</span></h3>
+  <section class="card" id="detail-66">
+    <h3><span class="badge ok">max 0.8%</span> Paneer <span class="cat">Eggs &amp; Dairy</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: medium</span>
@@ -2945,23 +2865,23 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>260</td><td>3</td><td>18.3</td><td>20</td></tr>
+        <tr><th>Our data (USDA)</th><td>321.4</td><td>3.6</td><td>21.4</td><td>25</td></tr>
         <tr><th>Amazon (as labeled, 28 g serving)</th><td>90</td><td>1</td><td>6</td><td>7</td></tr>
         <tr><th>Amazon → per 100 g</th><td>321.4</td><td>3.6</td><td>21.4</td><td>25</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">61.4 <span class="pct">(+23.6%)</span></td><td class="bad">0.6 <span class="pct">(+19%)</span></td><td class="bad">3.1 <span class="pct">(+17.1%)</span></td><td class="bad">5 <span class="pct">(+25%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(-0.8%)</span></td><td class="ok">0 <span class="pct">(+0.1%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Paneer">Decision:
-      <label><input type="radio" name="dec_69" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_69" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_67" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_67" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_69">Notes on Paneer</label>
-      <textarea id="note_69" data-ing="Paneer" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_67">Notes on Paneer</label>
+      <textarea id="note_67" data-ing="Paneer" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-69">
+  <section class="card" id="detail-67">
     <h3><span class="badge bad">max 100%</span> Parmesan Cheese <span class="cat">Eggs &amp; Dairy</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -2981,16 +2901,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Parmesan Cheese">Decision:
-      <label><input type="radio" name="dec_70" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_70" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_68" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_68" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_70">Notes on Parmesan Cheese</label>
-      <textarea id="note_70" data-ing="Parmesan Cheese" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_68">Notes on Parmesan Cheese</label>
+      <textarea id="note_68" data-ing="Parmesan Cheese" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-70">
+  <section class="card" id="detail-68">
     <h3><span class="badge warn">max 6.1%</span> Whole Milk <span class="cat">Eggs &amp; Dairy</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -3010,16 +2930,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Whole Milk">Decision:
-      <label><input type="radio" name="dec_71" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_71" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_69" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_69" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_71">Notes on Whole Milk</label>
-      <textarea id="note_71" data-ing="Whole Milk" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_69">Notes on Whole Milk</label>
+      <textarea id="note_69" data-ing="Whole Milk" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-71">
+  <section class="card" id="detail-69">
     <h3><span class="badge bad">max 55.3%</span> Blue Cheese <span class="cat">Eggs &amp; Dairy</span></h3>
     <div class="meta">
       <span class="tag tag-mixed">source: mixed</span>
@@ -3039,16 +2959,16 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Blue Cheese">Decision:
-      <label><input type="radio" name="dec_72" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_72" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_70" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_70" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_72">Notes on Blue Cheese</label>
-      <textarea id="note_72" data-ing="Blue Cheese" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_70">Notes on Blue Cheese</label>
+      <textarea id="note_70" data-ing="Blue Cheese" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-72">
+  <section class="card" id="detail-70">
     <h3><span class="badge bad">max 17.8%</span> Evaporated Milk <span class="cat">Eggs &amp; Dairy</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -3068,17 +2988,17 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Evaporated Milk">Decision:
-      <label><input type="radio" name="dec_73" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_73" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_71" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_71" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_73">Notes on Evaporated Milk</label>
-      <textarea id="note_73" data-ing="Evaporated Milk" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_71">Notes on Evaporated Milk</label>
+      <textarea id="note_71" data-ing="Evaporated Milk" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-73">
-    <h3><span class="badge bad">max 100%</span> Queso Fresco <span class="cat">Eggs &amp; Dairy</span></h3>
+  <section class="card" id="detail-71">
+    <h3><span class="badge ok">max 0.1%</span> Queso Fresco <span class="cat">Eggs &amp; Dairy</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: high</span>
@@ -3090,23 +3010,23 @@
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>299</td><td>3</td><td>18.1</td><td>23.8</td></tr>
+        <tr><th>Our data (USDA)</th><td>285.7</td><td>0</td><td>21.4</td><td>21.4</td></tr>
         <tr><th>Amazon (as labeled, 28 g serving)</th><td>80</td><td>0</td><td>6</td><td>6</td></tr>
         <tr><th>Amazon → per 100 g</th><td>285.7</td><td>0</td><td>21.4</td><td>21.4</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">-13.3 <span class="pct">(-4.4%)</span></td><td class="bad">-3 <span class="pct">(-100%)</span></td><td class="bad">3.3 <span class="pct">(+18.4%)</span></td><td class="warn">-2.4 <span class="pct">(-10%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(0%)</span></td><td class="ok">0 <span class="pct">(+0.1%)</span></td><td class="ok">0 <span class="pct">(+0.1%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Queso Fresco">Decision:
-      <label><input type="radio" name="dec_74" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_74" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_72" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_72" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_74">Notes on Queso Fresco</label>
-      <textarea id="note_74" data-ing="Queso Fresco" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_72">Notes on Queso Fresco</label>
+      <textarea id="note_72" data-ing="Queso Fresco" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-74">
+  <section class="card" id="detail-72">
     <h3><span class="badge bad">max 68.1%</span> Tofu <span class="cat">Eggs &amp; Dairy</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
@@ -3126,42 +3046,42 @@
       </tbody>
     </table>
     <div class="decision" data-ing="Tofu">Decision:
-      <label><input type="radio" name="dec_75" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_75" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_73" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_73" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_75">Notes on Tofu</label>
-      <textarea id="note_75" data-ing="Tofu" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_73">Notes on Tofu</label>
+      <textarea id="note_73" data-ing="Tofu" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
-  <section class="card" id="detail-75">
-    <h3><span class="badge bad">max 187.4%</span> Bacon <span class="cat">Meat &amp; Seafood</span></h3>
+  <section class="card" id="detail-73">
+    <h3><span class="badge bad">max 164.6%</span> Bacon <span class="cat">Meat &amp; Seafood</span></h3>
     <div class="meta">
       <span class="tag tag-aggregator">source: aggregator</span>
       <span class="tag">confidence: high</span>
       <span class="tag">form: cooked</span>
       <span class="tag mismatch">⚠ form differs from USDA raw/dry — delta expected</span>
     </div>
-    <p class="notes">Hormel Black Label, but the label&#39;s serving is 2 PAN-FRIED slices while our row is USDA raw — so the +187% protein and +16% calorie deltas are rendered-out water and fat, not a data error. The practical warning stands: 15g of cooked bacon comes from roughly 34g raw, so a recipe that weighs cooked strips against this raw row understates by well over half.</p>
+    <p class="notes">Hormel Black Label, but the label&#39;s serving is 2 PAN-FRIED slices while our row is USDA raw — so the +187% protein and +16% calorie deltas are rendered-out water and fat, not a data error. The practical warning stands: 15g of cooked bacon comes from roughly 34g raw, so a recipe that weighs cooked strips against this raw row understates by well over half. S20 decision: ADJUST, but on a raw basis — the registry row moved from an unsourced 458/1.3/11.6/45 to USDA &#39;Pork, cured, bacon, unprepared&#39; (FDC 168277: 417/1.3/12.6/39.7). The cooked Hormel label above is kept as provenance only; it is not a valid target for a raw-weighed row, so this card still shows the form mismatch.</p>
     <div class="links"><strong>Amazon:</strong><br><a href="https://www.amazon.com/HORMEL-BLACK-LABEL-Original-Bacon/dp/B000Q3AEBG" target="_blank" rel="noopener">HORMEL Black Label Original Bacon, 16 oz (Amazon)</a><br><a href="https://www.amazon.com/Wellshire-Farms-Thick-Sliced-Dry-Rubbed/dp/B074VD2YC2" target="_blank" rel="noopener">Wellshire Farms Thick Sliced Uncured Bacon, 12 oz (Amazon)</a><br><a href="https://www.nutritionvalue.org/Hormel%2C_black_label%2C_original_bacon_by_Hormel_Foods_Corporation_376998_nutritional_value.html" target="_blank" rel="noopener">Hormel Black Label Original Bacon label (NutritionValue)</a></div>
     <table class="cmp">
       <thead><tr><th>Per 100 g</th><th>Calories</th><th>Carbs (g)</th><th>Protein (g)</th><th>Fat (g)</th></tr></thead>
       <tbody>
-        <tr><th>Our data (USDA)</th><td>458</td><td>1.3</td><td>11.6</td><td>45</td></tr>
+        <tr><th>Our data (USDA)</th><td>417</td><td>1.3</td><td>12.6</td><td>39.7</td></tr>
         <tr><th>Amazon (as labeled, 15 g serving)</th><td>80</td><td>0</td><td>5</td><td>7</td></tr>
         <tr><th>Amazon → per 100 g</th><td>533.3</td><td>0</td><td>33.3</td><td>46.7</td></tr>
-        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">75.3 <span class="pct">(+16.4%)</span></td><td class="bad">-1.3 <span class="pct">(-100%)</span></td><td class="bad">21.7 <span class="pct">(+187.4%)</span></td><td class="ok">1.7 <span class="pct">(+3.7%)</span></td></tr>
+        <tr class="delta"><th>Δ (Amazon − ours)</th><td class="bad">116.3 <span class="pct">(+27.9%)</span></td><td class="bad">-1.3 <span class="pct">(-100%)</span></td><td class="bad">20.7 <span class="pct">(+164.6%)</span></td><td class="bad">7 <span class="pct">(+17.5%)</span></td></tr>
       </tbody>
     </table>
     <div class="decision" data-ing="Bacon">Decision:
-      <label><input type="radio" name="dec_76" value="keep" onchange="setDec(this)"> keep ours</label>
-      <label><input type="radio" name="dec_76" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
+      <label><input type="radio" name="dec_74" value="keep" onchange="setDec(this)"> keep ours</label>
+      <label><input type="radio" name="dec_74" value="adjust" onchange="setDec(this)"> adjust toward Amazon</label>
       <button type="button" class="clearrow" onclick="clearDec(this)">clear</button>
     </div>
     <div class="rownote">
-      <label for="note_76">Notes on Bacon</label>
-      <textarea id="note_76" data-ing="Bacon" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
+      <label for="note_74">Notes on Bacon</label>
+      <textarea id="note_74" data-ing="Bacon" rows="2" spellcheck="true" oninput="setNote(this)" placeholder="Optional — anything you want me to know about this row"></textarea>
     </div>
   </section>
 </div>

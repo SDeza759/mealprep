@@ -1,12 +1,11 @@
 # CLAUDE.md — Project Context
 
 ## Last Updated
-2026-08-30 — S19. Grocery-display session: serving-macros line removed, store-scale lbs/oz
-weights, counts trimmed to eggs only (see Key Decisions). **The macro audit review is STILL
-pending OFF-SESSION** — the user left S17 to tick all 76 rows in `audit/macro-audit.html` and
-will return with pasted decisions; expect that paste and don't rebuild or re-review the audit.
-`data.js` touched only for `GROCERY_COUNTABLE` (display data, no macros); 700/700 + 7000/7000,
-139/139, hygiene all-green.
+2026-09-04 — S20. The macro audit review came back and was applied (see Key Decisions): 16 registry
+rows re-based on retail labels, `Bacon` moved to USDA raw, five legume/edamame rows renamed to their
+bought form, `Cherry Sauce` and `Pesto Sauce` deleted in favour of sauces made in the recipe. **The
+macro audit is CLOSED** (74 rows) — don't re-review it. Registry 147 → 146, pool still 139;
+700/700 + 7000/7000, 139/139, hygiene all-green, browser-verified.
 
 ## Project Overview
 Multi-file HTML meal-prep optimizer ("Actual Size Optimizer"). Weekly plans vs macro targets
@@ -15,7 +14,8 @@ Entry: `index.html`. Path: `/Users/sebas/Desktop/MealPrep/`.
 
 ## File Map
 - `index.html` — React App: all UI, weekly table, meal/swap modals, settings, stats; `MEAT_INGREDIENTS` Set.
-- `data.js` — pure data: `INGREDIENT_REGISTRY` (147, USDA raw/100g), `RECIPES` (139, grams-only),
+- `data.js` — pure data: `INGREDIENT_REGISTRY` (146, USDA raw/100g unless a `// S20 macro audit` line
+  comment names a retail label), `RECIPES` (139, grams-only),
   `RECIPE_SPICE_OVERRIDES`, `RECIPE_COOKING_DATA`, `UNIT_INGREDIENTS`, `INGREDIENT_CATEGORIES`, `DAYS_NAMES`.
 - `algorithm.js` — `generatePlan`, `adjustDayMeals` (solver), `selectVariant` (module scope, exported),
   nested `comboFeasible`, `initializeData`, exported mutable `state` (`solverDiagnostics`, `recipeRotation`).
@@ -43,8 +43,11 @@ balanced in-zone, else shake-planned in-zone, else least-bad + deficit shake →
 - **Preferences outrank authenticity.** Both bans landed on the research-backed Peruvian dishes, where
   walnuts and olives are traditional garnishes. Drop the ingredient, keep the rest of the dish, reword the
   `RECIPE_COOKING_DATA` step so it doesn't name what's gone. Never "restore" them as a data-integrity fix.
-- **`Pesto Sauce` / `Granola` are nut-free-brand-only** (S12) — a comment on each registry line says so.
-  Single rows for packaged products, so the rule lives in the shopping decision. Keep the comments.
+- **`Granola` is nut-free-brand-only** (S12) — the registry-line comment says so; keep it. A single row
+  for a packaged product, so the rule lives in the shopping decision.
+- **Pesto is made in the recipe, nut-free** (S20, user's call). `Pesto Sauce` is gone; Chicken Pesto
+  Pasta, Pesto Shrimp Pasta and Grilled Salmon & Asparagus carry `Basil` + `Olive Oil` + `Parmesan
+  Cheese` + `Garlic` with a pound-or-blitz step. Never write pine nuts (or any nut) back into those steps.
 
 ## Key Decisions (don't reverse)
 - **Combo-first**: evaluate full-day combos, not sequential picks — avoids structural incompatibility.
@@ -143,6 +146,22 @@ balanced in-zone, else shake-planned in-zone, else least-bad + deficit shake →
   and Baked Cod with Lemon & Herbs. `Lime Zest` deliberately does NOT exist yet — no current
   recipe uses it; add it with the first dish that does, not before. Old saved plans still carry
   "Lime"/"Lemon" ingredient names (same S15-rename staleness) until regenerated.
+- **Macro audit decisions are applied** (S20; the user reviewed all 76 rows: 17 adjust / 59 keep).
+  (1) Sixteen registry rows carry the retail label's per-100g values instead of USDA, each with a
+  `// S20 macro audit:` comment naming the brand and the old USDA numbers: Panko Breadcrumbs, Flour
+  Tortilla, Edamame, Grape Leaves, Hoisin Sauce, Hummus, Miso Paste, Soy Sauce, Fish Sauce (35 → 107),
+  Mayonnaise, Mirin, Tonkatsu Sauce, Worcestershire Sauce, Feta Cheese, Paneer, Queso Fresco. Trace
+  macros the label rounds to 0 went to 0 (hoisin protein, grape-leaf protein/fat, mayo carbs/protein,
+  queso fresco carbs) — immaterial at recipe amounts. (2) **`Bacon` is USDA raw** (417/1.3/12.6/39.7,
+  FDC 168277): the tick was "adjust" with the note "should've been raw not cooked" — bacon labels are
+  per cooked slice and are never a valid target for a raw-weighed row, so don't re-base it on one.
+  (3) **Bought-form names**: `Black Beans (Dry)`, `Chickpeas (Dry)`, `White Beans (Dry)`, `Kidney
+  Beans (Dry)`, `Edamame (frozen)`. The dry rows kept their USDA dry macros; the 11 steps that read as
+  canned ("warm the beans", "rinse and drain") now say soak overnight + simmer about an hour, so the
+  grams and the method agree. (4) **`Cherry Sauce` and `Pesto Sauce` are deleted** — the jarred
+  versions are dessert-sweet / nut-bearing. `Cherries (frozen)` (USDA sweet cherries raw, category
+  Fruit, 60g in Pan-Seared Duck, sauce made in the pan) replaced the one; the pesto trio replaced the
+  other (see User Constraints). Old saved plans carry the old ingredient names until regenerated.
 
 ## Fragile Areas
 - **Registry name match**: recipe `name` must exactly match a key or macros silently zero out. Two
@@ -211,27 +230,28 @@ balanced in-zone, else shake-planned in-zone, else least-bad + deficit shake →
   the browser, don't eyeball the code.
 
 ## What to Do Next
-- **The macro audit needs ONE user review — that is the whole job.** Serve the repo, open
-  `audit/macro-audit.html`, tick keep/adjust on all 76 rows (per-row notes optional), "Copy decisions",
-  paste back. Only then touch the registry. Reading order:
-  - **`Tofu` first**: US retail firm-tofu labels read ~86cal/10.9g protein against our USDA 144/17.3 —
-    −40% cal, −37% protein, and it moves protein targets. **`Fish Sauce`** next: brands ~107 vs our 35.
-  - **Ignore −100% deltas on trace macros** (`Aji Amarillo Paste`, `Mayonnaise`, `Grape Leaves`,
-    `Cornstarch`) and the ±5% calorie noise on pure oils — both are label rounding at tiny servings.
-  - **`Bacon`, `Kidney Beans`, `Edamame` are ⚠ form mismatches**: only cooked/canned labels exist. The
-    gap is water, not error. `Gram Flour`'s +56% carb delta is a bad Swad label — Deep and USDA match us.
+- **Nothing is queued from the macro audit.** The user kept `Tofu` at USDA (144/17.3) knowingly, and
+  `Gram Flour`'s +56% carb delta was ruled a bad Swad label. If they revisit a row, edit the registry
+  line and its `// S20 macro audit` comment, then rebuild the audit — the Δ reads live.
 - **Verify the mobile pass on a real phone.** S12 was checked at 375/768/1280px in the in-app browser, but
   `ResizeObserver` callbacks aren't delivered there, so the live re-check on rotate/resize is the one path
   never exercised. Rotate a phone with a 5–6 meal day and confirm `.wk-narrow` toggles. Touch scrolling of
   the weekly table is also untested.
 - **Data backlog.** 72 registry entries are used by fewer than 5 recipes — an expected consequence of
   adding 46 rows for specific dishes, not a defect; `hygiene.js` prints the live list. Only `Red Lentils`
-  (5 → 1) and `Cauliflower` (→ 1) actually moved. Raising any means authoring recipes, so agree the dish
-  list with the user first. `Wild Rice` still missing (Pan-Seared Duck uses a fallback).
+  (5 → 1) and `Cauliflower` (→ 1) actually moved; `Cherries (frozen)` is a deliberate 1x (S20). Raising
+  any means authoring recipes, so agree the dish list with the user first. `Wild Rice` still missing
+  (Pan-Seared Duck uses a fallback).
 - **Variant labels: grocery list deliberately skipped.** Table done S14. The grocery `appearances` line
   still says plain "Shawarma Bowl"; quantities are correct, so only attribution is ambiguous.
 
-## The macro audit — GENERATED (S16)
+## The macro audit — CLOSED (S20), generator kept
+The review is done and applied — don't re-review, re-verify or re-fetch rows. 74 records now (the
+`Cherry Sauce`/`Pesto Sauce` records went with their registry rows); every adjusted row reads within
+±1% because `ours` is live. `Bacon` deliberately still shows ⚠ cooked: the Hormel label is provenance
+only. The `Kidney Beans (Dry)` record was re-based on Goya's dry bag (Fitia label) so it compares
+like-for-like. The user's saved decisions are keyed by the OLD names for the 5 renamed rows, so those
+cards look undecided in the browser — expected, not lost work.
 Edit `audit/macro-audit/records.json`, run `node audit/macro-audit/build.js`. Never edit the HTML.
 - **`ours` is read live from `INGREDIENT_REGISTRY`**, never stored in records.json, so the audit cannot
   drift from the app. A record whose name is missing from the registry **fails the build** with an orphan
@@ -242,7 +262,7 @@ Edit `audit/macro-audit/records.json`, run `node audit/macro-audit/build.js`. Ne
   5–15% warn, >15% bad.
 - **Amazon pages do not render nutrition labels to a fetcher.** Every row pairs a real Amazon listing
   (provenance) with an aggregator (values). Don't burn a session re-trying Amazon.
-- 72/76 rows have a label. Four cannot and say so: `Dry Sherry`, `Sake`, `White Wine` (alcohol is exempt
+- 70/74 rows have a label. Four cannot and say so: `Dry Sherry`, `Sake`, `White Wine` (alcohol is exempt
   from FDA labelling) and `Tteok` (imported, no US panel). Expected, not a gap.
 - **Review state**: `mealprep_macro_audit_decisions` (name → keep/adjust), `mealprep_macro_audit_notes`
   (name → text, plus `__general`), `mealprep_macro_audit_sortmode` (Δ columns sort by percent or by
@@ -299,3 +319,12 @@ refuses to write on any error); `out/*.jsonl` (every applied record + rationale 
   `Lemon Juice` (USDA juice macros, 52 refs, all steps reworded), `Lemon Zest` added as a spice
   seasoning on 3 recipes, `Lime Zest` intentionally deferred, both citrus rows dropped from
   `UNIT_INGREDIENTS`. Full gate green, browser-verified.
+- **S20**: the macro audit review, applied. The user ticked all 76 rows (17 adjust / 59 keep, 10 notes).
+  One throwaway script did the mechanical part — exact-line `replaceOnce` plus occurrence-count asserts
+  on every rename, so a miscount (Chickpeas: 9, not 10) aborted before writing instead of half-applying.
+  16 label re-bases + `Bacon` → USDA raw, 5 bought-form renames, 2 sauce rows replaced by in-recipe
+  sauces (nut-free pesto trio; frozen cherries reduced in the duck pan), 11 canned-reading bean steps
+  reworded to cook from dry. Gate green; browser-verified (meal modal shows `Chickpeas (Dry)`, grocery
+  list has Basil/Parmesan/Garlic feeding Chicken Pesto Pasta, audit summary reads ok on every adjusted
+  row). Lesson: an "adjust" tick with a note contradicting the label's form means re-base on the right
+  form (raw), not copy the label — and say so in the record's notes.

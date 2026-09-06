@@ -5,7 +5,7 @@ import { fmtInt, groceryQty, spiceDisplay } from '../core/display.js';
 import * as ops from '../core/planOps.js';
 import { Card, Button, Icon, Empty, cx } from '../ui/index.jsx';
 import { usePlanDoc, useDayGroups, useUnits, useSettings } from '../fuel/hooks.js';
-import { fmtTime, macroLine, useIsDesktop } from '../fuel/common.js';
+import { macroLine, useIsDesktop } from '../fuel/common.js';
 
 // "8 min", "5-7 minutes", "about an hour" → minutes (the longest figure mentioned), or null.
 export function stepMinutes(text) {
@@ -91,7 +91,6 @@ export default function CookDay() {
   const remaining = timer ? Math.max(0, (timer.endAt - Date.now()) / 1000) : null;
   const timerDone = timer && remaining <= 0;
   useEffect(() => { if (timerDone && navigator.vibrate) navigator.vibrate([200, 100, 200]); }, [timerDone]);
-  const timesFor = (mi) => ops.mealTimesFor(leadDay.meals.length, settings.mealTimes)[mi];
 
   const toggleChecked = (name) => setProgress((p) => { const checked = { ...p.checked }; if (checked[name]) delete checked[name]; else checked[name] = true; return { ...p, checked }; });
   const done = () => { setTimer(null); setProgress((p) => ({ ...p, step: Math.min(p.step + 1, steps.length) })); };
@@ -161,7 +160,7 @@ export default function CookDay() {
           <div key={b.mi} className="stack-sm">
             <div className="strong">{b.meal.name} · {b.portions} container{b.portions === 1 ? '' : 's'}</div>
             <div className="row-sm wrap">
-              {unit.days.map((d) => <div key={d} className="chip" style={{ height: 40, flexDirection: 'column', gap: 2, padding: '0 14px' }}><span className="num" style={{ fontSize: 14 }}>{ops.SHORT_DAYS[d]}</span><span className="eyebrow" style={{ fontSize: 9 }}>{fmtTime(timesFor(b.mi))}</span></div>)}
+              {unit.days.map((d) => <span key={d} className="chip"><span className="num" style={{ fontSize: 14 }}>{ops.SHORT_DAYS[d]}</span></span>)}
             </div>
             <div className="small muted">{fmtInt(b.meal.totalMacros.calories)} kcal per container · {macroLine(b.meal.totalMacros, { kcal: false })}</div>
           </div>

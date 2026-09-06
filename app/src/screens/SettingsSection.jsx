@@ -163,7 +163,6 @@ function Days() {
 
 function Meals() {
   const [dg, patch] = useDayGroups();
-  const [settings, patchS] = useSettings();
   const T = useTargets();
   const units = useUnits();
   const setCount = (u, val) => {
@@ -172,13 +171,7 @@ function Meals() {
     u.days.forEach((d) => { next[d] = v; });
     patch({ mealCounts: next });
   };
-  const counts = [...new Set(units.map((u) => u.meals))].sort((a, b) => a - b);
   const strained = ops.strainedUnits(units, T.calories);
-  const setTime = (count, i, v) => {
-    const cur = ops.mealTimesFor(count, settings.mealTimes).slice();
-    cur[i] = v;
-    patchS({ mealTimes: { ...settings.mealTimes, [count]: cur } });
-  };
   return (
     <>
       <Card pad={false} className="card-rows">
@@ -192,16 +185,6 @@ function Meals() {
       </Card>
       {strained.length > 0 && <div className="warnbox">{strained.map((u) => `${u.name} (${Math.round(T.calories / u.meals)} kcal/meal)`).join(', ')} — that's a lot to ask of one sitting, so those days may land off-target.</div>}
       <div className="infobox">A protein shake is added only when a day can't reach its targets from meals alone, and you can remove it from any day.</div>
-      {counts.map((count) => (
-        <Card key={count} className="stack">
-          <div className="section-head"><div className="eyebrow">Meal times · {count} meal{count === 1 ? '' : 's'} a day</div><div className="small muted">used by Today</div></div>
-          <div className="grid-3">
-            {ops.mealTimesFor(count, settings.mealTimes).map((t, i) => (
-              <label key={i} className="field"><span>Meal {i + 1}</span><input className="input" type="time" value={t} onChange={(e) => setTime(count, i, e.target.value)} /></label>
-            ))}
-          </div>
-        </Card>
-      ))}
     </>
   );
 }

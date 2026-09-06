@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { DAYS_NAMES, RECIPE_COOKING_DATA, round1 } from '../core/index.js';
 import { ingQtyText, fmtInt } from '../core/display.js';
 import { Sheet, Button, Stepper, Tag, Icon, Chip, cx } from '../ui/index.jsx';
-import { macroLine, fmtTime } from './common.js';
+import { macroLine } from './common.js';
 import { useFavorites, useSettings } from './hooks.js';
-import { mealTimesFor } from '../core/planOps.js';
 
-export default function MealDetailSheet({ planDoc, di, mi, onClose, actions, onSwap }) {
+// readOnly hides the editing actions (swap, remove) — Home logs, Fuel edits.
+export default function MealDetailSheet({ planDoc, di, mi, onClose, actions, onSwap, readOnly = false }) {
   const [favorites, toggleFav] = useFavorites();
   const [settings] = useSettings();
   const [stepsOpen, setStepsOpen] = useState(true);
@@ -20,17 +20,16 @@ export default function MealDetailSheet({ planDoc, di, mi, onClose, actions, onS
   const cook = RECIPE_COOKING_DATA[meal.originalName];
   const mainIngs = meal.ingredients.filter((x) => !x.isSpice);
   const spiceIngs = meal.ingredients.filter((x) => x.isSpice);
-  const time = mealTimesFor(day.meals.length, settings.mealTimes)[mi];
   const isFav = !!favorites[meal.originalName];
 
   return (
     <Sheet open onClose={onClose}
       title={<span className="row-sm wrap">{meal.name}{meal.variantLabel && <Tag>{meal.variantLabel}</Tag>}<Tag>{meal.cuisine}</Tag></span>}
-      subtitle={`${DAYS_NAMES[di]} · Meal ${mi + 1}${time ? ` · ${fmtTime(time)}` : ''}`}
+      subtitle={DAYS_NAMES[di]}
       footer={
         <>
-          <Button variant="ghost" icon="swap" onClick={() => onSwap(di, mi)}>Swap</Button>
-          <Button variant="danger" icon="trash" onClick={() => { actions.remove(di, mi); onClose(); }} aria-label="Remove meal" />
+          {!readOnly && <Button variant="ghost" icon="swap" onClick={() => onSwap(di, mi)}>Swap</Button>}
+          {!readOnly && <Button variant="danger" icon="trash" onClick={() => { actions.remove(di, mi); onClose(); }} aria-label="Remove meal" />}
           <Button variant="ghost" icon="star" onClick={() => toggleFav(meal.originalName)} className={isFav ? 'accent' : ''} aria-label={isFav ? 'Unfavorite' : 'Favorite'} />
           <Button variant={isEaten ? 'primary' : 'ghost'} icon="check" block onClick={() => actions.toggleEaten(di, mi)}>{isEaten ? 'Eaten' : 'Mark eaten'}</Button>
         </>

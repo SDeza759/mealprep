@@ -5,7 +5,8 @@ import { fmtInt } from '../core/display.js';
 import * as ops from '../core/planOps.js';
 import { Card, Button, Bar, Stepper, Chip, Tag, Icon, Empty, Sheet, Confirm, cx } from '../ui/index.jsx';
 import { usePlanDoc, useTargets, useDayGroups, useUnits, usePlanActions, useSettings, useFavorites, todayIndex } from './hooks.js';
-import { groupColor, weekDates, fmtDayDate, macroLine, targetsLine, fmtTime, useIsDesktop } from './common.js';
+import { groupColor, weekDates, fmtDayDate, macroLine, targetsLine, useIsDesktop } from './common.js';
+import WeekStrip from './WeekStrip.jsx';
 import MealDetailSheet from './MealDetailSheet.jsx';
 import SwapSheet from './SwapSheet.jsx';
 import SavedPlans from './SavedPlans.jsx';
@@ -122,7 +123,7 @@ export default function PlanView() {
   const unitOf = (di) => meta(di).unit;
 
   // ---------- meal card (shared by phone list and desktop table popovers) ----------
-  const MealCard = ({ di, mi, meal, time }) => {
+  const MealCard = ({ di, mi, meal }) => {
     const key = `${di}-${mi}`;
     const isFresh = planDoc.tags[key] === 'fresh';
     const isEaten = !!planDoc.eaten[key];
@@ -131,7 +132,6 @@ export default function PlanView() {
       <Card className="meal-card" role="button" tabIndex={0} onClick={() => setDetail({ di, mi })} onKeyDown={(e) => { if (e.key === 'Enter') setDetail({ di, mi }); }} style={{ cursor: 'pointer' }}>
         <div className="row top">
           <div className="grow stack-sm" style={{ gap: 4 }}>
-            <div className="eyebrow" style={{ fontSize: 10 }}>Meal {mi + 1}{time ? ` · ${fmtTime(time)}` : ''}</div>
             <div className="meal-name row-sm wrap" style={{ gap: 6 }}>{meal.name}{meal.variantLabel && <Tag>{meal.variantLabel}</Tag>}</div>
             <div className="small muted">{macroLine(meal.totalMacros)}</div>
           </div>
@@ -153,7 +153,6 @@ export default function PlanView() {
     const day = days[di] || ops.EMPTY_DAY;
     const isFree = dg.excluded.includes(di);
     const { unit, cookLabel, color, isGroup } = meta(di);
-    const times = ops.mealTimesFor(day.meals.length, settings.mealTimes);
     const hasBatch = day.meals.some((_, mi) => planDoc.tags[`${di}-${mi}`] !== 'fresh');
     if (isFree) {
       return <Card><Empty title={`${DAYS_NAMES[di]} is a free day`}>Nothing planned. Change that under Settings › Day groups.</Empty></Card>;
@@ -173,7 +172,7 @@ export default function PlanView() {
             <div className="infobox">No meals on this day — add one below or regenerate {unit ? unit.name : 'it'}.</div>
           )}
         </Card>
-        {day.meals.map((meal, mi) => <MealCard key={`${di}-${mi}`} di={di} mi={mi} meal={meal} time={times[mi]} />)}
+        {day.meals.map((meal, mi) => <MealCard key={`${di}-${mi}`} di={di} mi={mi} meal={meal} />)}
         {day.proteinShake && (
           <Card className="row">
             <Icon name="shake" size={22} style={{ color: 'var(--muted)' }} />
@@ -197,19 +196,7 @@ export default function PlanView() {
   if (!desktop) {
     return (
       <>
-        <div className="week">
-          {[0, 1, 2, 3, 4, 5, 6].map((d) => {
-            const isFree = dg.excluded.includes(d);
-            const { color } = meta(d);
-            return (
-              <button key={d} type="button" className={cx('day', d === sel && 'on')} onClick={() => setSel(d)} aria-label={DAYS_NAMES[d]} aria-pressed={d === sel}>
-                <div className="eyebrow" style={{ fontSize: 10, color: d === today ? 'var(--fg)' : undefined }}>{ops.SHORT_DAYS[d]}</div>
-                <div className="num" style={{ fontSize: 18, color: isFree ? 'var(--dim)' : undefined }}>{dates[d].getDate()}</div>
-                {isFree ? <div className="eyebrow" style={{ fontSize: 9, color: 'var(--dim)', letterSpacing: '0.08em' }}>free</div> : <div className="day-mark" style={{ '--c': color }} />}
-              </button>
-            );
-          })}
-        </div>
+        <WeekStrip sel={sel} onSelect={setSel} dates={dates} excluded={dg.excluded} colorOf={(d) => meta(d).color} today={today} />
         <DayBody di={sel} />
         {sheets}
       </>
@@ -253,7 +240,6 @@ export default function PlanView() {
                   const day = days[di] || ops.EMPTY_DAY;
                   const isFree = dg.excluded.includes(di);
                   const { unit, color, cookLabel, isGroup } = meta(di);
-                  const times = ops.mealTimesFor(day.meals.length, settings.mealTimes);
                   return (
                     <tr key={di} className={cx(di === today && 'today')} onClick={() => setSel(di)} style={{ cursor: 'pointer', outline: di === sel ? '1px solid var(--line)' : undefined }}>
                       <td><div className="stack-sm" style={{ gap: 2 }}><div className="strong" style={{ color: isFree ? 'var(--muted)' : undefined }}>{ops.SHORT_DAYS[di]}</div><div className="small muted">{fmtDayDate(dates[di])}{di === today ? ' · today' : ''}</div></div></td>
@@ -271,7 +257,7 @@ export default function PlanView() {
                                 <div className="row">
                                   <button type="button" className="cell-btn" onClick={(e) => { e.stopPropagation(); setDetail({ di, mi }); }}>
                                     <span className="cell-name row-sm wrap" style={{ gap: 6 }}>{planDoc.eaten[key] && <Icon name="check" size={14} stroke={2.5} style={{ color: 'var(--accent-text)' }} />}{meal.name}</span>
-                                    <span className="small muted">{meal.variantLabel ? `${meal.variantLabel} · ` : ''}{fmtInt(meal.totalMacros.calories)} kcal{times[mi] ? ` · ${fmtTime(times[mi])}` : ''}</span>
+                                    <span className="small muted">{meal.variantLabel ? `${meal.variantLabel} · ` : ''}{fmtInt(meal.totalMacros.calories)} kcal</span>
                                   </button>
                                   <button type="button" className="tag" onClick={(e) => { e.stopPropagation(); actions.toggleTag(di, mi); }}>{fresh ? 'fresh' : 'batch'}</button>
                                 </div>

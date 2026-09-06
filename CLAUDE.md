@@ -25,7 +25,7 @@ Path `/Users/sebas/Desktop/MealPrep/`.
     `VitePWA` (autoUpdate, precache). Base path from env `DIALED_BASE` (default `/`).
   - `src/core/index.js` — the ONLY reader of the core globals; re-exports them as ESM and calls
     `initializeData()` once (guarded). `src/core/planOps.js` — pure plan logic (generate/regenerate/
-    swap/add/remove/removeShake, zone check, planning units, meal times). `src/core/display.js` —
+    swap/add/remove/removeShake, zone check, planning units). `src/core/display.js` —
     `MEAT_INGREDIENTS`, unit/spice display, `groceryQty(item, units)`.
   - `src/store/` — `db.js` (IndexedDB `dialed`/`docs` via idb; localStorage fallback), `store.js`
     (in-memory docs, `setDoc`, `useDoc(key, STABLE_FALLBACK)`), `migrate.js` (old `mealprep_*`
@@ -35,7 +35,7 @@ Path `/Users/sebas/Desktop/MealPrep/`.
     `recordEatenMeals`), `PlanView.jsx` (phone week strip + day cards; desktop table + rail),
     `MealDetailSheet.jsx`, `SwapSheet.jsx`, `GroceryView.jsx`, `RecipesView.jsx` (+ ingredients table),
     `LogView.jsx`, `SavedPlans.jsx`, `common.js` (dates, group colours, `useIsDesktop`).
-  - `src/screens/` — `Today`, `Fuel` (segments via `/fuel/:view?`), `CookDay` (`/fuel/cook/:unit`),
+  - `src/screens/` — `Home` (day switcher + eaten log), `Fuel` (segments via `/fuel/:view?`), `CookDay` (`/fuel/cook/:unit`),
     `Train`/`Body` (placeholders), `More` (settings index), `SettingsSection` (`/more/:section`).
   - `src/theme/` — `tokens.css` (dark-first; light under `[data-theme=light]` and the OS query),
     `base.css` (all component classes), `ThemeProvider.jsx`. `src/ui/` — primitives + `Icon.jsx`
@@ -55,7 +55,7 @@ Path `/Users/sebas/Desktop/MealPrep/`.
 
 ## Documents (IndexedDB, all optional, merged over defaults)
 `settings` {targets{calories,carbPct,proteinPct,fatPct}, theme system|light|dark, accent orange|lime|sky,
-units imperial|metric, mealTimes{count:[hh:mm]}, notifications{…all false}} · `daygroups` {groups[[di]],
+units imperial|metric, notifications{…all false}} · `daygroups` {groups[[di]],
 excluded[di], mealCounts{di:n}, cookDays{leadDi:weekday}} · `plan` {days[7 | null], groups{di:{groupIndex}},
 eaten{"di-mi"}, servings{"di-mi"}, tags{"di-mi":"fresh"}, groceryChecked, cook{unitKey:{step,checked}},
 weekStart, targets} · `savedPlans[]` · `favorites{name}` · `stats{plans[]}` · `overrides` · `meta`.
@@ -76,7 +76,9 @@ else shake-planned in-zone, else least-bad + deficit shake.
   (Basil + Olive Oil + Parmesan + Garlic; never write pine nuts back). `Pesto Sauce`/`Cherry Sauce` rows are gone.
 - **Product** (all the user's calls): nutrition + Train + Body + Recover/Habits/Weekly Review around "the
   plan adapts" (lifting day → +20 g carbs; weight trend → next week's calories; off-plan meal → rest of
-  day re-solves). Phone: bottom tabs Today · Fuel · Train · Body · More; desktop: sidebar + wide dashboards.
+  day re-solves). Phone: bottom tabs Home · Fuel · Train · Body · More; desktop: sidebar + wide dashboards.
+  **No meal times or meal labels** (no "Meal 1", no breakfast/lunch/dinner) — meals are an unordered set per day.
+  Home logs (eaten marks, any day of the week); Fuel edits (swap/add/remove). No settings button on Home.
   Grouped days shift to lifting-day targets only when every day in the group lifts. Local-first, no
   accounts (sync later). iPhone first; later Apple Watch/HealthKit, Android/Health Connect, Garmin/Whoop/Oura.
   Train does planning AND logging and waits for his brief. Cater to ALL goals (cut/maintain/bulk/recomp).
@@ -165,10 +167,10 @@ else shake-planned in-zone, else least-bad + deficit shake.
 ## Open TODOs
 - Deploy: GitHub → Settings → Pages → Source = "GitHub Actions"; then install on the iPhone (Share →
   Add to Home Screen) and do a real-phone pass (`.wk-narrow` on rotate in the legacy app too).
-- Replace the Today placeholders (Train card; sleep/steps/trend tiles) when Body/Train exist.
+- Replace the Home placeholders (Train card; sleep/steps/trend tiles) when Body/Train exist.
 - Data backlog: 72 thin ingredients (<5 recipes), `Wild Rice` missing from the registry.
 - Grocery `appearances` doesn't show the Shawarma variant label.
 - Ingredient overrides have no editor (data pass-through only).
-- Milestone 2 per the user's build order: Body (weight log + trend + adaptive calories), Habits on Today,
+- Milestone 2 per the user's build order: Body (weight log + trend + adaptive calories), Habits on Home,
   off-plan meal logging that re-solves the rest of the day, per-weekday lifting toggle (+20 g carbs) until
   Train exists, Weekly Review. Then Capacitor iOS + HealthKit, then Train (after his brief), then public.

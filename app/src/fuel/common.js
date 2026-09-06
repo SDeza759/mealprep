@@ -29,13 +29,6 @@ export function macroLine(m, { kcal = true } = {}) {
 export function targetsLine(T) {
   return `${fmtInt(T.calories)} kcal · ${Math.round(T.carbGrams)} C · ${Math.round(T.proteinGrams)} P · ${Math.round(T.fatGrams)} F`;
 }
-export function fmtTime(hhmm) {
-  if (!hhmm) return '';
-  const [h, m] = hhmm.split(':').map(Number);
-  const suffix = h >= 12 ? 'pm' : 'am';
-  const hh = h % 12 === 0 ? 12 : h % 12;
-  return `${hh}:${String(m).padStart(2, '0')} ${suffix}`;
-}
 
 export function useIsDesktop() {
   const get = () => window.matchMedia('(min-width: 900px)').matches;

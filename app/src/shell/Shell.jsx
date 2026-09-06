@@ -4,7 +4,7 @@ import { Icon, Seg } from '../ui/index.jsx';
 import { useSettings } from '../fuel/hooks.js';
 
 const TABS = [
-  { to: '/', label: 'Today', icon: 'today', end: true },
+  { to: '/', label: 'Home', icon: 'home', end: true },
   { to: '/fuel', label: 'Fuel', icon: 'fuel' },
   { to: '/train', label: 'Train', icon: 'train' },
   { to: '/body', label: 'Body', icon: 'body' },
@@ -12,7 +12,7 @@ const TABS = [
 ];
 
 const SIDE = [
-  { to: '/', label: 'Today', icon: 'today', end: true },
+  { to: '/', label: 'Home', icon: 'home', end: true },
   { to: '/fuel', label: 'Fuel', icon: 'fuel' },
   { to: '/train', label: 'Train', icon: 'train' },
   { to: '/body', label: 'Body', icon: 'body' },
@@ -42,7 +42,6 @@ export default function Shell({ children }) {
           { value: 'light', label: 'Light', icon: 'sun' },
           { value: 'dark', label: 'Dark', icon: 'moon' },
         ]} />
-        <div className="sidebar-foot">Everything stays on this device.</div>
       </nav>
       <main className="shell-main">{children}</main>
       <nav className="tabbar" aria-label="Sections">

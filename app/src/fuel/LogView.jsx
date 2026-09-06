@@ -54,7 +54,7 @@ export default function LogView() {
     <>
       <Card className="stack">
         <div className="section-head"><div className="eyebrow">This week</div><div className="small muted">{eatenCount} meal{eatenCount === 1 ? '' : 's'} ticked</div></div>
-        <div className="small muted" style={{ lineHeight: 1.45 }}>Tick meals as you eat them (on Today or in the plan), then log them here. Logging records what you actually ate and clears the ticks.</div>
+        <div className="small muted" style={{ lineHeight: 1.45 }}>Tick meals as you eat them (on Home or in the plan), then log them here. Logging records what you actually ate and clears the ticks.</div>
         <Button variant="primary" block icon="clipboard" onClick={() => actions.logEaten()} disabled={!eatenCount}>Log {eatenCount || ''} eaten meal{eatenCount === 1 ? '' : 's'}</Button>
       </Card>
       {!derived ? (

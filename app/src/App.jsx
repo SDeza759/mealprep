@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ThemeProvider from './theme/ThemeProvider.jsx';
 import { ToastProvider } from './ui/index.jsx';
 import Shell from './shell/Shell.jsx';
-import Today from './screens/Today.jsx';
+import Home from './screens/Home.jsx';
 import Fuel from './screens/Fuel.jsx';
 import CookDay from './screens/CookDay.jsx';
 import Train from './screens/Train.jsx';
@@ -19,7 +19,7 @@ export default function App() {
         <ToastProvider>
           <Shell>
             <Routes>
-              <Route path="/" element={<Today />} />
+              <Route path="/" element={<Home />} />
               <Route path="/fuel/cook/:unit" element={<CookDay />} />
               <Route path="/fuel/:view?" element={<Fuel />} />
               <Route path="/train" element={<Train />} />

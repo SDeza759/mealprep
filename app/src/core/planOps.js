@@ -342,11 +342,3 @@ export const DAY_STRAIN = { high: 1100, low: 350 };
 export function strainedUnits(units, calories) {
   return units.filter((u) => { const per = calories / u.meals; return per > DAY_STRAIN.high || per < DAY_STRAIN.low; });
 }
-
-// Meal-time defaults: spread N meals across the day. Overridable per count in settings.
-const TIME_SPREADS = { 1: ['13:00'], 2: ['12:30', '19:00'], 3: ['08:00', '13:00', '19:00'], 4: ['08:00', '12:00', '16:00', '19:30'], 5: ['07:30', '10:30', '13:30', '16:30', '19:30'], 6: ['07:00', '09:30', '12:00', '14:30', '17:00', '19:30'] };
-export function mealTimesFor(count, overrides) {
-  const custom = overrides && overrides[count];
-  if (Array.isArray(custom) && custom.length === count) return custom;
-  return TIME_SPREADS[Math.max(1, Math.min(6, count))] || TIME_SPREADS[2];
-}

@@ -23,7 +23,7 @@ export default function SwapSheet({ target, onClose, onPick }) {
   const favCount = listed.filter((r) => favorites[r.name]).length;
   if (!target) return null;
   const title = target.isAdd ? 'Add a meal' : 'Swap recipe';
-  const subtitle = `${DAYS_NAMES[target.di]} · Meal ${target.mi + 1} · the day re-solves around your pick${target.isAdd ? ', rescaling every meal to fit' : ''}`;
+  const subtitle = `${DAYS_NAMES[target.di]} · the day re-solves around your pick${target.isAdd ? ', rescaling every meal to fit' : ''}`;
   return (
     <Sheet open onClose={onClose} title={title} subtitle={subtitle}>
       <Search value={q} onChange={setQ} placeholder="Search by name or cuisine" autoFocus />

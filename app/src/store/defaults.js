@@ -6,7 +6,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   theme: 'system',        // 'system' | 'light' | 'dark'
   accent: 'orange',       // 'orange' | 'lime' | 'sky'
   units: 'imperial',      // 'imperial' (lb · oz) | 'metric' (kg · g)
-  planDays: 7,            // how many days "Plan ahead" covers by default
+  planDays: 7,            // how many days Generate covers, from the selected day
   notifications: { enabled: false, mealReminders: false, proteinNudge: false, workoutReminder: false, weeklyReview: false },
 });
 

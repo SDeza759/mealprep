@@ -238,7 +238,7 @@ export function usePlanActions(weekStart) {
     [regenerate, swap, remove, dropShake, toggleEaten, setServing, toggleTag, clearWeek]);
 }
 
-// "Plan ahead": a rolling window of n days from any date, mapped onto the week documents it
+// Generate: a rolling window of n days from any date, mapped onto the week documents it
 // touches. Groups are weekday patterns, so a Thu–Sat group inside the window is still planned as
 // one shared plan; a group only partly inside plans just its in-window days. Recipes used earlier
 // in the same window seed later weeks so nothing repeats across the Sunday/Monday boundary.

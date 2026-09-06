@@ -10,7 +10,6 @@ import { weekStartOf, weekdayIndex, todayIso } from '../fuel/dates.js';
 import { fmtLongDate, weekDates, macroLine, groupColor, useIsDesktop } from '../fuel/common.js';
 import DayPager from '../fuel/DayPager.jsx';
 import MealDetailSheet from '../fuel/MealDetailSheet.jsx';
-import GenerateSheet from '../fuel/GenerateSheet.jsx';
 
 const BARS = [
   { key: 'carbs', tKey: 'carbGrams', label: 'Carbs', color: 'var(--carbs)' },
@@ -33,7 +32,6 @@ export default function Home() {
   const units = useUnits();
   const actions = usePlanActions(weekStart);
   const [detail, setDetail] = useState(null);
-  const [planOpen, setPlanOpen] = useState(false);
   const dates = useMemo(() => weekDates(weekStart), [weekStart]);
   const isToday = date === todayIso();
 
@@ -88,11 +86,7 @@ export default function Home() {
         {!isFree && !hasMeals && (
           <Card className="stack">
             <div className="strong">Nothing planned for {DAYS_NAMES[sel]}</div>
-            <div className="small muted">Plan from this day for the next few days, and Home fills in with your meals and what's left to eat.</div>
-            <div className="row-sm wrap">
-              <Button variant="primary" icon="refresh" onClick={() => setPlanOpen(true)}>Plan from here</Button>
-              <Button onClick={() => navigate('/fuel')}>Open Fuel</Button>
-            </div>
+            <Button variant="primary" icon="fuel" onClick={() => navigate('/fuel')}>Meal Plan</Button>
           </Card>
         )}
         {!isFree && day.meals.map((meal, mi) => {
@@ -135,7 +129,6 @@ export default function Home() {
       </div>
 
       {detail && planDoc && <MealDetailSheet planDoc={planDoc} di={detail.di} mi={detail.mi} onClose={() => setDetail(null)} actions={actions} readOnly />}
-      <GenerateSheet open={planOpen} onClose={() => setPlanOpen(false)} from={date} />
     </div>
   );
 }

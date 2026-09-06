@@ -59,7 +59,7 @@ export default function GroceryView() {
         <Stepper value={n} onChange={(v) => patchSettings({ planDays: v })} min={1} max={28} ariaLabel="Days covered" />
       </Card>
       {planned === 0 ? (
-        <Card><Empty title="Nothing planned in this range">Plan ahead from the day you're looking at, or move to a planned day, and the list builds itself.</Empty></Card>
+        <Card><Empty title="Nothing planned in this range">Generate from the day you're looking at under Plan, or move to a planned day, and the list builds itself.</Empty></Card>
       ) : (
         <>
           <div className="row between">

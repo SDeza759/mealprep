@@ -34,8 +34,8 @@ Path `/Users/sebas/Desktop/MealPrep/`.
   - `src/fuel/` — `hooks.js` (`useSettings/useTargets/useDayGroups/useUnits/usePlansDoc/useWeekPlan(weekStart)/
     usePlanActions(weekStart)/useLogEaten`, `recordEatenMeals`), `dates.js` (ISO date helpers, Monday keys),
     `selection.js` (session-level selected date shared by Home and Fuel), `DayPager.jsx` (±52 weeks, scroll-snap
-    pages of `WeekStrip.jsx`), `GenerateSheet.jsx` ("Plan ahead": from any date for N days; `useRangeActions`),
-    `grocery.js` (`groceryForWindow` over a rolling date window), `PlanView.jsx` (phone day cards; desktop table + rail),
+    pages of `WeekStrip.jsx`), `grocery.js` (`groceryForWindow` over a rolling date window), `PlanView.jsx`
+    (phone day cards incl. the inline empty-day generate card; desktop table + rail),
     `MealDetailSheet.jsx`, `SwapSheet.jsx`, `GroceryView.jsx`, `RecipesView.jsx` (+ ingredients table),
     `LogView.jsx`, `SavedPlans.jsx`, `common.js` (dates, group colours, `useIsDesktop`).
   - `src/screens/` — `Home` (day pager + eaten log), `Fuel` (segments via `/fuel/:view?`), `CookDay` (`/fuel/cook/:week/:unit`),
@@ -116,11 +116,14 @@ else shake-planned in-zone, else least-bad + deficit shake.
   `computeDay` in `planOps.js` adds the shake once; a removed shake sets `day.noShake` until regeneration.
   The shake's eaten slot is index `meals.length`.
 - **Manual re-solves anchor at recipe grams** (`baseMealIngredients`), never at the previous solution.
-- **Generation is a rolling window, never "the week"**: "Plan ahead" starts on any date (default the selected
-  day, i.e. today) for N days (`settings.planDays`, default 7, up to 28) and maps onto the week documents it
-  touches (`regenerateDays` with `expand:false`; recipes used earlier in the window seed later weeks). A group
+- **Generation is a rolling window, never "the week"**: Generate starts on the selected day (today by default)
+  for N days (`settings.planDays`, default 7, up to 28; stepper inline on the empty-day card and on Grocery) and
+  maps onto the week documents it touches (`regenerateDays` with `expand:false`; recipes used earlier in the
+  window seed later weeks). Replacing days that already hold meals asks first (`Confirm` in `Fuel.jsx`). A group
   only partly inside the window plans just its in-window days. "Repeat last plan" copies, per weekday, the most
   recent earlier day with meals. Storage stays per week, keyed by Monday (`plans.weeks`), a year back or ahead.
+- **No intermediate sheets for things a screen already shows** (user's call): generation is inline on Fuel, no
+  form. **Home stays simple**: the day, what's left, meals with an Eaten switch, and one "Meal Plan" link to Fuel.
 - **Group identity is scoped by generation batch**: `groups[di] = {groupIndex, gen}`; `planGroupMembers` only
   joins days with the same `gen`, so a window starting Tuesday never drags Monday's older plan along.
 - Day groups, free days and cook days are weekday patterns applied to whatever gets generated. Saved plans

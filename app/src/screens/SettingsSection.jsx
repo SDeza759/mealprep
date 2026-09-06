@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { DAYS_NAMES, RECIPES, INGREDIENT_REGISTRY } from '../core/index.js';
 import * as ops from '../core/planOps.js';
 import { Card, Button, Seg, Toggle, SRow, Stepper, Sheet, Confirm, Icon, cx, useToast } from '../ui/index.jsx';
-import { useSettings, useDayGroups, useUnits, useTargets, usePlanDoc } from '../fuel/hooks.js';
+import { useSettings, useDayGroups, useUnits, useTargets, usePlansDoc } from '../fuel/hooks.js';
 import { groupColor, targetsLine, useIsDesktop } from '../fuel/common.js';
 import { ACCENTS } from '../store/defaults.js';
 import { buildBackup, parseBackup, saveJson, backupFileName } from '../store/backup.js';
@@ -70,7 +70,8 @@ function Targets() {
 function Days() {
   const [dg, patch] = useDayGroups();
   const units = useUnits();
-  const [planDoc] = usePlanDoc();
+  const [plans] = usePlansDoc();
+  const hasPlans = Object.keys(plans.weeks || {}).length > 0;
   const [selected, setSelected] = useState(null);
   const [menu, setMenu] = useState(null);
   const groups = dg.groups;
@@ -148,7 +149,7 @@ function Days() {
         ))}
         {units.length === 0 && <div className="srow"><div className="srow-main"><div className="srow-val">Every day is free — nothing gets planned.</div></div></div>}
       </Card>
-      <div className="infobox">Cook day is when you prep a group's batch meals (fresh meals are cooked on the day). Changes here shape the next plan you generate{planDoc ? '; the current week keeps its groups until then' : ''}.</div>
+      <div className="infobox">Cook day is when you prep a group's batch meals (fresh meals are cooked on the day). Changes here shape the next week you generate{hasPlans ? '; weeks already planned keep their groups' : ''}.</div>
       <Sheet open={menu != null} onClose={() => setMenu(null)} title={menu != null ? DAYS_NAMES[menu] : ''}>
         {menu != null && (
           <div className="stack-sm">

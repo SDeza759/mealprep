@@ -20,7 +20,7 @@ export default function App() {
           <Shell>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/fuel/cook/:unit" element={<CookDay />} />
+              <Route path="/fuel/cook/:week/:unit" element={<CookDay />} />
               <Route path="/fuel/:view?" element={<Fuel />} />
               <Route path="/train" element={<Train />} />
               <Route path="/body" element={<Body />} />

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Sheet, Button, Icon, useToast } from '../ui/index.jsx';
-import { usePlanDoc, useSavedPlans, useSettings, useTargets } from './hooks.js';
+import { useWeekPlan, useSavedPlans, useSettings, useTargets, emptyWeek } from './hooks.js';
 import { densify } from '../core/planOps.js';
 
 // Saved plans: snapshot the current week under a name, load one back later. Loading restores the
 // plan's targets too (calories + macro split) so the week re-solves against what it was built for.
-export default function SavedPlans({ open, onClose }) {
-  const [planDoc, setPlanDoc] = usePlanDoc();
+export default function SavedPlans({ open, onClose, weekStart }) {
+  const [planDoc, setPlanDoc] = useWeekPlan(weekStart);
   const [saved, setSaved] = useSavedPlans();
   const [settings, patch] = useSettings();
   const T = useTargets();
@@ -27,14 +27,14 @@ export default function SavedPlans({ open, onClose }) {
   };
   const load = (entry) => {
     patch({ targets: { calories: entry.calories, carbPct: entry.carbPct, proteinPct: entry.proteinPct, fatPct: entry.fatPct } });
-    setPlanDoc({ days: densify(entry.plan || []), groups: entry.planGroups || {}, eaten: {}, servings: {}, tags: entry.tags || {}, createdAt: new Date().toISOString(), weekStart: entry.weekStart || null, targets: T });
+    setPlanDoc(emptyWeek(weekStart, T, { days: densify(entry.plan || []), groups: entry.planGroups || {}, tags: entry.tags || {} }));
     toast(`Loaded "${entry.name}".`, { kind: 'ok' });
     onClose();
   };
   const del = (n) => setSaved(saved.filter((p) => p.name !== n));
 
   return (
-    <Sheet open={open} onClose={onClose} title="Saved plans" subtitle="Snapshots of a week you want back later">
+    <Sheet open={open} onClose={onClose} title="Saved plans" subtitle="Snapshots of a week you want back later — loading one fills the week you are looking at">
       {planDoc && (
         <div className="row-sm">
           <input className="input" placeholder="Name this week…" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') save(); }} />

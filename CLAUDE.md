@@ -31,11 +31,13 @@ Path `/Users/sebas/Desktop/MealPrep/`.
     (in-memory docs, `setDoc`, `useDoc(key, STABLE_FALLBACK)`), `migrate.js` (old `mealprep_*`
     localStorage → docs, once per origin, never deletes), `backup.js` (export/import; also reads the
     old app's export), `defaults.js` (frozen defaults, `ACCENTS`).
-  - `src/fuel/` — `hooks.js` (`useSettings/useTargets/useDayGroups/useUnits/usePlanDoc/usePlanActions`,
-    `recordEatenMeals`), `PlanView.jsx` (phone week strip + day cards; desktop table + rail),
+  - `src/fuel/` — `hooks.js` (`useSettings/useTargets/useDayGroups/useUnits/usePlansDoc/useWeekPlan(weekStart)/
+    usePlanActions(weekStart)/useLogEaten`, `recordEatenMeals`), `dates.js` (ISO date helpers, Monday keys),
+    `selection.js` (session-level selected date shared by Home and Fuel), `DayPager.jsx` (±52 weeks, scroll-snap
+    pages of `WeekStrip.jsx`), `PlanView.jsx` (phone day cards; desktop table + rail),
     `MealDetailSheet.jsx`, `SwapSheet.jsx`, `GroceryView.jsx`, `RecipesView.jsx` (+ ingredients table),
     `LogView.jsx`, `SavedPlans.jsx`, `common.js` (dates, group colours, `useIsDesktop`).
-  - `src/screens/` — `Home` (day switcher + eaten log), `Fuel` (segments via `/fuel/:view?`), `CookDay` (`/fuel/cook/:unit`),
+  - `src/screens/` — `Home` (day pager + eaten log), `Fuel` (segments via `/fuel/:view?`), `CookDay` (`/fuel/cook/:week/:unit`),
     `Train`/`Body` (placeholders), `More` (settings index), `SettingsSection` (`/more/:section`).
   - `src/theme/` — `tokens.css` (dark-first; light under `[data-theme=light]` and the OS query),
     `base.css` (all component classes), `ThemeProvider.jsx`. `src/ui/` — primitives + `Icon.jsx`
@@ -56,9 +58,10 @@ Path `/Users/sebas/Desktop/MealPrep/`.
 ## Documents (IndexedDB, all optional, merged over defaults)
 `settings` {targets{calories,carbPct,proteinPct,fatPct}, theme system|light|dark, accent orange|lime|sky,
 units imperial|metric, notifications{…all false}} · `daygroups` {groups[[di]],
-excluded[di], mealCounts{di:n}, cookDays{leadDi:weekday}} · `plan` {days[7 | null], groups{di:{groupIndex}},
-eaten{"di-mi"}, servings{"di-mi"}, tags{"di-mi":"fresh"}, groceryChecked, cook{unitKey:{step,checked}},
-weekStart, targets} · `savedPlans[]` · `favorites{name}` · `stats{plans[]}` · `overrides` · `meta`.
+excluded[di], mealCounts{di:n}, cookDays{leadDi:weekday}} · `plans` {weeks{mondayIso: {days[7 | null],
+groups{di:{groupIndex}}, eaten{"di-mi"}, servings{"di-mi"}, tags{"di-mi":"fresh"}, groceryChecked,
+cook{unitKey:{step,checked}}, weekStart, targets}}} · `savedPlans[]` · `favorites{name}` · `stats{plans[]}` ·
+`overrides` · `meta`. `store.normalizeDocs()` upgrades the old single-week `plan` doc into `plans` (boot + import).
 Theme/accent are mirrored to localStorage `dialed:theme` / `dialed:accent` for the pre-paint script in `index.html`.
 Legacy localStorage keys (old app): `mealprep_daygroups`, `mealprep_plans`, `mealprep_overrides`,
 `mealprep_stats`, `mealprep_stats_last_view`, `mealprep_favorites`.
@@ -112,7 +115,10 @@ else shake-planned in-zone, else least-bad + deficit shake.
   `computeDay` in `planOps.js` adds the shake once; a removed shake sets `day.noShake` until regeneration.
   The shake's eaten slot is index `meals.length`.
 - **Manual re-solves anchor at recipe grams** (`baseMealIngredients`), never at the previous solution.
-- **The current plan is persisted** (`plan` doc). Saved plans restore targets too.
+- **Plans are per week, keyed by the week's Monday** (`plans.weeks`), any week a year back or ahead. Day groups,
+  free days and cook days are weekday patterns applied to whichever week is generated; each week keeps its own
+  `groups` snapshot. "Reuse the week of …" copies the latest earlier planned week. Saved plans load into the
+  week being viewed and restore targets too. Logging eaten meals sweeps every week's ticks into one stats entry.
 - **Cook Day = a unit's batch meals × servings, merged** (ingredients summed, steps in recipe order, timers
   parsed from step text, portion chips per day). Meals default to batch; `fresh` opts out.
 - **Units setting** (lb·oz / kg·g) changes grocery + cook amounts only; recipe tables stay grams.

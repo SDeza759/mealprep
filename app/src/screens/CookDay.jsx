@@ -4,7 +4,7 @@ import { DAYS_NAMES, RECIPE_COOKING_DATA } from '../core/index.js';
 import { fmtInt, groceryQty, spiceDisplay } from '../core/display.js';
 import * as ops from '../core/planOps.js';
 import { Card, Button, Icon, Empty, cx } from '../ui/index.jsx';
-import { usePlanDoc, useDayGroups, useUnits, useSettings } from '../fuel/hooks.js';
+import { useWeekPlan, useDayGroups, useUnits, useSettings } from '../fuel/hooks.js';
 import { macroLine, useIsDesktop } from '../fuel/common.js';
 
 // "8 min", "5-7 minutes", "about an hour" → minutes (the longest figure mentioned), or null.
@@ -26,11 +26,11 @@ function mmss(sec) { const s = Math.max(0, Math.round(sec)); return `${Math.floo
 // Cook Day merges a unit's batch meals into one prep flow: merged shopping-to-counter list,
 // every recipe's steps in order, then portioning. Fresh meals stay out.
 export default function CookDay() {
-  const { unit: unitKey } = useParams();
+  const { week: weekStart, unit: unitKey } = useParams();
   const navigate = useNavigate();
   const desktop = useIsDesktop();
   const units = useUnits();
-  const [planDoc, setPlanDoc] = usePlanDoc();
+  const [planDoc, setPlanDoc] = useWeekPlan(weekStart);
   const [dg] = useDayGroups();
   const [settings] = useSettings();
   const [timer, setTimer] = useState(null); // { endAt, total }

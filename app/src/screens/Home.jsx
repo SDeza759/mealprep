@@ -4,10 +4,13 @@ import { DAYS_NAMES } from '../core/index.js';
 import { fmtInt } from '../core/display.js';
 import * as ops from '../core/planOps.js';
 import { Card, Button, Bar, Ring, Icon, Tag, cx } from '../ui/index.jsx';
-import { usePlanDoc, useTargets, useDayGroups, useUnits, usePlanActions, todayIndex } from '../fuel/hooks.js';
-import { fmtLongDate, weekDates, macroLine, groupColor, useIsDesktop } from '../fuel/common.js';
-import WeekStrip from '../fuel/WeekStrip.jsx';
+import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanActions } from '../fuel/hooks.js';
+import { useSelectedDate } from '../fuel/selection.js';
+import { weekStartOf, weekdayIndex, todayIso } from '../fuel/dates.js';
+import { fmtLongDate, weekDates, macroLine, groupColor, weekLabel, useIsDesktop } from '../fuel/common.js';
+import DayPager from '../fuel/DayPager.jsx';
 import MealDetailSheet from '../fuel/MealDetailSheet.jsx';
+import { latestPlannedBefore } from '../fuel/PlanView.jsx';
 
 const BARS = [
   { key: 'carbs', tKey: 'carbGrams', label: 'Carbs', color: 'var(--carbs)' },
@@ -16,26 +19,30 @@ const BARS = [
 ];
 
 // Home = the day's log: what's left to eat, every planned meal with an Eaten switch. Opens on
-// today; any day of the week can be selected to catch up on marks or read its summary.
+// today; any day — a year back or ahead — can be selected to catch up on marks or read a summary.
 export default function Home() {
   const navigate = useNavigate();
   const desktop = useIsDesktop();
-  const [planDoc] = usePlanDoc();
+  const [date, setDate] = useSelectedDate();
+  const weekStart = weekStartOf(date);
+  const sel = weekdayIndex(date);
+  const [planDoc] = useWeekPlan(weekStart);
+  const [plans] = usePlansDoc();
   const T = useTargets();
   const [dg] = useDayGroups();
   const units = useUnits();
-  const actions = usePlanActions();
-  const today = todayIndex();
-  const [sel, setSel] = useState(today);
+  const actions = usePlanActions(weekStart);
   const [detail, setDetail] = useState(null);
-  const dates = useMemo(() => weekDates(planDoc && planDoc.weekStart), [planDoc]);
+  const dates = useMemo(() => weekDates(weekStart), [weekStart]);
+  const isToday = date === todayIso();
+  const copySource = latestPlannedBefore(plans, weekStart);
 
   const day = planDoc ? (planDoc.days[sel] || ops.EMPTY_DAY) : null;
   const isFree = dg.excluded.includes(sel);
   const unit = ops.unitForDay(units, sel);
   const cook = unit ? dg.cookDays[unit.lead] : null;
   const cookText = cook != null && cook !== '' ? ` · cooked ${ops.SHORT_DAYS[cook]}` : '';
-  const colorOf = (d) => { const e = planDoc && planDoc.groups && planDoc.groups[d]; return groupColor(e ? e.groupIndex : -1); };
+  const colorOf = (iso) => { const w = plans.weeks && plans.weeks[weekStartOf(iso)]; const e = w && w.groups && w.groups[weekdayIndex(iso)]; return groupColor(e ? e.groupIndex : -1); };
 
   // Eaten so far = ticked meals (+ the shake, ticked in the slot after the meals).
   const eaten = { calories: 0, carbs: 0, protein: 0, fat: 0 };
@@ -49,9 +56,9 @@ export default function Home() {
   return (
     <div className={cx('page', desktop && 'page-wide')} style={desktop ? { maxWidth: 760 } : undefined}>
       <div className="page-head">
-        <div className="page-head-l"><div className="eyebrow">{fmtLongDate(dates[sel])}{sel === today ? ' · today' : ''}</div><div className="num page-title">Home</div></div>
+        <div className="page-head-l"><div className="eyebrow">{fmtLongDate(dates[sel])}{isToday ? ' · today' : ''}</div><div className="num page-title">Home</div></div>
       </div>
-      <WeekStrip sel={sel} onSelect={setSel} dates={dates} excluded={dg.excluded} colorOf={colorOf} today={today} />
+      <DayPager date={date} onSelect={setDate} excluded={dg.excluded} colorOf={colorOf} />
 
       <Card className="stack">
         <div className="row" style={{ gap: 16 }}>
@@ -78,13 +85,16 @@ export default function Home() {
         <div className="eyebrow">Meals</div>
         {!planDoc && (
           <Card className="stack">
-            <div className="strong">No plan for this week yet</div>
+            <div className="strong">No plan for the {weekLabel(weekStart).replace('Week', 'week')} yet</div>
             <div className="small muted">Generate one and Home fills in with your meals and what's left to eat.</div>
-            <Button variant="primary" icon="refresh" onClick={() => { if (actions.generate()) navigate('/fuel'); }}>Generate this week</Button>
+            <div className="row-sm wrap">
+              <Button variant="primary" icon="refresh" onClick={() => actions.generate()}>Generate this week</Button>
+              {copySource && <Button icon="copy" onClick={() => actions.copyFrom(copySource)}>Reuse the {weekLabel(copySource).replace('Week', 'week')}</Button>}
+            </div>
           </Card>
         )}
         {planDoc && isFree && <Card><div className="small muted">Free day · nothing planned.</div></Card>}
-        {planDoc && !isFree && day.meals.length === 0 && <Card><div className="small muted">No meals planned for {DAYS_NAMES[sel]}. Add one or regenerate under Fuel.</div></Card>}
+        {planDoc && !isFree && day.meals.length === 0 && <Card><div className="small muted">No meals planned for {DAYS_NAMES[sel]}. <button type="button" className="link" onClick={() => navigate('/fuel')}>Add one or regenerate under Fuel.</button></div></Card>}
         {planDoc && !isFree && day.meals.map((meal, mi) => {
           const key = `${sel}-${mi}`;
           const isEaten = !!planDoc.eaten[key];

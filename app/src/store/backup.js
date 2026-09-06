@@ -7,7 +7,7 @@ export function buildBackup() {
   return { app: 'dialed', format: 1, exportedAt: new Date().toISOString(), docs: allDocs() };
 }
 
-const KNOWN_DOCS = ['settings', 'daygroups', 'plan', 'savedPlans', 'favorites', 'stats', 'overrides', 'habits', 'body', 'train', 'meta'];
+const KNOWN_DOCS = ['settings', 'daygroups', 'plan', 'plans', 'savedPlans', 'favorites', 'stats', 'overrides', 'habits', 'body', 'train', 'meta'];
 
 // Returns { source: 'dialed' | 'legacy', docs: {...} } or throws with a readable message.
 export function parseBackup(text) {
@@ -17,7 +17,7 @@ export function parseBackup(text) {
 
   if (data.app === 'dialed' && data.docs && typeof data.docs === 'object') {
     const docs = {};
-    for (const [k, v] of Object.entries(data.docs)) if (KNOWN_DOCS.includes(k) || true) docs[k] = v;
+    for (const [k, v] of Object.entries(data.docs)) if (KNOWN_DOCS.includes(k)) docs[k] = v;
     delete docs.meta;
     return { source: 'dialed', docs };
   }

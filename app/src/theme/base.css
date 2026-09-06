@@ -247,3 +247,9 @@ select.input { appearance: none; -webkit-appearance: none; padding-right: 32px; 
 .kpi .num { font-size: 24px; }
 .sticky-actions { position: sticky; bottom: calc(var(--tabbar) + env(safe-area-inset-bottom) + 8px); display: flex; gap: 8px; }
 @media (min-width: 900px) { .sticky-actions { bottom: 16px; } }
+
+/* ---------- day pager (weeks, swiped) ---------- */
+.pager { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.pager::-webkit-scrollbar { display: none; }
+.pager-page { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+.pager-head { display: flex; justify-content: space-between; align-items: center; min-height: 18px; }

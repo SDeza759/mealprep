@@ -16,7 +16,7 @@ export const DEFAULT_DAYGROUPS = Object.freeze({
   cookDays: {},      // { leadDayIndex: weekdayIndex } — which day you cook a unit's batch meals
 });
 
-export const DEFAULT_PLAN = null;
+export const DEFAULT_PLANS = Object.freeze({ weeks: {} }); // { [mondayIso]: week plan }
 export const DEFAULT_LIST = Object.freeze([]);
 export const DEFAULT_MAP = Object.freeze({});
 export const DEFAULT_STATS = Object.freeze({ plans: [] });

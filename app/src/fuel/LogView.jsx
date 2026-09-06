@@ -2,18 +2,16 @@ import { useMemo, useState } from 'react';
 import { RECIPES } from '../core/index.js';
 import { fmtInt, formatWeight, getUnitDisplay } from '../core/display.js';
 import { Card, Button, Bar, Icon, Empty, Confirm } from '../ui/index.jsx';
-import { usePlanDoc, useStats, usePlanActions, useSettings } from './hooks.js';
+import { useStats, useLogEaten, useSettings } from './hooks.js';
 
 // Eaten history. The old app's Stats view, trimmed to what earns its place on a phone.
 export default function LogView() {
-  const [planDoc] = usePlanDoc();
   const [stats, setStats] = useStats();
   const [settings] = useSettings();
-  const actions = usePlanActions();
+  const { count: eatenCount, logEaten } = useLogEaten();
   const [confirmDel, setConfirmDel] = useState(null);
   const [showAllRecipes, setShowAllRecipes] = useState(false);
 
-  const eatenCount = planDoc ? Object.keys(planDoc.eaten || {}).length : 0;
   const plans = stats.plans || [];
 
   const derived = useMemo(() => {
@@ -53,9 +51,9 @@ export default function LogView() {
   return (
     <>
       <Card className="stack">
-        <div className="section-head"><div className="eyebrow">This week</div><div className="small muted">{eatenCount} meal{eatenCount === 1 ? '' : 's'} ticked</div></div>
+        <div className="section-head"><div className="eyebrow">Ticked, not yet logged</div><div className="small muted">{eatenCount} meal{eatenCount === 1 ? '' : 's'}</div></div>
         <div className="small muted" style={{ lineHeight: 1.45 }}>Tick meals as you eat them (on Home or in the plan), then log them here. Logging records what you actually ate and clears the ticks.</div>
-        <Button variant="primary" block icon="clipboard" onClick={() => actions.logEaten()} disabled={!eatenCount}>Log {eatenCount || ''} eaten meal{eatenCount === 1 ? '' : 's'}</Button>
+        <Button variant="primary" block icon="clipboard" onClick={logEaten} disabled={!eatenCount}>Log {eatenCount || ''} eaten meal{eatenCount === 1 ? '' : 's'}</Button>
       </Card>
       {!derived ? (
         <Card><Empty title="Nothing logged yet">Your eaten history — recipes, cuisines, macro consistency — builds up here.</Empty></Card>

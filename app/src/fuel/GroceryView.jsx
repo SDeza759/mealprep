@@ -3,10 +3,15 @@ import { buildGroceryList, groceryToText } from '../core/index.js';
 import { groceryQty } from '../core/display.js';
 import * as ops from '../core/planOps.js';
 import { Card, Button, Icon, Empty, cx, useToast } from '../ui/index.jsx';
-import { usePlanDoc, useDayGroups, useSettings } from './hooks.js';
+import { useWeekPlan, useDayGroups, useSettings } from './hooks.js';
+import { useSelectedDate } from './selection.js';
+import { weekStartOf } from './dates.js';
+import { weekLabel } from './common.js';
 
 export default function GroceryView() {
-  const [planDoc, setPlanDoc] = usePlanDoc();
+  const [date] = useSelectedDate();
+  const weekStart = weekStartOf(date);
+  const [planDoc, setPlanDoc] = useWeekPlan(weekStart);
   const [dg] = useDayGroups();
   const [settings] = useSettings();
   const toast = useToast();
@@ -53,7 +58,7 @@ export default function GroceryView() {
     catch (err) { if (!err || err.name !== 'AbortError') toast('Sharing failed.', { kind: 'warn' }); }
   };
 
-  if (!planDoc) return <Card><Empty title="No plan yet">Generate a week under Plan and the grocery list builds itself.</Empty></Card>;
+  if (!planDoc) return <Card><Empty title={`No plan for the ${weekLabel(weekStart).replace('Week', 'week')}`}>Generate that week under Plan and its grocery list builds itself.</Empty></Card>;
 
   return (
     <>

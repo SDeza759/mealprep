@@ -3,6 +3,7 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import { readAll, write, remove, wipe } from './db.js';
 import { migrateLegacy } from './migrate.js';
+import { isoDate, mondayOf } from '../fuel/dates.js';
 
 const docs = new Map();
 const listeners = new Set();
@@ -38,6 +39,24 @@ export async function replaceAll(snapshot) {
   for (const k of keys) {
     if (k in snapshot) await write(k, snapshot[k]); else await remove(k);
   }
+  normalizeDocs();
+}
+
+// Shape upgrades for documents written by older builds. Runs after boot and after any import.
+// • `plan` (a single week) → `plans.weeks[<its Monday>]`.
+export function normalizeDocs() {
+  const legacy = docs.get('plan');
+  if (legacy && Array.isArray(legacy.days)) {
+    const cur = docs.get('plans');
+    const plans = { ...(cur || {}), weeks: { ...((cur && cur.weeks) || {}) } };
+    const ws = legacy.weekStart || isoDate(mondayOf(new Date()));
+    if (!plans.weeks[ws]) plans.weeks[ws] = { ...legacy, weekStart: ws };
+    docs.set('plans', plans);
+    docs.delete('plan');
+    emit();
+    write('plans', plans).catch(() => {});
+    remove('plan').catch(() => {});
+  }
 }
 
 export async function clearAll() {
@@ -56,6 +75,7 @@ export async function boot() {
     docs.set('meta', meta);
     await write('meta', meta);
   }
+  normalizeDocs();
   ready = true;
   emit();
 }

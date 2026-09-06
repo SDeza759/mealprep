@@ -5,7 +5,7 @@ import { DEFAULT_SETTINGS, DEFAULT_DAYGROUPS, DEFAULT_MAP, DEFAULT_LIST, DEFAULT
 import { useToast } from '../ui/index.jsx';
 import * as ops from '../core/planOps.js';
 import { DAYS_NAMES, round1 } from '../core/index.js';
-import { isoDate, todayIso, addDaysIso } from './dates.js';
+import { isoDate, todayIso, addDaysIso, weekStartOf, weekdayIndex } from './dates.js';
 
 export { isoDate, mondayOf, todayIndex } from './dates.js';
 
@@ -150,32 +150,15 @@ export function usePlanActions(weekStart) {
     toast(`${context} the day is outside the 95–105% zone: ${ops.zoneText(zone)}. Swap again or regenerate.`, { kind: 'warn' });
   }, [toast]);
 
-  const generate = useCallback(() => {
-    if (!T.pctValid) { toast('Macro percentages must add up to 100% — fix them in Settings › Targets.', { kind: 'warn' }); return false; }
-    const included = [0, 1, 2, 3, 4, 5, 6].filter((d) => !dg.excluded.includes(d));
-    if (!included.length) { toast('Every day is a free day — nothing to plan.', { kind: 'warn' }); return false; }
-    const { days, groups } = ops.generateWeek({ T, overrides, groups: dg.groups, excluded: dg.excluded, mealCounts: dg.mealCounts });
-    setWeek(emptyWeek(weekStart, T, { days, groups }));
-    return true;
-  }, [T, dg, overrides, setWeek, weekStart, toast]);
-
-  // Copy another week's meals into this one (eaten marks and servings start fresh).
-  const copyFrom = useCallback((sourceWeekStart) => {
-    const src = plans.weeks && plans.weeks[sourceWeekStart];
-    if (!src) return false;
-    setWeek(emptyWeek(weekStart, T, { days: JSON.parse(JSON.stringify(src.days)), groups: { ...(src.groups || {}) }, tags: { ...(src.tags || {}) }, copiedFrom: sourceWeekStart }));
-    return true;
-  }, [plans, setWeek, weekStart, T]);
-
   const regenerate = useCallback((selection) => {
     if (!T.pctValid) { toast('Macro percentages must add up to 100%.', { kind: 'warn' }); return; }
     setWeek((prev) => {
-      if (!prev) return prev;
-      const r = ops.regenerateDays({ days: prev.days, planGroups: prev.groups, selection, T, overrides, groups: dg.groups, excluded: dg.excluded, mealCounts: dg.mealCounts });
+      const base = prev || emptyWeek(weekStart, T);
+      const r = ops.regenerateDays({ days: base.days, planGroups: base.groups, selection, T, overrides, groups: dg.groups, excluded: dg.excluded, mealCounts: dg.mealCounts, gen: Date.now() });
       if (!r) return prev;
-      return { ...prev, days: r.days, groups: r.groups, eaten: ops.dropDayKeys(prev.eaten, r.regenSet), servings: ops.dropDayKeys(prev.servings, r.regenSet), tags: ops.dropDayKeys(prev.tags, r.regenSet) };
+      return { ...base, days: r.days, groups: r.groups, eaten: ops.dropDayKeys(base.eaten, r.regenSet), servings: ops.dropDayKeys(base.servings, r.regenSet), tags: ops.dropDayKeys(base.tags, r.regenSet) };
     });
-  }, [T, dg, overrides, setWeek, toast]);
+  }, [T, dg, overrides, setWeek, weekStart, toast]);
 
   const swap = useCallback((di, mi, recipe, isAdd = false) => {
     let zone = null;
@@ -251,8 +234,122 @@ export function usePlanActions(weekStart) {
 
   const clearWeek = useCallback(() => setWeek(null), [setWeek]);
 
-  return useMemo(() => ({ generate, copyFrom, regenerate, swap, remove, dropShake, toggleEaten, setServing, toggleTag, clearWeek }),
-    [generate, copyFrom, regenerate, swap, remove, dropShake, toggleEaten, setServing, toggleTag, clearWeek]);
+  return useMemo(() => ({ regenerate, swap, remove, dropShake, toggleEaten, setServing, toggleTag, clearWeek }),
+    [regenerate, swap, remove, dropShake, toggleEaten, setServing, toggleTag, clearWeek]);
+}
+
+// "Plan ahead": a rolling window of n days from any date, mapped onto the week documents it
+// touches. Groups are weekday patterns, so a Thu–Sat group inside the window is still planned as
+// one shared plan; a group only partly inside plans just its in-window days. Recipes used earlier
+// in the same window seed later weeks so nothing repeats across the Sunday/Monday boundary.
+export function useRangeActions() {
+  const [plans, setPlans] = usePlansDoc();
+  const [settings, patchSettings] = useSettings();
+  const T = useTargets();
+  const [dg] = useDayGroups();
+  const overrides = useOverrides();
+  const toast = useToast();
+
+  const byWeek = (fromIso, n) => {
+    const out = {};
+    for (let i = 0; i < n; i++) {
+      const iso = addDaysIso(fromIso, i);
+      const ws = weekStartOf(iso);
+      (out[ws] = out[ws] || []).push(weekdayIndex(iso));
+    }
+    return out;
+  };
+
+  const plannedCount = useCallback((fromIso, n) => {
+    let count = 0;
+    for (let i = 0; i < n; i++) {
+      const iso = addDaysIso(fromIso, i);
+      const wd = weekdayIndex(iso);
+      if (dg.excluded.includes(wd)) continue;
+      const w = plans.weeks && plans.weeks[weekStartOf(iso)];
+      const d = w && w.days[wd];
+      if (d && d.meals.length) count++;
+    }
+    return count;
+  }, [plans, dg]);
+
+  const generateRange = useCallback((fromIso, n) => {
+    if (!T.pctValid) { toast('Macro percentages must add up to 100% — fix them in Settings › Targets.', { kind: 'warn' }); return false; }
+    const gen = Date.now();
+    const seedNames = {};
+    let any = false;
+    const groupsByWeek = byWeek(fromIso, n);
+    setPlans((prev) => {
+      const weeks = { ...((prev && prev.weeks) || {}) };
+      Object.keys(groupsByWeek).sort().forEach((ws) => {
+        const cur = weeks[ws] || emptyWeek(ws, T);
+        const r = ops.regenerateDays({ days: cur.days, planGroups: cur.groups || {}, selection: groupsByWeek[ws], T, overrides, groups: dg.groups, excluded: dg.excluded, mealCounts: dg.mealCounts, expand: false, seedNames, gen });
+        if (!r) return;
+        any = true;
+        r.names.forEach((nm) => { seedNames[nm] = true; });
+        weeks[ws] = { ...cur, days: r.days, groups: r.groups, eaten: ops.dropDayKeys(cur.eaten, r.regenSet), servings: ops.dropDayKeys(cur.servings, r.regenSet), tags: ops.dropDayKeys(cur.tags, r.regenSet) };
+      });
+      return { ...prev, weeks };
+    });
+    if (!any) { toast('Every day in that range is a free day — nothing to plan.', { kind: 'warn' }); return false; }
+    if (n !== settings.planDays) patchSettings({ planDays: n });
+    return true;
+  }, [T, dg, overrides, setPlans, settings.planDays, patchSettings, toast]);
+
+  // Repeat the last plan: each day in the window copies the most recent earlier day with the same
+  // weekday that has meals (up to eight weeks back). Eaten marks and servings start fresh.
+  const copyPattern = useCallback((fromIso, n) => {
+    const gen = Date.now();
+    let copied = 0;
+    setPlans((prev) => {
+      const weeks = { ...((prev && prev.weeks) || {}) };
+      for (let i = 0; i < n; i++) {
+        const iso = addDaysIso(fromIso, i);
+        const wd = weekdayIndex(iso);
+        if (dg.excluded.includes(wd)) continue;
+        const ws = weekStartOf(iso);
+        let src = null, srcWeek = null;
+        for (let back = 1; back <= 8 && !src; back++) {
+          const sws = addDaysIso(ws, -7 * back);
+          const w = weeks[sws];
+          if (w && w.days[wd] && w.days[wd].meals.length) { src = w.days[wd]; srcWeek = w; }
+        }
+        if (!src) continue;
+        const cur = weeks[ws] || emptyWeek(ws, T);
+        const days = cur.days.slice();
+        days[wd] = { ...JSON.parse(JSON.stringify(src)), day: wd };
+        const gi = ops.findDayGroup(dg.groups, wd);
+        const groups = { ...(cur.groups || {}) };
+        if (gi !== -1) groups[wd] = { groupIndex: gi, gen }; else delete groups[wd];
+        const tags = ops.dropDayKeys(cur.tags, [wd]);
+        Object.keys(srcWeek.tags || {}).forEach((k) => { if (k.startsWith(`${wd}-`)) tags[k] = srcWeek.tags[k]; });
+        weeks[ws] = { ...cur, days, groups, tags, eaten: ops.dropDayKeys(cur.eaten, [wd]), servings: ops.dropDayKeys(cur.servings, [wd]) };
+        copied++;
+      }
+      return { ...prev, weeks };
+    });
+    if (copied) toast(`Copied ${copied} day${copied === 1 ? '' : 's'} from your last plan.`, { kind: 'ok' });
+    else toast('No earlier plan to copy from yet.', { kind: 'warn' });
+    if (copied && n !== settings.planDays) patchSettings({ planDays: n });
+    return copied;
+  }, [T, dg, setPlans, settings.planDays, patchSettings, toast]);
+
+  // Something to copy from: any earlier day with meals for a weekday in the window.
+  const canCopy = useCallback((fromIso, n) => {
+    for (let i = 0; i < n; i++) {
+      const iso = addDaysIso(fromIso, i);
+      const wd = weekdayIndex(iso);
+      if (dg.excluded.includes(wd)) continue;
+      const ws = weekStartOf(iso);
+      for (let back = 1; back <= 8; back++) {
+        const w = plans.weeks && plans.weeks[addDaysIso(ws, -7 * back)];
+        if (w && w.days[wd] && w.days[wd].meals.length) return true;
+      }
+    }
+    return false;
+  }, [plans, dg]);
+
+  return useMemo(() => ({ generateRange, copyPattern, plannedCount, canCopy }), [generateRange, copyPattern, plannedCount, canCopy]);
 }
 
 export { todayIso };

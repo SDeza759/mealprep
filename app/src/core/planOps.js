@@ -132,14 +132,16 @@ export function groupSnapshot(groups) {
 }
 
 // Days that share di's group in the CURRENT plan (includes di), based on the generation-time
-// snapshot so an edit propagates to exactly the days the user sees grouped.
+// snapshot so an edit propagates to exactly the days the user sees grouped. Days generated in
+// different batches (`gen`) are never members of each other, even with the same group index: a
+// window that starts on Tuesday plans Tue–Wed together and leaves Monday's older plan alone.
 export function planGroupMembers(days, planGroups, di) {
   const entry = planGroups && planGroups[di];
   if (!entry || !days) return [di];
   const members = [];
   for (let d = 0; d < 7; d++) {
     const e = planGroups[d];
-    if (e && e.groupIndex === entry.groupIndex && days[d]) members.push(d);
+    if (e && e.groupIndex === entry.groupIndex && (e.gen || null) === (entry.gen || null) && days[d]) members.push(d);
   }
   return members.length ? members : [di];
 }
@@ -287,11 +289,16 @@ export function generateWeek({ T, overrides, groups, excluded, mealCounts }) {
   return { days: densify(p), groups: groupSnapshot(groups) };
 }
 
-// Regenerate the given days (expanded to their full current groups), keeping every other day and
-// seeding the week tracker with the kept recipes so nothing is duplicated.
-export function regenerateDays({ days, planGroups, selection, T, overrides, groups, excluded, mealCounts }) {
+// Regenerate the given days of one week, keeping every other day. `expand` (the per-unit
+// "Regenerate Mon–Wed" button) widens the selection to full groups; a rolling window passes
+// expand:false so a group only partly inside the window plans just its in-window days (the
+// solver still treats them as one shared plan). Kept days and `seedNames` (recipes already used
+// elsewhere in the same generation) seed the week tracker so nothing is duplicated. `gen` tags
+// the regenerated days as one batch for planGroupMembers.
+export function regenerateDays({ days, planGroups, selection, T, overrides, groups, excluded, mealCounts, expand = true, seedNames = null, gen = null }) {
   const regenSet = new Set();
   selection.forEach((di) => {
+    if (!expand) { if (!excluded.includes(di)) regenSet.add(di); return; }
     const gi = findDayGroup(groups, di);
     const members = gi !== -1 ? groups[gi] : [di];
     members.forEach((d) => { if (!excluded.includes(d)) regenSet.add(d); });
@@ -299,7 +306,7 @@ export function regenerateDays({ days, planGroups, selection, T, overrides, grou
   if (regenSet.size === 0) return null;
   const excludedForCall = [];
   for (let d = 0; d < 7; d++) if (!regenSet.has(d)) excludedForCall.push(d);
-  const seed = { recipeNames: {} };
+  const seed = { recipeNames: { ...(seedNames || {}) } };
   days.forEach((day, di) => {
     if (!day || regenSet.has(di) || excluded.includes(di)) return;
     day.meals.forEach((meal) => { seed.recipeNames[meal.name] = true; });
@@ -307,11 +314,13 @@ export function regenerateDays({ days, planGroups, selection, T, overrides, grou
   const p = generatePlan(T.calories, T.carbGrams, T.proteinGrams, T.fatGrams, overrides || {}, groups, excludedForCall, seed, resolvedMealCounts(mealCounts));
   const nextDays = Array.from({ length: 7 }, (_, di) => (regenSet.has(di) ? p[di] || null : days[di] || null));
   const nextGroups = { ...(planGroups || {}) };
+  const names = [];
   regenSet.forEach((d) => {
     const gi = findDayGroup(groups, d);
-    if (gi !== -1) nextGroups[d] = { groupIndex: gi }; else delete nextGroups[d];
+    if (gi !== -1) nextGroups[d] = gen ? { groupIndex: gi, gen } : { groupIndex: gi }; else delete nextGroups[d];
+    if (nextDays[d]) nextDays[d].meals.forEach((m) => names.push(m.name));
   });
-  return { days: nextDays, groups: nextGroups, regenSet: Array.from(regenSet) };
+  return { days: nextDays, groups: nextGroups, regenSet: Array.from(regenSet), names };
 }
 
 // Weekly averages over days that actually hold meals (emptied and free days are skipped).

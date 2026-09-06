@@ -34,7 +34,8 @@ Path `/Users/sebas/Desktop/MealPrep/`.
   - `src/fuel/` — `hooks.js` (`useSettings/useTargets/useDayGroups/useUnits/usePlansDoc/useWeekPlan(weekStart)/
     usePlanActions(weekStart)/useLogEaten`, `recordEatenMeals`), `dates.js` (ISO date helpers, Monday keys),
     `selection.js` (session-level selected date shared by Home and Fuel), `DayPager.jsx` (±52 weeks, scroll-snap
-    pages of `WeekStrip.jsx`), `PlanView.jsx` (phone day cards; desktop table + rail),
+    pages of `WeekStrip.jsx`), `GenerateSheet.jsx` ("Plan ahead": from any date for N days; `useRangeActions`),
+    `grocery.js` (`groceryForWindow` over a rolling date window), `PlanView.jsx` (phone day cards; desktop table + rail),
     `MealDetailSheet.jsx`, `SwapSheet.jsx`, `GroceryView.jsx`, `RecipesView.jsx` (+ ingredients table),
     `LogView.jsx`, `SavedPlans.jsx`, `common.js` (dates, group colours, `useIsDesktop`).
   - `src/screens/` — `Home` (day pager + eaten log), `Fuel` (segments via `/fuel/:view?`), `CookDay` (`/fuel/cook/:week/:unit`),
@@ -57,10 +58,10 @@ Path `/Users/sebas/Desktop/MealPrep/`.
 
 ## Documents (IndexedDB, all optional, merged over defaults)
 `settings` {targets{calories,carbPct,proteinPct,fatPct}, theme system|light|dark, accent orange|lime|sky,
-units imperial|metric, notifications{…all false}} · `daygroups` {groups[[di]],
+units imperial|metric, planDays, notifications{…all false}} · `daygroups` {groups[[di]],
 excluded[di], mealCounts{di:n}, cookDays{leadDi:weekday}} · `plans` {weeks{mondayIso: {days[7 | null],
-groups{di:{groupIndex}}, eaten{"di-mi"}, servings{"di-mi"}, tags{"di-mi":"fresh"}, groceryChecked,
-cook{unitKey:{step,checked}}, weekStart, targets}}} · `savedPlans[]` · `favorites{name}` · `stats{plans[]}` ·
+groups{di:{groupIndex,gen}}, eaten{"di-mi"}, servings{"di-mi"}, tags{"di-mi":"fresh"},
+cook{unitKey:{step,checked}}, weekStart, targets}}, groceryChecked{name}} · `savedPlans[]` · `favorites{name}` · `stats{plans[]}` ·
 `overrides` · `meta`. `store.normalizeDocs()` upgrades the old single-week `plan` doc into `plans` (boot + import).
 Theme/accent are mirrored to localStorage `dialed:theme` / `dialed:accent` for the pre-paint script in `index.html`.
 Legacy localStorage keys (old app): `mealprep_daygroups`, `mealprep_plans`, `mealprep_overrides`,
@@ -115,10 +116,16 @@ else shake-planned in-zone, else least-bad + deficit shake.
   `computeDay` in `planOps.js` adds the shake once; a removed shake sets `day.noShake` until regeneration.
   The shake's eaten slot is index `meals.length`.
 - **Manual re-solves anchor at recipe grams** (`baseMealIngredients`), never at the previous solution.
-- **Plans are per week, keyed by the week's Monday** (`plans.weeks`), any week a year back or ahead. Day groups,
-  free days and cook days are weekday patterns applied to whichever week is generated; each week keeps its own
-  `groups` snapshot. "Reuse the week of …" copies the latest earlier planned week. Saved plans load into the
-  week being viewed and restore targets too. Logging eaten meals sweeps every week's ticks into one stats entry.
+- **Generation is a rolling window, never "the week"**: "Plan ahead" starts on any date (default the selected
+  day, i.e. today) for N days (`settings.planDays`, default 7, up to 28) and maps onto the week documents it
+  touches (`regenerateDays` with `expand:false`; recipes used earlier in the window seed later weeks). A group
+  only partly inside the window plans just its in-window days. "Repeat last plan" copies, per weekday, the most
+  recent earlier day with meals. Storage stays per week, keyed by Monday (`plans.weeks`), a year back or ahead.
+- **Group identity is scoped by generation batch**: `groups[di] = {groupIndex, gen}`; `planGroupMembers` only
+  joins days with the same `gen`, so a window starting Tuesday never drags Monday's older plan along.
+- Day groups, free days and cook days are weekday patterns applied to whatever gets generated. Saved plans
+  snapshot/load the calendar week being viewed. Logging eaten meals sweeps every week's ticks into one entry.
+  Grocery is the rolling window from the selected day (`planDays` long); check-offs live on `plans.groceryChecked`.
 - **Cook Day = a unit's batch meals × servings, merged** (ingredients summed, steps in recipe order, timers
   parsed from step text, portion chips per day). Meals default to batch; `fresh` opts out.
 - **Units setting** (lb·oz / kg·g) changes grocery + cook amounts only; recipe tables stay grams.

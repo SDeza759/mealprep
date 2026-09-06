@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DAYS_NAMES, buildGroceryList } from '../core/index.js';
+import { DAYS_NAMES } from '../core/index.js';
 import { fmtInt, groceryQty } from '../core/display.js';
 import * as ops from '../core/planOps.js';
-import { Card, Button, Bar, Stepper, Chip, Tag, Icon, Empty, Confirm, cx } from '../ui/index.jsx';
-import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanActions, useSettings } from './hooks.js';
+import { Card, Button, Bar, Stepper, Chip, Tag, Icon, Empty, cx } from '../ui/index.jsx';
+import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanActions, useSettings, emptyWeek } from './hooks.js';
 import { useSelectedDate } from './selection.js';
-import { weekStartOf, weekdayIndex, todayIso, isoDate } from './dates.js';
-import { groupColor, weekDates, fmtDayDate, macroLine, targetsLine, weekLabel, useIsDesktop } from './common.js';
+import { weekStartOf, weekdayIndex, todayIso, isoDate, parseIso } from './dates.js';
+import { groupColor, weekDates, fmtDayDate, fmtLongDate, fmtRange, macroLine, targetsLine, useIsDesktop } from './common.js';
+import { groceryForWindow } from './grocery.js';
 import DayPager from './DayPager.jsx';
 import MealDetailSheet from './MealDetailSheet.jsx';
 import SwapSheet from './SwapSheet.jsx';
 import SavedPlans from './SavedPlans.jsx';
+import GenerateSheet from './GenerateSheet.jsx';
 
 const MACRO_TILES = [
   { key: 'calories', tKey: 'calories', label: 'kcal', color: 'var(--accent)', unit: '' },
@@ -44,37 +46,13 @@ function DayTiles({ totals, T }) {
   );
 }
 
-// The most recent planned week before `weekStart`, for "reuse that week".
-export function latestPlannedBefore(plans, weekStart) {
-  const keys = Object.keys((plans && plans.weeks) || {}).filter((k) => k < weekStart && plans.weeks[k] && plans.weeks[k].days.some(Boolean)).sort();
-  return keys.length ? keys[keys.length - 1] : null;
-}
-
-export function GenerateCard({ weekStart, onGenerate, onCopy, copySource, T, units, dg }) {
-  const strained = ops.strainedUnits(units, T.calories);
-  return (
-    <Card className="stack-lg" style={{ padding: 20 }}>
-      <Empty title={`No plan for the ${weekLabel(weekStart).replace('Week', 'week')} yet`}>
-        <div className="stack-sm">
-          <div>Targets {targetsLine(T)}.</div>
-          <div>{units.length ? units.map((u) => `${u.name} · ${u.meals} meal${u.meals === 1 ? '' : 's'}`).join(' · ') : 'No days to plan'}{dg.excluded.length ? ` · free: ${dg.excluded.map((d) => ops.SHORT_DAYS[d]).join(', ')}` : ''}.</div>
-        </div>
-      </Empty>
-      {!T.pctValid && <div className="warnbox">Macro percentages add up to {T.pctSum}% — they must equal 100%. Fix them under Settings › Targets.</div>}
-      {strained.length > 0 && <div className="warnbox">{strained.map((u) => `${u.name} (${Math.round(T.calories / u.meals)} kcal/meal)`).join(', ')} — that's a lot to ask of one sitting, so those days may land off-target.</div>}
-      <Button variant="primary" block icon="refresh" onClick={onGenerate} disabled={!T.pctValid || !units.length}>Generate this week</Button>
-      {copySource && <Button block icon="copy" onClick={onCopy}>Reuse the {weekLabel(copySource).replace('Week', 'week')}</Button>}
-    </Card>
-  );
-}
-
 export default function PlanView() {
   const desktop = useIsDesktop();
   const navigate = useNavigate();
   const [date, setDate] = useSelectedDate();
   const weekStart = weekStartOf(date);
   const sel = weekdayIndex(date);
-  const [planDoc] = useWeekPlan(weekStart);
+  const [stored] = useWeekPlan(weekStart);
   const [plans] = usePlansDoc();
   const T = useTargets();
   const [dg] = useDayGroups();
@@ -83,11 +61,12 @@ export default function PlanView() {
   const [settings] = useSettings();
   const [detail, setDetail] = useState(null);
   const [swapTarget, setSwapTarget] = useState(null);
-  const [confirmRegen, setConfirmRegen] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const dates = useMemo(() => weekDates(weekStart), [weekStart]);
   const today = weekStart === weekStartOf(todayIso()) ? weekdayIndex(todayIso()) : -1;
-  const copySource = latestPlannedBefore(plans, weekStart);
+  // A week with no document renders as an empty week; actions create the document on first edit.
+  const planDoc = stored || emptyWeek(weekStart, T);
 
   // Which planning unit a day belongs to, its cook day and colour, from the plan-time snapshot.
   const meta = (di) => {
@@ -105,31 +84,18 @@ export default function PlanView() {
 
   useEffect(() => { if (detail && !(planDoc && planDoc.days[detail.di] && planDoc.days[detail.di].meals[detail.mi])) setDetail(null); }, [planDoc, detail]);
 
-  const onGenerate = () => { if (planDoc) setConfirmRegen(true); else actions.generate(); };
   const openSwap = (di, mi, isAdd = false) => { setDetail(null); setSwapTarget({ di, mi, isAdd }); };
   const pick = (recipe) => { if (!swapTarget) return; actions.swap(swapTarget.di, swapTarget.mi, recipe, swapTarget.isAdd); setSwapTarget(null); };
 
-  const pager = <DayPager date={date} onSelect={setDate} excluded={dg.excluded} colorOf={colorOf} label={false} />;
+  const pager = <DayPager date={date} onSelect={setDate} excluded={dg.excluded} colorOf={colorOf} />;
   const sheets = (
     <>
       {detail && <MealDetailSheet planDoc={planDoc} di={detail.di} mi={detail.mi} onClose={() => setDetail(null)} actions={actions} onSwap={(di, mi) => openSwap(di, mi)} />}
       {swapTarget && <SwapSheet target={swapTarget} onClose={() => setSwapTarget(null)} onPick={pick} />}
-      <Confirm open={confirmRegen} onClose={() => setConfirmRegen(false)} title={`Replace the plan for the ${weekLabel(weekStart).replace('Week', 'week')}?`} confirmLabel="Generate" onConfirm={() => actions.generate()}
-        body="A fresh week is generated from your targets and day groups. Eaten marks, servings and batch tags on that week are cleared." />
+      <GenerateSheet open={planOpen} onClose={() => setPlanOpen(false)} from={date} />
       <SavedPlans open={savedOpen} onClose={() => setSavedOpen(false)} weekStart={weekStart} />
     </>
   );
-
-  if (!planDoc) {
-    return (
-      <>
-        {pager}
-        <GenerateCard weekStart={weekStart} onGenerate={onGenerate} onCopy={() => actions.copyFrom(copySource)} copySource={copySource} T={T} units={units} dg={dg} />
-        <Button variant="ghost" block icon="bookmark" onClick={() => setSavedOpen(true)}>Saved plans</Button>
-        {sheets}
-      </>
-    );
-  }
 
   const days = planDoc.days;
 
@@ -167,6 +133,23 @@ export default function PlanView() {
     if (isFree) {
       return <Card><Empty title={`${DAYS_NAMES[di]} is a free day`}>Nothing planned. Change that under Settings › Day groups.</Empty></Card>;
     }
+    if (day.meals.length === 0) {
+      return (
+        <Card className="stack-lg" style={{ padding: 20 }}>
+          <Empty title={`Nothing planned for ${fmtLongDate(dates[di])}`}>
+            Plan from this day for the next {settings.planDays || 7} days, or repeat what you ate last time.
+            {isGroup ? ` ${unit.name} share one plan.` : ''}
+          </Empty>
+          <div className="stack-sm">
+            <Button variant="primary" block icon="refresh" onClick={() => setPlanOpen(true)}>Plan from here</Button>
+            <div className="row-sm">
+              <Button block size="sm" icon="plus" onClick={() => openSwap(di, 0, true)}>Add a meal</Button>
+              {unit && <Button block size="sm" icon="refresh" onClick={() => actions.regenerate([di])}>Just {isGroup ? unit.name : 'this day'}</Button>}
+            </div>
+          </div>
+        </Card>
+      );
+    }
     return (
       <>
         <Card className="stack">
@@ -178,9 +161,8 @@ export default function PlanView() {
             </div>
             <div className="small muted">Targets {targetsLine(T)}</div>
           </div>
-          {day.meals.length > 0 ? (<><DayTiles totals={day.totals} T={T} /><ZoneLine totals={day.totals} T={T} /></>) : (
-            <div className="infobox">No meals on this day — add one below or regenerate {unit ? unit.name : 'it'}.</div>
-          )}
+          <DayTiles totals={day.totals} T={T} />
+          <ZoneLine totals={day.totals} T={T} />
         </Card>
         {day.meals.map((meal, mi) => <MealCard key={`${di}-${mi}`} di={di} mi={mi} meal={meal} />)}
         {day.proteinShake && (
@@ -208,6 +190,7 @@ export default function PlanView() {
       <>
         {pager}
         <DayBody di={sel} />
+        <button type="button" className="link" style={{ alignSelf: 'flex-start' }} onClick={() => setSavedOpen(true)}>Saved plans</button>
         {sheets}
       </>
     );
@@ -220,9 +203,9 @@ export default function PlanView() {
   activeIdx.forEach((di) => { const day = days[di]; if (day && day.meals.length > maxMeals) maxMeals = day.meals.length; });
   const anyCanAdd = activeIdx.some((di) => !dg.excluded.includes(di) && (days[di] ? days[di].meals.length : 0) < ops.MAX_MEALS);
   const selUnit = meta(sel).unit;
-  const grocery = buildGroceryList(days.map((d, di) => (dg.excluded.includes(di) ? null : d)), planDoc.servings);
-  const topItems = grocery.flatMap((s) => s.items).filter((i) => !i.isSpice).sort((a, b) => b.totalGrams - a.totalGrams).slice(0, 4);
-  const itemCount = grocery.reduce((n, s) => n + s.items.length, 0);
+  const grocery = groceryForWindow(plans, dg, date, settings.planDays || 7);
+  const topItems = grocery.list.flatMap((s) => s.items).filter((i) => !i.isSpice).sort((a, b) => b.totalGrams - a.totalGrams).slice(0, 4);
+  const itemCount = grocery.list.reduce((n, s) => n + s.items.length, 0);
   const nextCook = units.find((u) => dg.cookDays[u.lead] != null && dg.cookDays[u.lead] !== '' && u.days.some((d) => days[d] && days[d].meals.some((_, mi) => planDoc.tags[`${d}-${mi}`] !== 'fresh')));
   const inZoneDays = activeIdx.filter((di) => days[di] && days[di].meals.length && !dg.excluded.includes(di) && ops.zoneCheck(days[di].totals, T).ok).length;
 
@@ -260,7 +243,7 @@ export default function PlanView() {
                         <>
                           {Array.from({ length: maxMeals }, (_, mi) => {
                             const meal = day.meals[mi];
-                            if (!meal) return <td key={mi}>{mi === 0 && day.meals.length === 0 ? <span className="muted small">No meals — add one or regenerate.</span> : null}</td>;
+                            if (!meal) return <td key={mi}>{mi === 0 && day.meals.length === 0 ? <button type="button" className="link" onClick={(e) => { e.stopPropagation(); setDate(isoDate(dates[di])); setPlanOpen(true); }}>Nothing planned · plan from here</button> : null}</td>;
                             const key = `${di}-${mi}`;
                             const fresh = planDoc.tags[key] === 'fresh';
                             return (
@@ -296,7 +279,7 @@ export default function PlanView() {
         <div className="row-sm wrap">
           {selUnit && <Button icon="refresh" onClick={() => actions.regenerate([sel])}>Regenerate {selUnit.days.length > 1 ? selUnit.name : ops.SHORT_DAYS[sel]}</Button>}
           <Button icon="bookmark" onClick={() => setSavedOpen(true)}>Saved plans</Button>
-          <Button icon="trash" onClick={() => actions.clearWeek()}>Clear this week</Button>
+          {stored && <Button icon="trash" onClick={() => actions.clearWeek()}>Clear this week</Button>}
         </div>
       </div>
       <div className="desk-rail">
@@ -313,7 +296,7 @@ export default function PlanView() {
           )}
         </Card>
         <Card className="stack" style={{ padding: 18 }}>
-          <div className="section-head"><div className="eyebrow">Grocery</div><div className="small muted">{itemCount} items · {grocery.length} aisles</div></div>
+          <div className="section-head"><div className="eyebrow">Grocery · {fmtRange(date, settings.planDays || 7)}</div><div className="small muted">{itemCount} items · {grocery.list.length} aisles</div></div>
           <div className="stack-sm" style={{ gap: 8 }}>
             {topItems.map((it) => <div key={it.name} className="row between"><span>{it.name}</span><span className="num" style={{ fontSize: 15 }}>{groceryQty(it, settings.units)}</span></div>)}
           </div>

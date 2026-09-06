@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Seg, Button, Confirm, cx } from '../ui/index.jsx';
+import { Seg, Button, cx } from '../ui/index.jsx';
+import GenerateSheet from '../fuel/GenerateSheet.jsx';
 import PlanView from '../fuel/PlanView.jsx';
 import GroceryView from '../fuel/GroceryView.jsx';
 import RecipesView from '../fuel/RecipesView.jsx';
 import LogView from '../fuel/LogView.jsx';
-import { useWeekPlan, usePlanActions } from '../fuel/hooks.js';
 import { useSelectedDate } from '../fuel/selection.js';
-import { weekStartOf } from '../fuel/dates.js';
-import { weekLabel, useIsDesktop } from '../fuel/common.js';
+import { parseIso, todayIso } from '../fuel/dates.js';
+import { fmtLongDate, useIsDesktop } from '../fuel/common.js';
 
 const VIEWS = [
   { value: 'plan', label: 'Plan', path: '/fuel' },
@@ -22,28 +22,24 @@ export default function Fuel() {
   const navigate = useNavigate();
   const desktop = useIsDesktop();
   const [date] = useSelectedDate();
-  const weekStart = weekStartOf(date);
-  const [week] = useWeekPlan(weekStart);
-  const actions = usePlanActions(weekStart);
-  const [confirm, setConfirm] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
   const current = VIEWS.some((v) => v.value === view) ? view : 'plan';
 
   return (
     <div className={cx('page', desktop && 'page-wide')}>
       <div className="page-head">
         <div className="page-head-l">
-          <div className="eyebrow">{weekLabel(weekStart, desktop)}</div>
+          <div className="eyebrow">{fmtLongDate(parseIso(date))}{date === todayIso() ? ' · today' : ''}</div>
           <div className="num page-title">Fuel</div>
         </div>
-        <Button variant="primary" size={desktop ? undefined : 'sm'} icon={desktop ? 'refresh' : undefined} onClick={() => (week ? setConfirm(true) : actions.generate())}>{desktop ? 'Generate week' : 'Generate'}</Button>
+        <Button variant="primary" size={desktop ? undefined : 'sm'} icon={desktop ? 'refresh' : undefined} onClick={() => setPlanOpen(true)}>Plan ahead</Button>
       </div>
       <Seg value={current} onChange={(v) => navigate(VIEWS.find((x) => x.value === v).path)} options={VIEWS} />
       {current === 'plan' && <PlanView />}
       {current === 'grocery' && <GroceryView />}
       {current === 'recipes' && <RecipesView />}
       {current === 'log' && <LogView />}
-      <Confirm open={confirm} onClose={() => setConfirm(false)} title={`Replace the plan for the ${weekLabel(weekStart).replace('Week', 'week')}?`} confirmLabel="Generate" onConfirm={() => actions.generate()}
-        body="A fresh week is generated from your targets and day groups. Eaten marks, servings and batch tags on that week are cleared." />
+      <GenerateSheet open={planOpen} onClose={() => setPlanOpen(false)} from={date} />
     </div>
   );
 }

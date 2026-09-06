@@ -26,6 +26,13 @@ export function weekLabel(weekStart, withEnd = false) {
   return `Week of ${fmtDayDate(ds[0])} – ${sameMonth ? ds[6].getDate() : fmtDayDate(ds[6])}`;
 }
 
+// "Sep 6 – Sep 12" for a window of n days from an ISO date.
+export function fmtRange(fromIso, n) {
+  const a = parseIso(fromIso), b = parseIso(fromIso);
+  b.setDate(b.getDate() + Math.max(0, n - 1));
+  return n <= 1 ? fmtDayDate(a) : `${fmtDayDate(a)} – ${fmtDayDate(b)}`;
+}
+
 export function macroLine(m, { kcal = true } = {}) {
   return `${kcal ? `${fmtInt(m.calories)} kcal · ` : ''}${Math.round(m.carbs)} C · ${Math.round(m.protein)} P · ${Math.round(m.fat)} F`;
 }

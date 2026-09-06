@@ -7,10 +7,10 @@ import { Card, Button, Bar, Ring, Icon, Tag, cx } from '../ui/index.jsx';
 import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanActions } from '../fuel/hooks.js';
 import { useSelectedDate } from '../fuel/selection.js';
 import { weekStartOf, weekdayIndex, todayIso } from '../fuel/dates.js';
-import { fmtLongDate, weekDates, macroLine, groupColor, weekLabel, useIsDesktop } from '../fuel/common.js';
+import { fmtLongDate, weekDates, macroLine, groupColor, useIsDesktop } from '../fuel/common.js';
 import DayPager from '../fuel/DayPager.jsx';
 import MealDetailSheet from '../fuel/MealDetailSheet.jsx';
-import { latestPlannedBefore } from '../fuel/PlanView.jsx';
+import GenerateSheet from '../fuel/GenerateSheet.jsx';
 
 const BARS = [
   { key: 'carbs', tKey: 'carbGrams', label: 'Carbs', color: 'var(--carbs)' },
@@ -33,11 +33,12 @@ export default function Home() {
   const units = useUnits();
   const actions = usePlanActions(weekStart);
   const [detail, setDetail] = useState(null);
+  const [planOpen, setPlanOpen] = useState(false);
   const dates = useMemo(() => weekDates(weekStart), [weekStart]);
   const isToday = date === todayIso();
-  const copySource = latestPlannedBefore(plans, weekStart);
 
-  const day = planDoc ? (planDoc.days[sel] || ops.EMPTY_DAY) : null;
+  const day = (planDoc && planDoc.days[sel]) || ops.EMPTY_DAY;
+  const hasMeals = day.meals.length > 0;
   const isFree = dg.excluded.includes(sel);
   const unit = ops.unitForDay(units, sel);
   const cook = unit ? dg.cookDays[unit.lead] : null;
@@ -46,12 +47,12 @@ export default function Home() {
 
   // Eaten so far = ticked meals (+ the shake, ticked in the slot after the meals).
   const eaten = { calories: 0, carbs: 0, protein: 0, fat: 0 };
-  if (day) {
+  if (planDoc) {
     day.meals.forEach((m, mi) => { if (planDoc.eaten[`${sel}-${mi}`]) { eaten.calories += m.totalMacros.calories; eaten.carbs += m.totalMacros.carbs; eaten.protein += m.totalMacros.protein; eaten.fat += m.totalMacros.fat; } });
     if (day.proteinShake && planDoc.eaten[`${sel}-${day.meals.length}`]) { eaten.calories += day.proteinShake.calories; eaten.carbs += day.proteinShake.carbs; eaten.protein += day.proteinShake.protein; eaten.fat += day.proteinShake.fat; }
   }
   const left = Math.max(0, T.calories - eaten.calories);
-  const shakeKey = day ? `${sel}-${day.meals.length}` : '';
+  const shakeKey = `${sel}-${day.meals.length}`;
 
   return (
     <div className={cx('page', desktop && 'page-wide')} style={desktop ? { maxWidth: 760 } : undefined}>
@@ -83,19 +84,18 @@ export default function Home() {
 
       <div className="stack">
         <div className="eyebrow">Meals</div>
-        {!planDoc && (
+        {isFree && <Card><div className="small muted">Free day · nothing planned.</div></Card>}
+        {!isFree && !hasMeals && (
           <Card className="stack">
-            <div className="strong">No plan for the {weekLabel(weekStart).replace('Week', 'week')} yet</div>
-            <div className="small muted">Generate one and Home fills in with your meals and what's left to eat.</div>
+            <div className="strong">Nothing planned for {DAYS_NAMES[sel]}</div>
+            <div className="small muted">Plan from this day for the next few days, and Home fills in with your meals and what's left to eat.</div>
             <div className="row-sm wrap">
-              <Button variant="primary" icon="refresh" onClick={() => actions.generate()}>Generate this week</Button>
-              {copySource && <Button icon="copy" onClick={() => actions.copyFrom(copySource)}>Reuse the {weekLabel(copySource).replace('Week', 'week')}</Button>}
+              <Button variant="primary" icon="refresh" onClick={() => setPlanOpen(true)}>Plan from here</Button>
+              <Button onClick={() => navigate('/fuel')}>Open Fuel</Button>
             </div>
           </Card>
         )}
-        {planDoc && isFree && <Card><div className="small muted">Free day · nothing planned.</div></Card>}
-        {planDoc && !isFree && day.meals.length === 0 && <Card><div className="small muted">No meals planned for {DAYS_NAMES[sel]}. <button type="button" className="link" onClick={() => navigate('/fuel')}>Add one or regenerate under Fuel.</button></div></Card>}
-        {planDoc && !isFree && day.meals.map((meal, mi) => {
+        {!isFree && day.meals.map((meal, mi) => {
           const key = `${sel}-${mi}`;
           const isEaten = !!planDoc.eaten[key];
           const isFresh = planDoc.tags[key] === 'fresh';
@@ -112,7 +112,7 @@ export default function Home() {
             </Card>
           );
         })}
-        {planDoc && !isFree && day.proteinShake && (
+        {!isFree && day.proteinShake && (
           <Card className="row">
             <Icon name="shake" size={22} style={{ color: 'var(--muted)' }} />
             <div className="grow stack-sm" style={{ gap: 3 }}>
@@ -134,7 +134,8 @@ export default function Home() {
         ))}
       </div>
 
-      {detail && <MealDetailSheet planDoc={planDoc} di={detail.di} mi={detail.mi} onClose={() => setDetail(null)} actions={actions} readOnly />}
+      {detail && planDoc && <MealDetailSheet planDoc={planDoc} di={detail.di} mi={detail.mi} onClose={() => setDetail(null)} actions={actions} readOnly />}
+      <GenerateSheet open={planOpen} onClose={() => setPlanOpen(false)} from={date} />
     </div>
   );
 }

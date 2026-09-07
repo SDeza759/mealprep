@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Seg, Button, Confirm, cx } from '../ui/index.jsx';
+import { Seg, Button, Confirm, Stepper, cx } from '../ui/index.jsx';
 import PlanView from '../fuel/PlanView.jsx';
 import GroceryView from '../fuel/GroceryView.jsx';
 import RecipesView from '../fuel/RecipesView.jsx';
@@ -23,7 +23,7 @@ export default function Fuel() {
   const navigate = useNavigate();
   const desktop = useIsDesktop();
   const [date, setDate] = useSelectedDate();
-  const [settings] = useSettings();
+  const [settings, patchSettings] = useSettings();
   const { generateRange, plannedCount } = useRangeActions();
   const [confirm, setConfirm] = useState(null); // { from, planned }
   const current = VIEWS.some((v) => v.value === view) ? view : 'plan';
@@ -53,7 +53,8 @@ export default function Fuel() {
         </div>
         <div className="row-sm">
           {current === 'plan' && hasBatch && <Button size={desktop ? undefined : 'sm'} icon="pot" onClick={() => navigate(`/fuel/cook/${weekStart}/${unit.key}`)}>Cook day</Button>}
-          <Button variant="primary" size={desktop ? undefined : 'sm'} icon={desktop ? 'refresh' : undefined} onClick={() => startGenerate(date)}>{desktop ? `Generate ${n} days` : 'Generate'}</Button>
+          {desktop && current === 'plan' && <Stepper value={n} onChange={(v) => patchSettings({ planDays: v })} min={1} max={28} ariaLabel="Days to plan" />}
+          <Button variant="primary" size={desktop ? undefined : 'sm'} icon={desktop ? 'refresh' : undefined} onClick={() => startGenerate(date)}>{desktop ? `Generate ${n} day${n === 1 ? '' : 's'}` : 'Generate'}</Button>
         </div>
       </div>
       <Seg value={current} onChange={(v) => navigate(VIEWS.find((x) => x.value === v).path)} options={VIEWS} />

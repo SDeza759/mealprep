@@ -7,7 +7,7 @@ import { Card, Button, Bar, Stepper, Chip, Tag, Icon, Empty, cx } from '../ui/in
 import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanActions, useRangeActions, useSettings, emptyWeek } from './hooks.js';
 import { useSelectedDate } from './selection.js';
 import { weekStartOf, weekdayIndex, todayIso, isoDate, parseIso } from './dates.js';
-import { groupColor, weekDates, fmtDayDate, fmtLongDate, fmtRange, macroLine, targetsLine, useIsDesktop } from './common.js';
+import { groupColor, weekDates, fmtDayDate, fmtLongDate, fmtRange, weekLabel, macroLine, targetsLine, useIsDesktop } from './common.js';
 import DayPager from './DayPager.jsx';
 import MealDetailSheet from './MealDetailSheet.jsx';
 import SwapSheet from './SwapSheet.jsx';
@@ -204,6 +204,30 @@ export default function PlanView({ onGenerate }) {
   activeIdx.forEach((di) => { const day = days[di]; if (day && day.meals.length > maxMeals) maxMeals = day.meals.length; });
   const anyCanAdd = activeIdx.some((di) => !dg.excluded.includes(di) && (days[di] ? days[di].meals.length : 0) < ops.MAX_MEALS);
   const selUnit = meta(sel).unit;
+  const weekEmpty = activeIdx.every((di) => !days[di] || days[di].meals.length === 0);
+  const selFree = dg.excluded.includes(sel);
+
+  // Nothing in this week yet: no zero tiles, no seven identical rows. Generate lives in the header;
+  // here only the actions that are not a copy of it.
+  if (weekEmpty) {
+    return (
+      <div className="desk-main">
+        {pager}
+        <Card style={{ padding: 28 }}>
+          <Empty title={`Nothing planned for ${weekLabel(weekStart, true).replace('Week of ', '')}`}>
+            Pick a start day above and press Generate — it covers {fmtRange(date, n)}.
+          </Empty>
+          <div className="row-sm" style={{ justifyContent: 'center', gap: 20, marginTop: 4 }}>
+            {canCopy(date, n) && <button type="button" className="link" onClick={() => copyPattern(date, n)}><Icon name="copy" size={14} stroke={2.25} />Repeat last plan</button>}
+            {!selFree && <button type="button" className="link" onClick={() => openSwap(sel, 0, true)}><Icon name="plus" size={14} stroke={2.25} />Add a meal by hand</button>}
+            <button type="button" className="link" onClick={() => setSavedOpen(true)}><Icon name="bookmark" size={14} stroke={2.25} />Saved plans</button>
+          </div>
+        </Card>
+        {sheets}
+      </div>
+    );
+  }
+
   return (
     <div className="desk-main">
         {pager}
@@ -237,7 +261,7 @@ export default function PlanView({ onGenerate }) {
                         <>
                           {Array.from({ length: maxMeals }, (_, mi) => {
                             const meal = day.meals[mi];
-                            if (!meal) return <td key={mi}>{mi === 0 && day.meals.length === 0 ? <button type="button" className="link" onClick={(e) => { e.stopPropagation(); onGenerate(isoDate(dates[di])); }}>Nothing planned · generate from here</button> : null}</td>;
+                            if (!meal) return <td key={mi}>{mi === 0 && day.meals.length === 0 ? <span className="muted">Nothing planned</span> : null}</td>;
                             const key = `${di}-${mi}`;
                             const fresh = planDoc.tags[key] === 'fresh';
                             return (

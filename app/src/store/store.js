@@ -59,10 +59,17 @@ export function normalizeDocs() {
   }
 }
 
+// Erase everything and become a brand-new install: a fresh `meta` is written so the next boot does
+// NOT re-import the old app's localStorage (it lives on the same origin and is never deleted), and
+// the theme/accent mirrors go so the pre-paint script stops painting the erased choices.
 export async function clearAll() {
   docs.clear();
   emit();
   await wipe();
+  const meta = { createdAt: new Date().toISOString(), erasedAt: new Date().toISOString() };
+  docs.set('meta', meta);
+  await write('meta', meta);
+  try { localStorage.removeItem('dialed:theme'); localStorage.removeItem('dialed:accent'); } catch { /* private mode */ }
 }
 
 export async function boot() {

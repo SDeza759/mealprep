@@ -268,14 +268,14 @@ function Backup() {
       </div>
       <Card pad={false} className="card-rows">
         <SRow title="Storage" value={`${storageMode() === 'idb' ? 'IndexedDB' : 'localStorage'} on this device · about ${size} KB`} />
-        <SRow title="Erase everything" value="Plans, logs, favorites and settings on this device" danger onClick={() => setConfirmClear(true)} />
+        <SRow title="Erase everything" value="Start over as a brand-new install on this device" danger onClick={() => setConfirmClear(true)} />
       </Card>
       <Sheet open={!!pending} onClose={() => setPending(null)} title="Import this file?" subtitle={pending ? `${pending.source === 'dialed' ? 'Dialed backup' : 'Old app export'} · ${Object.keys(pending.docs).join(', ')}` : ''}
         footer={<><Button block onClick={() => apply('merge')}>Add to mine</Button><Button block variant="primary" onClick={() => apply('replace')}>Replace mine</Button></>}>
         <div className="small muted" style={{ lineHeight: 1.45 }}><span className="strong">Replace</span> overwrites the sections in the file and keeps the rest. <span className="strong">Add</span> also overwrites those sections — use it when the file only holds part of your data (for example just the old app's stats).</div>
       </Sheet>
       <Confirm open={confirmClear} onClose={() => setConfirmClear(false)} title="Erase everything on this device?" confirmLabel="Erase" danger onConfirm={wipe}
-        body="This deletes every plan, log, favorite and setting stored by Dialed on this device. Export a backup first if you want any of it back." />
+        body="This deletes every plan, log, favorite and setting stored by Dialed on this device and reloads as a first launch. The old app's data is not picked up again — export a backup first if you want any of it back." />
     </>
   );
 }

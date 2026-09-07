@@ -28,7 +28,8 @@ Path `/Users/sebas/Desktop/MealPrep/`.
     swap/add/remove/removeShake, zone check, planning units). `src/core/display.js` —
     `MEAT_INGREDIENTS`, unit/spice display, `groceryQty(item, units)`.
   - `src/store/` — `db.js` (IndexedDB `dialed`/`docs` via idb; localStorage fallback), `store.js`
-    (in-memory docs, `setDoc`, `useDoc(key, STABLE_FALLBACK)`), `migrate.js` (old `mealprep_*`
+    (in-memory docs, `setDoc`, `useDoc(key, STABLE_FALLBACK)`; `clearAll()` writes a fresh `meta` so the legacy
+    migration never re-runs after an erase, and clears the theme/accent mirrors), `migrate.js` (old `mealprep_*`
     localStorage → docs, once per origin, never deletes), `backup.js` (export/import; also reads the
     old app's export), `defaults.js` (frozen defaults, `ACCENTS`).
   - `src/fuel/` — `hooks.js` (`useSettings/useTargets/useDayGroups/useUnits/usePlansDoc/useWeekPlan(weekStart)/
@@ -122,6 +123,8 @@ else shake-planned in-zone, else least-bad + deficit shake.
   window seed later weeks). Replacing days that already hold meals asks first (`Confirm` in `Fuel.jsx`). A group
   only partly inside the window plans just its in-window days. "Repeat last plan" copies, per weekday, the most
   recent earlier day with meals. Storage stays per week, keyed by Monday (`plans.weeks`), a year back or ahead.
+- **Review as a new user**: `?fresh` on any URL (`FreshStart` in `App.jsx`) asks, erases everything and reloads as a
+  first launch — same as More › Backup › Erase everything. A private window is the zero-setup alternative.
 - **No intermediate sheets for things a screen already shows** (user's call): generation is inline on Fuel, no
   form. **Home stays simple**: the day, what's left, meals with an Eaten switch, and one "Meal Plan" link to Fuel.
 - **Group identity is scoped by generation batch**: `groups[di] = {groupIndex, gen}`; `planGroupMembers` only

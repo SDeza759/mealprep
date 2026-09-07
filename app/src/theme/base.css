@@ -253,3 +253,21 @@ select.input { appearance: none; -webkit-appearance: none; padding-right: 32px; 
 .pager::-webkit-scrollbar { display: none; }
 .pager-page { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
 .pager-head { display: flex; justify-content: space-between; align-items: center; min-height: 18px; }
+
+/* ---------- Fuel › Plan: Week | Month toggle and the month grid (desktop) ---------- */
+.seg.sm { padding: 3px; border-radius: 10px; gap: 2px; }
+.seg.sm > button { height: 26px; font-size: 12px; padding: 0 12px; border-radius: 8px; flex: 0 0 auto; }
+.month { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.month-dow { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-align: center; padding: 6px 0 2px; }
+.mcell { min-height: 112px; min-width: 0; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; text-align: left; }
+.mcell:hover { background: var(--surface2); }
+.mcell.range { background: var(--accent-soft); }
+.mcell.on { border-color: var(--accent); }
+.mcell.out { opacity: 0.45; }
+.mcell.free { background: transparent; border-style: dashed; }
+.mcell-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.mcell-num { font-size: 15px; color: var(--muted); }
+.mcell.today .mcell-num { color: var(--accent-text); }
+.mcell.on .mcell-num, .mcell-meal + .mcell-foot { color: var(--fg); }
+.mcell-meal { font-size: 12px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mcell-foot { margin-top: auto; padding-top: 4px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }

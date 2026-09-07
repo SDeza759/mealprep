@@ -35,7 +35,8 @@ Path `/Users/sebas/Desktop/MealPrep/`.
   - `src/fuel/` — `hooks.js` (`useSettings/useTargets/useDayGroups/useUnits/usePlansDoc/useWeekPlan(weekStart)/
     usePlanActions(weekStart)/useLogEaten`, `recordEatenMeals`), `dates.js` (ISO date helpers, Monday keys),
     `selection.js` (session-level selected date shared by Home and Fuel), `DayPager.jsx` (±52 weeks, scroll-snap
-    pages of `WeekStrip.jsx`), `grocery.js` (`groceryForWindow` over a rolling date window), `PlanView.jsx`
+    pages of `WeekStrip.jsx`; `extra` slot in its head row), `MonthGrid.jsx` (desktop month view: 42-cell Monday-first
+    grid, read-only, exports `monthOf`/`monthCells`), `grocery.js` (`groceryForWindow` over a rolling date window), `PlanView.jsx`
     (phone day cards incl. the inline empty-day generate card; desktop table + rail),
     `MealDetailSheet.jsx`, `SwapSheet.jsx`, `GroceryView.jsx`, `RecipesView.jsx` (+ ingredients table),
     `LogView.jsx`, `SavedPlans.jsx`, `common.js` (dates, group colours, `useIsDesktop`).
@@ -59,7 +60,7 @@ Path `/Users/sebas/Desktop/MealPrep/`.
 
 ## Documents (IndexedDB, all optional, merged over defaults)
 `settings` {targets{calories,carbPct,proteinPct,fatPct}, theme system|light|dark, accent orange|lime|sky,
-units imperial|metric, planDays, notifications{…all false}} · `daygroups` {groups[[di]],
+units imperial|metric, planDays, planView week|month, notifications{…all false}} · `daygroups` {groups[[di]],
 excluded[di], mealCounts{di:n}, cookDays{leadDi:weekday}} · `plans` {weeks{mondayIso: {days[7 | null],
 groups{di:{groupIndex,gen}}, eaten{"di-mi"}, servings{"di-mi"}, tags{"di-mi":"fresh"},
 cook{unitKey:{step,checked}}, weekStart, targets}}, groceryChecked{name}} · `savedPlans[]` · `favorites{name}` · `stats{plans[]}` ·
@@ -125,6 +126,10 @@ else shake-planned in-zone, else least-bad + deficit shake.
   recent earlier day with meals. Storage stays per week, keyed by Monday (`plans.weeks`), a year back or ahead.
 - **Review as a new user**: `?fresh` on any URL (`FreshStart` in `App.jsx`) asks, erases everything and reloads as a
   first launch — same as More › Backup › Erase everything. A private window is the zero-setup alternative.
+- **Fuel › Plan on desktop is Week | Month** (`settings.planView`, toggle in the strip's head row). The month grid is
+  read-only: click selects the day (header, Generate, Cook day follow), double-click opens its week, the N days Generate
+  would cover are tinted; edits (swap/add/tags/servings) stay in the table and day cards. Tiles average the visible
+  month's planned days and hide at zero, like the empty-week card replaces the table when the week has no meals.
 - **No intermediate sheets for things a screen already shows** (user's call): generation is inline on Fuel, no
   form. **Home stays simple**: the day, what's left, meals with an Eaten switch, and one "Meal Plan" link to Fuel.
 - **Group identity is scoped by generation batch**: `groups[di] = {groupIndex, gen}`; `planGroupMembers` only

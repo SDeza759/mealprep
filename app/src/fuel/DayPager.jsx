@@ -17,7 +17,7 @@ const Page = memo(function Page({ week, selIdx, todayIdx, excluded, colorOf, onP
   );
 });
 
-export default function DayPager({ date, onSelect, excluded, colorOf, label = true }) {
+export default function DayPager({ date, onSelect, excluded, colorOf, label = true, extra = null }) {
   const desktop = useIsDesktop();
   const ref = useRef(null);
   const weeks = useMemo(() => {
@@ -65,10 +65,13 @@ export default function DayPager({ date, onSelect, excluded, colorOf, label = tr
   const away = date !== today;
   return (
     <div className="stack-sm">
-      {(label || away) && (
+      {(label || away || extra) && (
         <div className="pager-head">
           <span className="small muted">{label ? weekLabel(visibleWeek, true) : ''}</span>
-          {away && <button type="button" className="link" onClick={() => onSelect(today)}>Today</button>}
+          <div className="row-sm" style={{ gap: 12 }}>
+            {away && <button type="button" className="link" onClick={() => onSelect(today)}>Today</button>}
+            {extra}
+          </div>
         </div>
       )}
       <div className="row-sm" style={{ gap: 4 }}>

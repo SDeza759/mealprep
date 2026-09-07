@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DAYS_NAMES } from '../core/index.js';
 import { fmtInt } from '../core/display.js';
 import * as ops from '../core/planOps.js';
-import { Card, Button, Bar, Stepper, Chip, Tag, Icon, Empty, cx } from '../ui/index.jsx';
+import { Card, Button, Bar, Stepper, Chip, Tag, Icon, Empty, Seg, cx } from '../ui/index.jsx';
 import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanActions, useRangeActions, useSettings, emptyWeek } from './hooks.js';
 import { useSelectedDate } from './selection.js';
 import { weekStartOf, weekdayIndex, todayIso, isoDate, parseIso } from './dates.js';
@@ -12,6 +12,7 @@ import DayPager from './DayPager.jsx';
 import MealDetailSheet from './MealDetailSheet.jsx';
 import SwapSheet from './SwapSheet.jsx';
 import SavedPlans from './SavedPlans.jsx';
+import MonthGrid, { monthOf, monthCells } from './MonthGrid.jsx';
 
 const MACRO_TILES = [
   { key: 'calories', tKey: 'calories', label: 'kcal', color: 'var(--accent)', unit: '' },
@@ -62,6 +63,11 @@ export default function PlanView({ onGenerate }) {
   const [swapTarget, setSwapTarget] = useState(null);
   const [savedOpen, setSavedOpen] = useState(false);
   const n = settings.planDays || 7;
+  // Desktop Week | Month toggle (persisted). The visible month follows the selection when it moves.
+  const view = desktop && settings.planView === 'month' ? 'month' : 'week';
+  const [month, setMonth] = useState(() => monthOf(date));
+  useEffect(() => { setMonth((c) => { const m = monthOf(date); return c.y === m.y && c.m === m.m ? c : m; }); }, [date]);
+  const viewSeg = desktop ? <Seg className="sm" value={view} onChange={(v) => patchSettings({ planView: v })} options={[{ value: 'week', label: 'Week', icon: 'list' }, { value: 'month', label: 'Month', icon: 'calendar' }]} /> : null;
   const dates = useMemo(() => weekDates(weekStart), [weekStart]);
   const today = weekStart === weekStartOf(todayIso()) ? weekdayIndex(todayIso()) : -1;
   // A week with no document renders as an empty week; actions create the document on first edit.
@@ -86,7 +92,7 @@ export default function PlanView({ onGenerate }) {
   const openSwap = (di, mi, isAdd = false) => { setDetail(null); setSwapTarget({ di, mi, isAdd }); };
   const pick = (recipe) => { if (!swapTarget) return; actions.swap(swapTarget.di, swapTarget.mi, recipe, swapTarget.isAdd); setSwapTarget(null); };
 
-  const pager = <DayPager date={date} onSelect={setDate} excluded={dg.excluded} colorOf={colorOf} />;
+  const pager = <DayPager date={date} onSelect={setDate} excluded={dg.excluded} colorOf={colorOf} extra={viewSeg} />;
   const sheets = (
     <>
       {detail && <MealDetailSheet planDoc={planDoc} di={detail.di} mi={detail.mi} onClose={() => setDetail(null)} actions={actions} onSwap={(di, mi) => openSwap(di, mi)} />}
@@ -198,6 +204,38 @@ export default function PlanView({ onGenerate }) {
   }
 
   // ---------- desktop ----------
+  const tiles = (s) => (
+    <div className="grid-4">
+      {MACRO_TILES.map((m) => (
+        <Card key={m.key} className="stack-sm" style={{ gap: 8 }}>
+          <div className="eyebrow" style={{ fontSize: 10 }}>Avg {m.key === 'calories' ? 'calories' : m.key}</div>
+          <div className="row baseline" style={{ gap: 6 }}>
+            <div className="num nowrap" style={{ fontSize: 28 }}>{fmtInt(s.avg[m.key])}{m.unit}</div>
+            <div className="small muted">{s.pcts ? `${Math.round(s.pcts[m.key])}% of ${fmtInt(T[m.tKey])}` : '—'}{m.key === 'calories' ? ` · ${s.n} day${s.n === 1 ? '' : 's'}` : ''}</div>
+          </div>
+          <Bar value={s.avg[m.key]} target={T[m.tKey]} color={m.color} thin />
+        </Card>
+      ))}
+    </div>
+  );
+
+  if (view === 'month') {
+    // Tiles average the planned days inside the visible month (free weekdays skipped).
+    const plannedDays = monthCells(month.y, month.m)
+      .filter((d) => d.getMonth() === month.m)
+      .map((d) => { const iso = isoDate(d); const di = weekdayIndex(iso); if (dg.excluded.includes(di)) return null; const wk = plans.weeks && plans.weeks[weekStartOf(iso)]; return wk && wk.days ? wk.days[di] : null; })
+      .filter((d) => d && d.meals.length > 0);
+    const ms = ops.weeklySummary(plannedDays, [], T);
+    return (
+      <div className="desk-main">
+        <MonthGrid date={date} onSelect={setDate} onOpenWeek={(iso) => { setDate(iso); patchSettings({ planView: 'week' }); }}
+          month={month} onMonth={setMonth} plans={plans} excluded={dg.excluded} T={T} n={n} head={viewSeg} />
+        {ms.n > 0 && tiles(ms)}
+        {sheets}
+      </div>
+    );
+  }
+
   const summary = ops.weeklySummary(days, dg.excluded, T);
   const activeIdx = [0, 1, 2, 3, 4, 5, 6];
   let maxMeals = 1;
@@ -229,18 +267,7 @@ export default function PlanView({ onGenerate }) {
   return (
     <div className="desk-main">
         {pager}
-        <div className="grid-4">
-          {MACRO_TILES.map((m) => (
-            <Card key={m.key} className="stack-sm" style={{ gap: 8 }}>
-              <div className="eyebrow" style={{ fontSize: 10 }}>Avg {m.key === 'calories' ? 'calories' : m.key}</div>
-              <div className="row baseline" style={{ gap: 6 }}>
-                <div className="num nowrap" style={{ fontSize: 28 }}>{fmtInt(summary.avg[m.key])}{m.unit}</div>
-                <div className="small muted">{summary.pcts ? `${Math.round(summary.pcts[m.key])}% of ${fmtInt(T[m.tKey])}` : '—'}{m.key === 'calories' ? ` · ${summary.n} day${summary.n === 1 ? '' : 's'}` : ''}</div>
-              </div>
-              <Bar value={summary.avg[m.key]} target={T[m.tKey]} color={m.color} thin />
-            </Card>
-          ))}
-        </div>
+        {tiles(summary)}
         <Card pad={false} style={{ overflow: 'hidden' }}>
           <div className="table-wrap">
             <table className="table">

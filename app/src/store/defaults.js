@@ -7,6 +7,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   accent: 'orange',       // 'orange' | 'lime' | 'sky'
   units: 'imperial',      // 'imperial' (lb · oz) | 'metric' (kg · g)
   planDays: 7,            // how many days Generate covers, from the selected day
+  planView: 'week',       // Fuel › Plan on desktop: 'week' (table) | 'month' (calendar grid)
   notifications: { enabled: false, mealReminders: false, proteinNudge: false, workoutReminder: false, weeklyReview: false },
 });
 

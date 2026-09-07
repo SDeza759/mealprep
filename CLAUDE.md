@@ -35,8 +35,9 @@ Path `/Users/sebas/Desktop/MealPrep/`.
   - `src/fuel/` — `hooks.js` (`useSettings/useTargets/useDayGroups/useUnits/usePlansDoc/useWeekPlan(weekStart)/
     usePlanActions(weekStart)/useLogEaten`, `recordEatenMeals`), `dates.js` (ISO date helpers, Monday keys),
     `selection.js` (session-level selected date shared by Home and Fuel), `DayPager.jsx` (±52 weeks, scroll-snap
-    pages of `WeekStrip.jsx`; `extra` slot in its head row), `MonthGrid.jsx` (desktop month view: 42-cell Monday-first
-    grid, read-only, exports `monthOf`/`monthCells`), `grocery.js` (`groceryForWindow` over a rolling date window), `PlanView.jsx`
+    pages of `WeekStrip.jsx`; `extra` slot in its head row), `MonthGrid.jsx` (`MonthCells` 42-cell Monday-first grid, read-only;
+    default export = desktop head + grid; `MonthPager` = phone, ±13 months scroll-snapped, compact cells;
+    exports `monthOf`/`monthCells`), `grocery.js` (`groceryForWindow` over a rolling date window), `PlanView.jsx`
     (phone day cards incl. the inline empty-day generate card; desktop table + rail),
     `MealDetailSheet.jsx`, `SwapSheet.jsx`, `GroceryView.jsx`, `RecipesView.jsx` (+ ingredients table),
     `LogView.jsx`, `SavedPlans.jsx`, `common.js` (dates, group colours, `useIsDesktop`).
@@ -126,7 +127,8 @@ else shake-planned in-zone, else least-bad + deficit shake.
   recent earlier day with meals. Storage stays per week, keyed by Monday (`plans.weeks`), a year back or ahead.
 - **Review as a new user**: `?fresh` on any URL (`FreshStart` in `App.jsx`) asks, erases everything and reloads as a
   first launch — same as More › Backup › Erase everything. A private window is the zero-setup alternative.
-- **Fuel › Plan on desktop is Week | Month** (`settings.planView`, toggle in the strip's head row). The month grid is
+- **Fuel › Plan is Week | Month** (`settings.planView`, toggle in the strip's head row, both form factors). Phone month =
+  compact grid (number + group dot) swiped like the strip, with the selected day's card under it. The month grid is
   read-only: click selects the day (header, Generate, Cook day follow), double-click opens its week, the N days Generate
   would cover are tinted; edits (swap/add/tags/servings) stay in the table and day cards. Tiles average the visible
   month's planned days and hide at zero, like the empty-week card replaces the table when the week has no meals.

@@ -9,7 +9,7 @@ import { useSettings, useRangeActions, useUnits, useWeekPlan } from '../fuel/hoo
 import { useSelectedDate } from '../fuel/selection.js';
 import { parseIso, todayIso, weekStartOf, weekdayIndex } from '../fuel/dates.js';
 import { unitForDay } from '../core/planOps.js';
-import { fmtLongDate, fmtRange, useIsDesktop } from '../fuel/common.js';
+import { fmtLongDate, fmtShortDate, fmtRange, useIsDesktop } from '../fuel/common.js';
 
 const VIEWS = [
   { value: 'plan', label: 'Plan', path: '/fuel' },
@@ -48,7 +48,7 @@ export default function Fuel() {
     <div className={cx('page', desktop && 'page-wide')}>
       <div className="page-head">
         <div className="page-head-l">
-          <div className="eyebrow">{fmtLongDate(parseIso(date))}{date === todayIso() ? ' · today' : ''}</div>
+          <div className="eyebrow nowrap">{(desktop ? fmtLongDate : fmtShortDate)(parseIso(date))}{date === todayIso() ? ' · today' : ''}</div>
           <div className="num page-title">Fuel</div>
         </div>
         <div className="row-sm">

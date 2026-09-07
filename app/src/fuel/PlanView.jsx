@@ -12,7 +12,7 @@ import DayPager from './DayPager.jsx';
 import MealDetailSheet from './MealDetailSheet.jsx';
 import SwapSheet from './SwapSheet.jsx';
 import SavedPlans from './SavedPlans.jsx';
-import MonthGrid, { monthOf, monthCells } from './MonthGrid.jsx';
+import MonthGrid, { MonthPager, monthOf, monthCells } from './MonthGrid.jsx';
 
 const MACRO_TILES = [
   { key: 'calories', tKey: 'calories', label: 'kcal', color: 'var(--accent)', unit: '' },
@@ -64,10 +64,10 @@ export default function PlanView({ onGenerate }) {
   const [savedOpen, setSavedOpen] = useState(false);
   const n = settings.planDays || 7;
   // Desktop Week | Month toggle (persisted). The visible month follows the selection when it moves.
-  const view = desktop && settings.planView === 'month' ? 'month' : 'week';
+  const view = settings.planView === 'month' ? 'month' : 'week';
   const [month, setMonth] = useState(() => monthOf(date));
   useEffect(() => { setMonth((c) => { const m = monthOf(date); return c.y === m.y && c.m === m.m ? c : m; }); }, [date]);
-  const viewSeg = desktop ? <Seg className="sm" value={view} onChange={(v) => patchSettings({ planView: v })} options={[{ value: 'week', label: 'Week', icon: 'list' }, { value: 'month', label: 'Month', icon: 'calendar' }]} /> : null;
+  const viewSeg = <Seg className="sm" value={view} onChange={(v) => patchSettings({ planView: v })} options={[{ value: 'week', label: 'Week', icon: desktop ? 'list' : undefined }, { value: 'month', label: 'Month', icon: desktop ? 'calendar' : undefined }]} />;
   const dates = useMemo(() => weekDates(weekStart), [weekStart]);
   const today = weekStart === weekStartOf(todayIso()) ? weekdayIndex(todayIso()) : -1;
   // A week with no document renders as an empty week; actions create the document on first edit.
@@ -195,7 +195,9 @@ export default function PlanView({ onGenerate }) {
   if (!desktop) {
     return (
       <>
-        {pager}
+        {view === 'month'
+          ? <MonthPager date={date} onSelect={setDate} month={month} onMonth={setMonth} plans={plans} excluded={dg.excluded} T={T} n={n} head={viewSeg} />
+          : pager}
         <DayBody di={sel} />
         <button type="button" className="link" style={{ alignSelf: 'flex-start' }} onClick={() => setSavedOpen(true)}>Saved plans</button>
         {sheets}

@@ -19,6 +19,11 @@ export function fmtLongDate(d) {
   const year = d.getFullYear() !== new Date().getFullYear() ? ` ${d.getFullYear()}` : '';
   return `${DAYS_NAMES[(d.getDay() + 6) % 7]}, ${fmtDayDate(d)}${year}`;
 }
+// Phone headers: 'Mon, Sep 7' — the long form wraps next to the header buttons on a 375px screen.
+export function fmtShortDate(d) {
+  const year = d.getFullYear() !== new Date().getFullYear() ? ` ${d.getFullYear()}` : '';
+  return `${DAYS_NAMES[(d.getDay() + 6) % 7].slice(0, 3)}, ${fmtDayDate(d)}${year}`;
+}
 export function weekLabel(weekStart, withEnd = false) {
   const ds = weekDates(weekStart);
   if (!withEnd) return `Week of ${fmtDayDate(ds[0])}`;

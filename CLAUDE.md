@@ -187,6 +187,8 @@ else shake-planned in-zone, else least-bad + deficit shake.
 - Deploy: GitHub → Settings → Pages → Source = "GitHub Actions"; then install on the iPhone (Share →
   Add to Home Screen) and do a real-phone pass (`.wk-narrow` on rotate in the legacy app too).
 - Replace the Home placeholders (Train card; sleep/steps/trend tiles) when Body/Train exist.
+- Remove the `?fresh` review link (`FreshStart` in `app/src/App.jsx` + its CLAUDE.md rule) before the public launch;
+  keep More › Backup › Erase everything.
 - Data backlog: 72 thin ingredients (<5 recipes), `Wild Rice` missing from the registry.
 - Grocery `appearances` doesn't show the Shawarma variant label.
 - Ingredient overrides have no editor (data pass-through only).

@@ -7,7 +7,7 @@ import { Card, Button, Bar, Stepper, Chip, Tag, Icon, Empty, cx } from '../ui/in
 import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanActions, useRangeActions, useSettings, emptyWeek } from './hooks.js';
 import { useSelectedDate } from './selection.js';
 import { weekStartOf, weekdayIndex, todayIso, isoDate, parseIso } from './dates.js';
-import { groupColor, weekDates, fmtDayDate, fmtLongDate, fmtRange, weekLabel, macroLine, targetsLine, useIsDesktop } from './common.js';
+import { groupColor, weekDates, fmtDayDate, fmtLongDate, fmtRange, macroLine, targetsLine, useIsDesktop } from './common.js';
 import DayPager from './DayPager.jsx';
 import MealDetailSheet from './MealDetailSheet.jsx';
 import SwapSheet from './SwapSheet.jsx';
@@ -214,9 +214,7 @@ export default function PlanView({ onGenerate }) {
       <div className="desk-main">
         {pager}
         <Card style={{ padding: 28 }}>
-          <Empty title={`Nothing planned for ${weekLabel(weekStart, true).replace('Week of ', '')}`}>
-            Pick a start day above and press Generate — it covers {fmtRange(date, n)}.
-          </Empty>
+          <Empty title="Nothing planned" />
           <div className="row-sm" style={{ justifyContent: 'center', gap: 20, marginTop: 4 }}>
             {canCopy(date, n) && <button type="button" className="link" onClick={() => copyPattern(date, n)}><Icon name="copy" size={14} stroke={2.25} />Repeat last plan</button>}
             {!selFree && <button type="button" className="link" onClick={() => openSwap(sel, 0, true)}><Icon name="plus" size={14} stroke={2.25} />Add a meal by hand</button>}

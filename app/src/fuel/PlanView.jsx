@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DAYS_NAMES } from '../core/index.js';
-import { fmtInt, groceryQty } from '../core/display.js';
+import { fmtInt } from '../core/display.js';
 import * as ops from '../core/planOps.js';
 import { Card, Button, Bar, Stepper, Chip, Tag, Icon, Empty, cx } from '../ui/index.jsx';
 import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanActions, useRangeActions, useSettings, emptyWeek } from './hooks.js';
 import { useSelectedDate } from './selection.js';
 import { weekStartOf, weekdayIndex, todayIso, isoDate, parseIso } from './dates.js';
 import { groupColor, weekDates, fmtDayDate, fmtLongDate, fmtRange, macroLine, targetsLine, useIsDesktop } from './common.js';
-import { groceryForWindow } from './grocery.js';
 import DayPager from './DayPager.jsx';
 import MealDetailSheet from './MealDetailSheet.jsx';
 import SwapSheet from './SwapSheet.jsx';
@@ -128,7 +127,6 @@ export default function PlanView({ onGenerate }) {
     const day = days[di] || ops.EMPTY_DAY;
     const isFree = dg.excluded.includes(di);
     const { unit, cookLabel, color, isGroup } = meta(di);
-    const hasBatch = day.meals.some((_, mi) => planDoc.tags[`${di}-${mi}`] !== 'fresh');
     if (isFree) {
       return <Card><Empty title={`${DAYS_NAMES[di]} is a free day`}>Nothing planned. Change that under Settings › Day groups.</Empty></Card>;
     }
@@ -182,7 +180,6 @@ export default function PlanView({ onGenerate }) {
         <div className="row-sm wrap">
           {day.meals.length < ops.MAX_MEALS && <Button size="sm" icon="plus" onClick={() => openSwap(di, day.meals.length, true)}>Add meal</Button>}
           {unit && <Button size="sm" icon="refresh" onClick={() => actions.regenerate([di])}>Regenerate {isGroup ? unit.name : 'day'}</Button>}
-          {unit && hasBatch && <Button size="sm" icon="pot" onClick={() => navigate(`/fuel/cook/${weekStart}/${unit.key}`)}>Cook day</Button>}
         </div>
       </>
     );
@@ -207,15 +204,8 @@ export default function PlanView({ onGenerate }) {
   activeIdx.forEach((di) => { const day = days[di]; if (day && day.meals.length > maxMeals) maxMeals = day.meals.length; });
   const anyCanAdd = activeIdx.some((di) => !dg.excluded.includes(di) && (days[di] ? days[di].meals.length : 0) < ops.MAX_MEALS);
   const selUnit = meta(sel).unit;
-  const grocery = groceryForWindow(plans, dg, date, settings.planDays || 7);
-  const topItems = grocery.list.flatMap((s) => s.items).filter((i) => !i.isSpice).sort((a, b) => b.totalGrams - a.totalGrams).slice(0, 4);
-  const itemCount = grocery.list.reduce((n, s) => n + s.items.length, 0);
-  const nextCook = units.find((u) => dg.cookDays[u.lead] != null && dg.cookDays[u.lead] !== '' && u.days.some((d) => days[d] && days[d].meals.some((_, mi) => planDoc.tags[`${d}-${mi}`] !== 'fresh')));
-  const inZoneDays = activeIdx.filter((di) => days[di] && days[di].meals.length && !dg.excluded.includes(di) && ops.zoneCheck(days[di].totals, T).ok).length;
-
   return (
-    <div className="desk-cols">
-      <div className="desk-main">
+    <div className="desk-main">
         {pager}
         <div className="grid-4">
           {MACRO_TILES.map((m) => (
@@ -285,35 +275,6 @@ export default function PlanView({ onGenerate }) {
           <Button icon="bookmark" onClick={() => setSavedOpen(true)}>Saved plans</Button>
           {stored && <Button icon="trash" onClick={() => actions.clearWeek()}>Clear this week</Button>}
         </div>
-      </div>
-      <div className="desk-rail">
-        <Card className="stack" style={{ padding: 18 }}>
-          <div className="section-head"><div className="eyebrow">Next cook day</div>{nextCook && <div className="small muted">{DAYS_NAMES[dg.cookDays[nextCook.lead]]}</div>}</div>
-          {nextCook ? (
-            <>
-              <div className="strong" style={{ fontSize: 17 }}>{nextCook.name} batch</div>
-              <div className="small muted">{(() => { const day = days[nextCook.lead]; if (!day) return '—'; const names = day.meals.filter((_, mi) => planDoc.tags[`${nextCook.lead}-${mi}`] !== 'fresh').map((m) => m.name); return `${names.join(', ')} × ${nextCook.days.length}`; })()}</div>
-              <Button block icon="pot" onClick={() => navigate(`/fuel/cook/${weekStart}/${nextCook.key}`)}>Open cook mode</Button>
-            </>
-          ) : (
-            <div className="small muted" style={{ lineHeight: 1.45 }}>Set a cook day per group under Settings › Day groups and the batch meals show up here.</div>
-          )}
-        </Card>
-        <Card className="stack" style={{ padding: 18 }}>
-          <div className="section-head"><div className="eyebrow">Grocery · {fmtRange(date, settings.planDays || 7)}</div><div className="small muted">{itemCount} items · {grocery.list.length} aisles</div></div>
-          <div className="stack-sm" style={{ gap: 8 }}>
-            {topItems.map((it) => <div key={it.name} className="row between"><span>{it.name}</span><span className="num" style={{ fontSize: 15 }}>{groceryQty(it, settings.units)}</span></div>)}
-          </div>
-          <button type="button" className="link" onClick={() => navigate('/fuel/grocery')}>Open list</button>
-        </Card>
-        <Card className="stack" style={{ padding: 18 }}>
-          <div className="eyebrow">This week</div>
-          <div className="small muted" style={{ lineHeight: 1.45 }}>
-            <div><span className="strong">{inZoneDays} of {summary.n}</span> planned days land inside the 95–105% zone on all four macros.</div>
-            <div style={{ marginTop: 6 }}>Targets {targetsLine(T)}. Lifting-day carbs and the weight trend arrive with Train and Body.</div>
-          </div>
-        </Card>
-      </div>
       {sheets}
     </div>
   );

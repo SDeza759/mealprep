@@ -5,9 +5,10 @@ import PlanView from '../fuel/PlanView.jsx';
 import GroceryView from '../fuel/GroceryView.jsx';
 import RecipesView from '../fuel/RecipesView.jsx';
 import LogView from '../fuel/LogView.jsx';
-import { useSettings, useRangeActions } from '../fuel/hooks.js';
+import { useSettings, useRangeActions, useUnits, useWeekPlan } from '../fuel/hooks.js';
 import { useSelectedDate } from '../fuel/selection.js';
-import { parseIso, todayIso } from '../fuel/dates.js';
+import { parseIso, todayIso, weekStartOf, weekdayIndex } from '../fuel/dates.js';
+import { unitForDay } from '../core/planOps.js';
 import { fmtLongDate, fmtRange, useIsDesktop } from '../fuel/common.js';
 
 const VIEWS = [
@@ -28,6 +29,13 @@ export default function Fuel() {
   const current = VIEWS.some((v) => v.value === view) ? view : 'plan';
   const n = settings.planDays || 7;
 
+  // Cook day for the selected day's unit, when that unit has batch meals in this week's plan.
+  const units = useUnits();
+  const weekStart = weekStartOf(date);
+  const [week] = useWeekPlan(weekStart);
+  const unit = unitForDay(units, weekdayIndex(date));
+  const hasBatch = !!(unit && week && unit.days.some((d) => week.days[d] && week.days[d].meals.some((_, mi) => week.tags[`${d}-${mi}`] !== 'fresh')));
+
   // Generate from a day for the usual number of days. Days that already hold meals are only
   // replaced after a confirmation.
   const startGenerate = (from = date) => {
@@ -43,7 +51,10 @@ export default function Fuel() {
           <div className="eyebrow">{fmtLongDate(parseIso(date))}{date === todayIso() ? ' · today' : ''}</div>
           <div className="num page-title">Fuel</div>
         </div>
-        <Button variant="primary" size={desktop ? undefined : 'sm'} icon={desktop ? 'refresh' : undefined} onClick={() => startGenerate(date)}>{desktop ? `Generate ${n} days` : 'Generate'}</Button>
+        <div className="row-sm">
+          {current === 'plan' && hasBatch && <Button size={desktop ? undefined : 'sm'} icon="pot" onClick={() => navigate(`/fuel/cook/${weekStart}/${unit.key}`)}>Cook day</Button>}
+          <Button variant="primary" size={desktop ? undefined : 'sm'} icon={desktop ? 'refresh' : undefined} onClick={() => startGenerate(date)}>{desktop ? `Generate ${n} days` : 'Generate'}</Button>
+        </div>
       </div>
       <Seg value={current} onChange={(v) => navigate(VIEWS.find((x) => x.value === v).path)} options={VIEWS} />
       {current === 'plan' && <PlanView onGenerate={startGenerate} />}

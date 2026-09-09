@@ -120,7 +120,8 @@ else shake-planned in-zone, else least-bad + deficit shake.
   The shake's eaten slot is index `meals.length`.
 - **Manual re-solves anchor at recipe grams** (`baseMealIngredients`), never at the previous solution.
 - **Generation is a rolling window, never "the week"**: Generate starts on the selected day (today by default)
-  for N days (`settings.planDays`, default 7, up to 28; stepper in the desktop header, on the phone's empty-day card and on Grocery) and
+  for N days (`settings.planDays`, default 7, up to 28; stepper beside Generate in the Fuel header on both form factors — the phone Plan view puts Cook day · stepper ·
+  Generate in their own row under the title — and on Grocery) and
   maps onto the week documents it touches (`regenerateDays` with `expand:false`; recipes used earlier in the
   window seed later weeks). Replacing days that already hold meals asks first (`Confirm` in `Fuel.jsx`). A group
   only partly inside the window plans just its in-window days. "Repeat last plan" copies, per weekday, the most
@@ -132,6 +133,11 @@ else shake-planned in-zone, else least-bad + deficit shake.
   read-only: click selects the day (header, Generate, Cook day follow), double-click opens its week, the N days Generate
   would cover are tinted; edits (swap/add/tags/servings) stay in the table and day cards. Tiles average the visible
   month's planned days and hide at zero, like the empty-week card replaces the table when the week has no meals.
+- **Phone and laptop offer the same actions** (user's call): empty state = "Nothing planned" + Repeat last plan / Add a meal /
+  Just <day|unit>; planned = Add a meal, Regenerate <day|unit>, Saved plans, Clear this week (asks first) on both. The phone
+  shows a one-line week/month average where the laptop shows tiles. Differences left on purpose are form-factor only:
+  arrows vs swipe, table vs day cards (per-meal controls inline on the phone, in the meal sheet on the laptop), month cells
+  with names vs dots, double-click to open a week (laptop only).
 - **No intermediate sheets for things a screen already shows** (user's call): generation is inline on Fuel, no
   form. **Home stays simple**: the day, what's left, meals with an Eaten switch, and one "Meal Plan" link to Fuel.
 - **Group identity is scoped by generation batch**: `groups[di] = {groupIndex, gen}`; `planGroupMembers` only

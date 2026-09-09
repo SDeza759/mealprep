@@ -44,6 +44,18 @@ export default function Fuel() {
     if (generateRange(from, n)) { setDate(from); if (current !== 'plan') navigate('/fuel'); }
   };
 
+  // Cook day · days to plan · Generate. Beside the title on desktop; on the phone the Plan view puts
+  // them in their own full-width row under the title (the title row can't fit all three), the other
+  // views keep Generate beside the title.
+  const actions = (
+    <>
+      {current === 'plan' && hasBatch && <Button size={desktop ? undefined : 'sm'} icon="pot" onClick={() => navigate(`/fuel/cook/${weekStart}/${unit.key}`)}>Cook day</Button>}
+      {current === 'plan' && <Stepper value={n} onChange={(v) => patchSettings({ planDays: v })} min={1} max={28} ariaLabel="Days to plan" />}
+      <Button variant="primary" size={desktop ? undefined : 'sm'} icon={desktop ? 'refresh' : undefined} className={!desktop && current === 'plan' ? 'grow' : undefined}
+        onClick={() => startGenerate(date)}>{desktop ? `Generate ${n} day${n === 1 ? '' : 's'}` : 'Generate'}</Button>
+    </>
+  );
+
   return (
     <div className={cx('page', desktop && 'page-wide')}>
       <div className="page-head">
@@ -51,12 +63,9 @@ export default function Fuel() {
           <div className="eyebrow nowrap">{(desktop ? fmtLongDate : fmtShortDate)(parseIso(date))}{date === todayIso() ? ' · today' : ''}</div>
           <div className="num page-title">Fuel</div>
         </div>
-        <div className="row-sm">
-          {current === 'plan' && hasBatch && <Button size={desktop ? undefined : 'sm'} icon="pot" onClick={() => navigate(`/fuel/cook/${weekStart}/${unit.key}`)}>Cook day</Button>}
-          {desktop && current === 'plan' && <Stepper value={n} onChange={(v) => patchSettings({ planDays: v })} min={1} max={28} ariaLabel="Days to plan" />}
-          <Button variant="primary" size={desktop ? undefined : 'sm'} icon={desktop ? 'refresh' : undefined} onClick={() => startGenerate(date)}>{desktop ? `Generate ${n} day${n === 1 ? '' : 's'}` : 'Generate'}</Button>
-        </div>
+        {(desktop || current !== 'plan') && <div className="row-sm">{actions}</div>}
       </div>
+      {!desktop && current === 'plan' && <div className="row-sm">{actions}</div>}
       <Seg value={current} onChange={(v) => navigate(VIEWS.find((x) => x.value === v).path)} options={VIEWS} />
       {current === 'plan' && <PlanView />}
       {current === 'grocery' && <GroceryView />}

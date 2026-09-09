@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { DAYS_NAMES } from '../core/index.js';
 import { fmtInt } from '../core/display.js';
 import * as ops from '../core/planOps.js';
-import { Card, Button, Bar, Stepper, Chip, Tag, Icon, Empty, Seg, cx } from '../ui/index.jsx';
+import { Card, Button, Bar, Stepper, Chip, Tag, Icon, Empty, Seg, Confirm, cx } from '../ui/index.jsx';
 import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanActions, useRangeActions, useSettings, emptyWeek } from './hooks.js';
 import { useSelectedDate } from './selection.js';
 import { weekStartOf, weekdayIndex, todayIso, isoDate, parseIso } from './dates.js';
-import { groupColor, weekDates, fmtDayDate, fmtLongDate, fmtRange, macroLine, targetsLine, useIsDesktop } from './common.js';
+import { groupColor, weekDates, fmtDayDate, fmtLongDate, fmtRange, weekLabel, macroLine, targetsLine, useIsDesktop, MONTHS } from './common.js';
 import DayPager from './DayPager.jsx';
 import MealDetailSheet from './MealDetailSheet.jsx';
 import SwapSheet from './SwapSheet.jsx';
@@ -62,6 +62,7 @@ export default function PlanView() {
   const [detail, setDetail] = useState(null);
   const [swapTarget, setSwapTarget] = useState(null);
   const [savedOpen, setSavedOpen] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   const n = settings.planDays || 7;
   // Desktop Week | Month toggle (persisted). The visible month follows the selection when it moves.
   const view = settings.planView === 'month' ? 'month' : 'week';
@@ -98,6 +99,8 @@ export default function PlanView() {
       {detail && <MealDetailSheet planDoc={planDoc} di={detail.di} mi={detail.mi} onClose={() => setDetail(null)} actions={actions} onSwap={(di, mi) => openSwap(di, mi)} />}
       {swapTarget && <SwapSheet target={swapTarget} onClose={() => setSwapTarget(null)} onPick={pick} />}
       <SavedPlans open={savedOpen} onClose={() => setSavedOpen(false)} weekStart={weekStart} />
+      <Confirm open={confirmClear} onClose={() => setConfirmClear(false)} title={`Clear the week of ${weekLabel(weekStart, true).replace('Week of ', '')}?`} confirmLabel="Clear" danger
+        onConfirm={() => actions.clearWeek()} body="Removes every meal, eaten mark, serving and batch tag in this week. Generate can fill it again." />
     </>
   );
 
@@ -143,10 +146,6 @@ export default function PlanView() {
       return (
         <Card className="stack" style={{ padding: 20 }}>
           <div className="num" style={{ fontSize: 22, textAlign: 'center', padding: '10px 0 2px' }}>Nothing planned</div>
-          <div className="row between">
-            <span className="small strong">Days to plan</span>
-            <Stepper value={n} onChange={(v) => patchSettings({ planDays: v })} min={1} max={28} ariaLabel="Days to plan" />
-          </div>
           <div className="row-sm wrap" style={{ justifyContent: 'center', gap: 16 }}>
             {canCopy(iso, n) && <button type="button" className="link" onClick={() => copyPattern(iso, n)}><Icon name="copy" size={14} stroke={2.25} />Repeat last plan</button>}
             <button type="button" className="link" onClick={() => openSwap(di, 0, true)}><Icon name="plus" size={14} stroke={2.25} />Add a meal</button>
@@ -181,12 +180,30 @@ export default function PlanView() {
           </Card>
         )}
         <div className="row-sm wrap">
-          {day.meals.length < ops.MAX_MEALS && <Button size="sm" icon="plus" onClick={() => openSwap(di, day.meals.length, true)}>Add meal</Button>}
-          {unit && <Button size="sm" icon="refresh" onClick={() => actions.regenerate([di])}>Regenerate {isGroup ? unit.name : 'day'}</Button>}
+          {day.meals.length < ops.MAX_MEALS && <Button size="sm" icon="plus" onClick={() => openSwap(di, day.meals.length, true)}>Add a meal</Button>}
+          {unit && <Button size="sm" icon="refresh" onClick={() => actions.regenerate([di])}>Regenerate {isGroup ? unit.name : ops.SHORT_DAYS[di]}</Button>}
         </div>
       </>
     );
   };
+
+  // Averages over the planned days of the week, and of the visible month (free weekdays skipped).
+  const summary = ops.weeklySummary(days, dg.excluded, T);
+  const monthPlanned = monthCells(month.y, month.m)
+    .filter((d) => d.getMonth() === month.m)
+    .map((d) => { const iso = isoDate(d); const di = weekdayIndex(iso); if (dg.excluded.includes(di)) return null; const wk = plans.weeks && plans.weeks[weekStartOf(iso)]; return wk && wk.days ? wk.days[di] : null; })
+    .filter((d) => d && d.meals.length > 0);
+  const monthSummary = ops.weeklySummary(monthPlanned, [], T);
+  const avgLine = (label, s) => s.n > 0 && (
+    <div className="small muted">{label} avg · {macroLine(s.avg)} · {s.n} day{s.n === 1 ? '' : 's'}</div>
+  );
+  const bottomRow = (extra) => (
+    <div className="row-sm wrap">
+      {extra}
+      <Button size={desktop ? undefined : 'sm'} icon="bookmark" onClick={() => setSavedOpen(true)}>Saved plans</Button>
+      {stored && <Button size={desktop ? undefined : 'sm'} icon="trash" onClick={() => setConfirmClear(true)}>Clear this week</Button>}
+    </div>
+  );
 
   // ---------- phone ----------
   if (!desktop) {
@@ -195,8 +212,9 @@ export default function PlanView() {
         {view === 'month'
           ? <MonthPager date={date} onSelect={setDate} month={month} onMonth={setMonth} plans={plans} excluded={dg.excluded} T={T} n={n} head={viewSeg} />
           : pager}
+        {view === 'month' ? avgLine(MONTHS[month.m], monthSummary) : avgLine('Week', summary)}
         <DayBody di={sel} />
-        <button type="button" className="link" style={{ alignSelf: 'flex-start' }} onClick={() => setSavedOpen(true)}>Saved plans</button>
+        {bottomRow()}
         {sheets}
       </>
     );
@@ -219,23 +237,16 @@ export default function PlanView() {
   );
 
   if (view === 'month') {
-    // Tiles average the planned days inside the visible month (free weekdays skipped).
-    const plannedDays = monthCells(month.y, month.m)
-      .filter((d) => d.getMonth() === month.m)
-      .map((d) => { const iso = isoDate(d); const di = weekdayIndex(iso); if (dg.excluded.includes(di)) return null; const wk = plans.weeks && plans.weeks[weekStartOf(iso)]; return wk && wk.days ? wk.days[di] : null; })
-      .filter((d) => d && d.meals.length > 0);
-    const ms = ops.weeklySummary(plannedDays, [], T);
     return (
       <div className="desk-main">
         <MonthGrid date={date} onSelect={setDate} onOpenWeek={(iso) => { setDate(iso); patchSettings({ planView: 'week' }); }}
           month={month} onMonth={setMonth} plans={plans} excluded={dg.excluded} T={T} n={n} head={viewSeg} />
-        {ms.n > 0 && tiles(ms)}
+        {monthSummary.n > 0 && tiles(monthSummary)}
         {sheets}
       </div>
     );
   }
 
-  const summary = ops.weeklySummary(days, dg.excluded, T);
   const activeIdx = [0, 1, 2, 3, 4, 5, 6];
   let maxMeals = 1;
   activeIdx.forEach((di) => { const day = days[di]; if (day && day.meals.length > maxMeals) maxMeals = day.meals.length; });
@@ -254,10 +265,11 @@ export default function PlanView() {
           <Empty title="Nothing planned" />
           <div className="row-sm" style={{ justifyContent: 'center', gap: 20, marginTop: 4 }}>
             {canCopy(date, n) && <button type="button" className="link" onClick={() => copyPattern(date, n)}><Icon name="copy" size={14} stroke={2.25} />Repeat last plan</button>}
-            {!selFree && <button type="button" className="link" onClick={() => openSwap(sel, 0, true)}><Icon name="plus" size={14} stroke={2.25} />Add a meal by hand</button>}
-            <button type="button" className="link" onClick={() => setSavedOpen(true)}><Icon name="bookmark" size={14} stroke={2.25} />Saved plans</button>
+            {!selFree && <button type="button" className="link" onClick={() => openSwap(sel, 0, true)}><Icon name="plus" size={14} stroke={2.25} />Add a meal</button>}
+            {selUnit && <button type="button" className="link" onClick={() => actions.regenerate([sel])}>Just {selUnit.days.length > 1 ? selUnit.name : 'this day'}</button>}
           </div>
         </Card>
+        {bottomRow()}
         {sheets}
       </div>
     );
@@ -300,7 +312,7 @@ export default function PlanView() {
                               </td>
                             );
                           })}
-                          {anyCanAdd && <td>{day.meals.length < ops.MAX_MEALS && <button type="button" className="icon-btn sm muted" aria-label="Add meal" onClick={(e) => { e.stopPropagation(); openSwap(di, day.meals.length, true); }}><Icon name="plus" size={16} /></button>}</td>}
+                          {anyCanAdd && <td>{day.meals.length < ops.MAX_MEALS && <button type="button" className="icon-btn sm muted" aria-label="Add a meal" onClick={(e) => { e.stopPropagation(); openSwap(di, day.meals.length, true); }}><Icon name="plus" size={16} /></button>}</td>}
                           <td>
                             <div className="row-sm">
                               <span className="num" style={{ fontSize: 18 }}>{fmtInt(day.totals.calories)}</span>
@@ -318,11 +330,7 @@ export default function PlanView() {
             </table>
           </div>
         </Card>
-        <div className="row-sm wrap">
-          {selUnit && <Button icon="refresh" onClick={() => actions.regenerate([sel])}>Regenerate {selUnit.days.length > 1 ? selUnit.name : ops.SHORT_DAYS[sel]}</Button>}
-          <Button icon="bookmark" onClick={() => setSavedOpen(true)}>Saved plans</Button>
-          {stored && <Button icon="trash" onClick={() => actions.clearWeek()}>Clear this week</Button>}
-        </div>
+        {bottomRow(selUnit && <Button icon="refresh" onClick={() => actions.regenerate([sel])}>Regenerate {selUnit.days.length > 1 ? selUnit.name : ops.SHORT_DAYS[sel]}</Button>)}
       {sheets}
     </div>
   );

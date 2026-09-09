@@ -137,105 +137,120 @@ export function useLogEaten() {
 }
 
 // Actions on one week's plan. Every edit goes through planOps, then setWeek.
-export function usePlanActions(weekStart) {
-  const [plans] = usePlansDoc();
-  const [, setWeek] = useWeekPlan(weekStart);
+// Plan actions for any week: `actionsFor(weekStart)` returns the same set usePlanActions() does,
+// bound to that week — the desktop list spans week documents, so each row binds its own.
+export function usePlanActionsFor() {
+  const [, setPlans] = usePlansDoc();
   const T = useTargets();
   const [dg] = useDayGroups();
   const overrides = useOverrides();
   const toast = useToast();
 
-  const warnZone = useCallback((zone, context) => {
-    if (zone.ok) return;
-    toast(`${context} the day is outside the 95–105% zone: ${ops.zoneText(zone)}. Swap again or regenerate.`, { kind: 'warn' });
-  }, [toast]);
-
-  const regenerate = useCallback((selection) => {
-    if (!T.pctValid) { toast('Macro percentages must add up to 100%.', { kind: 'warn' }); return; }
-    setWeek((prev) => {
-      const base = prev || emptyWeek(weekStart, T);
-      const r = ops.regenerateDays({ days: base.days, planGroups: base.groups, selection, T, overrides, groups: dg.groups, excluded: dg.excluded, mealCounts: dg.mealCounts, gen: Date.now() });
-      if (!r) return prev;
-      return { ...base, days: r.days, groups: r.groups, eaten: ops.dropDayKeys(base.eaten, r.regenSet), servings: ops.dropDayKeys(base.servings, r.regenSet), tags: ops.dropDayKeys(base.tags, r.regenSet) };
+  return useCallback((weekStart) => {
+    const setWeek = (next) => setPlans((prev) => {
+      const weeks = { ...((prev && prev.weeks) || {}) };
+      const cur = weeks[weekStart] || null;
+      const val = typeof next === 'function' ? next(cur) : next;
+      if (val === cur) return prev;
+      if (val == null) delete weeks[weekStart]; else weeks[weekStart] = val;
+      return { ...prev, weeks };
     });
-  }, [T, dg, overrides, setWeek, weekStart, toast]);
+    const warnZone = (zone, context) => {
+      if (zone.ok) return;
+      toast(`${context} the day is outside the 95–105% zone: ${ops.zoneText(zone)}. Swap again or regenerate.`, { kind: 'warn' });
+    };
 
-  const swap = useCallback((di, mi, recipe, isAdd = false) => {
-    let zone = null;
-    setWeek((prev) => {
-      const base = prev || emptyWeek(weekStart, T);
-      const r = ops.swapMeal({ days: base.days, planGroups: base.groups, di, mi, recipe, T, overrides, isAdd });
-      zone = r.zone;
-      return { ...base, days: r.days };
-    });
-    if (zone) warnZone(zone, isAdd ? 'After adding a meal' : 'After the swap');
-  }, [T, overrides, setWeek, weekStart, warnZone]);
+    const regenerate = (selection) => {
+      if (!T.pctValid) { toast('Macro percentages must add up to 100%.', { kind: 'warn' }); return; }
+      setWeek((prev) => {
+        const base = prev || emptyWeek(weekStart, T);
+        const r = ops.regenerateDays({ days: base.days, planGroups: base.groups, selection, T, overrides, groups: dg.groups, excluded: dg.excluded, mealCounts: dg.mealCounts, gen: Date.now() });
+        if (!r) return prev;
+        return { ...base, days: r.days, groups: r.groups, eaten: ops.dropDayKeys(base.eaten, r.regenSet), servings: ops.dropDayKeys(base.servings, r.regenSet), tags: ops.dropDayKeys(base.tags, r.regenSet) };
+      });
+    };
 
-  const remove = useCallback((di, mi) => {
-    let result = null;
-    setWeek((prev) => {
-      if (!prev) return prev;
-      const r = ops.removeMeal({ days: prev.days, planGroups: prev.groups, di, mi, T, overrides });
-      if (!r) return prev;
-      result = r;
-      return { ...prev, days: r.days, eaten: ops.dropDayKeys(prev.eaten, r.members), servings: ops.dropDayKeys(prev.servings, r.members), tags: ops.dropDayKeys(prev.tags, r.members) };
-    });
-    if (result && !result.isEmpty) warnZone(result.zone, 'After removing a meal');
-  }, [T, overrides, setWeek, warnZone]);
+    const swap = (di, mi, recipe, isAdd = false) => {
+      let zone = null;
+      setWeek((prev) => {
+        const base = prev || emptyWeek(weekStart, T);
+        const r = ops.swapMeal({ days: base.days, planGroups: base.groups, di, mi, recipe, T, overrides, isAdd });
+        zone = r.zone;
+        return { ...base, days: r.days };
+      });
+      if (zone) warnZone(zone, isAdd ? 'After adding a meal' : 'After the swap');
+    };
 
-  const dropShake = useCallback((di) => {
-    let result = null;
-    setWeek((prev) => {
-      if (!prev) return prev;
-      const r = ops.removeShake({ days: prev.days, planGroups: prev.groups, di, T, overrides });
-      if (!r) return prev;
-      result = r;
-      const eaten = { ...prev.eaten };
-      r.members.forEach((d) => { delete eaten[`${d}-${r.shakeSlot}`]; });
-      return { ...prev, days: r.days, eaten };
-    });
-    if (result && !result.zone.ok) toast(`Shake removed. Without it the day is off-zone: ${ops.zoneText(result.zone)} — that's the trade-off. Regenerating the day re-enables shakes.`, { kind: 'warn' });
-  }, [T, overrides, setWeek, toast]);
+    const remove = (di, mi) => {
+      let result = null;
+      setWeek((prev) => {
+        if (!prev) return prev;
+        const r = ops.removeMeal({ days: prev.days, planGroups: prev.groups, di, mi, T, overrides });
+        if (!r) return prev;
+        result = r;
+        return { ...prev, days: r.days, eaten: ops.dropDayKeys(prev.eaten, r.members), servings: ops.dropDayKeys(prev.servings, r.members), tags: ops.dropDayKeys(prev.tags, r.members) };
+      });
+      if (result && !result.isEmpty) warnZone(result.zone, 'After removing a meal');
+    };
 
-  const toggleEaten = useCallback((di, mi) => {
-    setWeek((prev) => {
-      if (!prev) return prev;
-      const key = `${di}-${mi}`;
-      const eaten = { ...prev.eaten };
-      if (eaten[key]) delete eaten[key]; else eaten[key] = true;
-      return { ...prev, eaten };
-    });
-  }, [setWeek]);
+    const dropShake = (di) => {
+      let result = null;
+      setWeek((prev) => {
+        if (!prev) return prev;
+        const r = ops.removeShake({ days: prev.days, planGroups: prev.groups, di, T, overrides });
+        if (!r) return prev;
+        result = r;
+        const eaten = { ...prev.eaten };
+        r.members.forEach((d) => { delete eaten[`${d}-${r.shakeSlot}`]; });
+        return { ...prev, days: r.days, eaten };
+      });
+      if (result && !result.zone.ok) toast(`Shake removed. Without it the day is off-zone: ${ops.zoneText(result.zone)} — that's the trade-off. Regenerating the day re-enables shakes.`, { kind: 'warn' });
+    };
 
-  // Servings are per day only (not group-aware): they scale the grocery list, nothing else.
-  const setServing = useCallback((di, mi, val) => {
-    setWeek((prev) => {
-      if (!prev) return prev;
-      const key = `${di}-${mi}`;
-      const servings = { ...prev.servings };
-      const v = Math.max(1, val);
-      if (v === 1) delete servings[key]; else servings[key] = v;
-      return { ...prev, servings };
-    });
-  }, [setWeek]);
+    const toggleEaten = (di, mi) => {
+      setWeek((prev) => {
+        if (!prev) return prev;
+        const key = `${di}-${mi}`;
+        const eaten = { ...prev.eaten };
+        if (eaten[key]) delete eaten[key]; else eaten[key] = true;
+        return { ...prev, eaten };
+      });
+    };
 
-  // Batch / fresh tag. Default is batch; 'fresh' meals are cooked on the day and stay out of Cook Day.
-  const toggleTag = useCallback((di, mi) => {
-    setWeek((prev) => {
-      if (!prev) return prev;
-      const members = ops.planGroupMembers(prev.days, prev.groups, di);
-      const key = `${di}-${mi}`;
-      const nextVal = prev.tags[key] === 'fresh' ? 'batch' : 'fresh';
-      const tags = { ...prev.tags };
-      members.forEach((d) => { const k = `${d}-${mi}`; if (nextVal === 'batch') delete tags[k]; else tags[k] = 'fresh'; });
-      return { ...prev, tags };
-    });
-  }, [setWeek]);
+    // Servings are per day only (not group-aware): they scale the grocery list, nothing else.
+    const setServing = (di, mi, val) => {
+      setWeek((prev) => {
+        if (!prev) return prev;
+        const key = `${di}-${mi}`;
+        const servings = { ...prev.servings };
+        const v = Math.max(1, val);
+        if (v === 1) delete servings[key]; else servings[key] = v;
+        return { ...prev, servings };
+      });
+    };
 
-  const clearWeek = useCallback(() => setWeek(null), [setWeek]);
+    // Batch / fresh tag. Default is batch; 'fresh' meals are cooked on the day and stay out of Cook Day.
+    const toggleTag = (di, mi) => {
+      setWeek((prev) => {
+        if (!prev) return prev;
+        const members = ops.planGroupMembers(prev.days, prev.groups, di);
+        const key = `${di}-${mi}`;
+        const nextVal = prev.tags[key] === 'fresh' ? 'batch' : 'fresh';
+        const tags = { ...prev.tags };
+        members.forEach((d) => { const k = `${d}-${mi}`; if (nextVal === 'batch') delete tags[k]; else tags[k] = 'fresh'; });
+        return { ...prev, tags };
+      });
+    };
 
-  return useMemo(() => ({ regenerate, swap, remove, dropShake, toggleEaten, setServing, toggleTag, clearWeek }),
-    [regenerate, swap, remove, dropShake, toggleEaten, setServing, toggleTag, clearWeek]);
+    const clearWeek = () => setWeek(null);
+
+    return { regenerate, swap, remove, dropShake, toggleEaten, setServing, toggleTag, clearWeek };
+  }, [setPlans, T, dg, overrides, toast]);
+}
+
+export function usePlanActions(weekStart) {
+  const actionsFor = usePlanActionsFor();
+  return useMemo(() => actionsFor(weekStart), [actionsFor, weekStart]);
 }
 
 // Generate: a rolling window of n days from any date, mapped onto the week documents it

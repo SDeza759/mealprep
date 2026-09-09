@@ -4,9 +4,9 @@ import { DAYS_NAMES } from '../core/index.js';
 import { fmtInt } from '../core/display.js';
 import * as ops from '../core/planOps.js';
 import { Card, Button, Bar, Stepper, Chip, Tag, Icon, Empty, Seg, Confirm, cx } from '../ui/index.jsx';
-import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanActions, useRangeActions, useSettings, emptyWeek } from './hooks.js';
+import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanActions, usePlanActionsFor, useRangeActions, useSettings, emptyWeek } from './hooks.js';
 import { useSelectedDate } from './selection.js';
-import { weekStartOf, weekdayIndex, todayIso, isoDate, parseIso } from './dates.js';
+import { weekStartOf, weekdayIndex, todayIso, isoDate, parseIso, addDaysIso } from './dates.js';
 import { groupColor, weekDates, fmtDayDate, fmtLongDate, fmtRange, weekLabel, macroLine, targetsLine, useIsDesktop, MONTHS } from './common.js';
 import DayPager from './DayPager.jsx';
 import MealDetailSheet from './MealDetailSheet.jsx';
@@ -57,6 +57,7 @@ export default function PlanView() {
   const [dg] = useDayGroups();
   const units = useUnits();
   const actions = usePlanActions(weekStart);
+  const actionsFor = usePlanActionsFor(); // the desktop list spans weeks; each row binds its own
   const [settings, patchSettings] = useSettings();
   const { copyPattern, canCopy } = useRangeActions();
   const [detail, setDetail] = useState(null);
@@ -88,15 +89,21 @@ export default function PlanView() {
     return meta(weekdayIndex(iso)).color;
   };
 
-  useEffect(() => { if (detail && !(planDoc && planDoc.days[detail.di] && planDoc.days[detail.di].meals[detail.mi])) setDetail(null); }, [planDoc, detail]);
+  // Sheets carry the week they belong to (`ws`); the phone always works in the selected week.
+  const docFor = (ws) => (ws === weekStart ? planDoc : ((plans.weeks && plans.weeks[ws]) || emptyWeek(ws, T)));
+  useEffect(() => {
+    if (!detail) return;
+    const d = docFor(detail.ws || weekStart);
+    if (!(d.days[detail.di] && d.days[detail.di].meals[detail.mi])) setDetail(null);
+  }, [plans, planDoc, detail]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const openSwap = (di, mi, isAdd = false) => { setDetail(null); setSwapTarget({ di, mi, isAdd }); };
-  const pick = (recipe) => { if (!swapTarget) return; actions.swap(swapTarget.di, swapTarget.mi, recipe, swapTarget.isAdd); setSwapTarget(null); };
+  const openSwap = (di, mi, isAdd = false, ws = weekStart) => { setDetail(null); setSwapTarget({ di, mi, isAdd, ws }); };
+  const pick = (recipe) => { if (!swapTarget) return; actionsFor(swapTarget.ws || weekStart).swap(swapTarget.di, swapTarget.mi, recipe, swapTarget.isAdd); setSwapTarget(null); };
 
   const pager = <DayPager date={date} onSelect={setDate} excluded={dg.excluded} colorOf={colorOf} extra={viewSeg} />;
   const sheets = (
     <>
-      {detail && <MealDetailSheet planDoc={planDoc} di={detail.di} mi={detail.mi} onClose={() => setDetail(null)} actions={actions} onSwap={(di, mi) => openSwap(di, mi)} />}
+      {detail && <MealDetailSheet planDoc={docFor(detail.ws || weekStart)} di={detail.di} mi={detail.mi} onClose={() => setDetail(null)} actions={actionsFor(detail.ws || weekStart)} onSwap={(di, mi) => openSwap(di, mi, false, detail.ws || weekStart)} />}
       {swapTarget && <SwapSheet target={swapTarget} onClose={() => setSwapTarget(null)} onPick={pick} />}
       <SavedPlans open={savedOpen} onClose={() => setSavedOpen(false)} weekStart={weekStart} />
       <Confirm open={confirmClear} onClose={() => setConfirmClear(false)} title={`Clear the week of ${weekLabel(weekStart, true).replace('Week of ', '')}?`} confirmLabel="Clear" danger
@@ -247,17 +254,39 @@ export default function PlanView() {
     );
   }
 
-  const activeIdx = [0, 1, 2, 3, 4, 5, 6];
+  // The list runs from the selected day, like Generate does: at least the Generate window (n days),
+  // extended to the last planned day within four weeks so a longer stretch never stops at a Sunday.
+  const rows = [];
+  let lastPlanned = -1;
+  for (let i = 0; i < 28; i++) {
+    const iso = addDaysIso(date, i);
+    const ws = weekStartOf(iso);
+    const di = weekdayIndex(iso);
+    const doc = (plans.weeks && plans.weeks[ws]) || null;
+    const day = (doc && doc.days && doc.days[di]) || ops.EMPTY_DAY;
+    if (day.meals.length) lastPlanned = i;
+    rows.push({ iso, ws, di, doc, day, isFree: dg.excluded.includes(di) });
+  }
+  rows.splice(Math.max(n, lastPlanned + 1));
+  const rowMeta = (row) => {
+    const unit = ops.unitForDay(units, row.di);
+    const entry = row.doc && row.doc.groups && row.doc.groups[row.di];
+    const gi = entry ? entry.groupIndex : -1;
+    const cook = unit ? dg.cookDays[unit.lead] : undefined;
+    return { unit, color: groupColor(gi), cookLabel: cook != null && cook !== '' ? `cook ${ops.SHORT_DAYS[cook]}` : null, isGroup: !!unit && unit.days.length > 1 };
+  };
   let maxMeals = 1;
-  activeIdx.forEach((di) => { const day = days[di]; if (day && day.meals.length > maxMeals) maxMeals = day.meals.length; });
-  const anyCanAdd = activeIdx.some((di) => !dg.excluded.includes(di) && (days[di] ? days[di].meals.length : 0) < ops.MAX_MEALS);
+  rows.forEach((r) => { if (r.day.meals.length > maxMeals) maxMeals = r.day.meals.length; });
+  const anyCanAdd = rows.some((r) => !r.isFree && r.day.meals.length < ops.MAX_MEALS);
+  const listSummary = ops.weeklySummary(rows.map((r) => (r.isFree ? null : r.day)), [], T);
   const selUnit = meta(sel).unit;
-  const weekEmpty = activeIdx.every((di) => !days[di] || days[di].meals.length === 0);
+  const listEmpty = rows.every((r) => r.day.meals.length === 0);
   const selFree = dg.excluded.includes(sel);
+  const todayStr = todayIso();
 
-  // Nothing in this week yet: no zero tiles, no seven identical rows. Generate lives in the header;
-  // here only the actions that are not a copy of it.
-  if (weekEmpty) {
+  // Nothing planned from here on: no zero tiles, no identical empty rows. Generate lives in the
+  // header; here only the actions that are not a copy of it.
+  if (listEmpty) {
     return (
       <div className="desk-main">
         {pager}
@@ -278,19 +307,20 @@ export default function PlanView() {
   return (
     <div className="desk-main">
         {pager}
-        {tiles(summary)}
+        {tiles(listSummary)}
         <Card pad={false} style={{ overflow: 'hidden' }}>
           <div className="table-wrap">
             <table className="table">
               <thead><tr><th>Day</th>{Array.from({ length: maxMeals }, (_, i) => <th key={i}>Meal</th>)}{anyCanAdd && <th style={{ width: 48 }} />}<th>Total</th><th>Group</th></tr></thead>
               <tbody>
-                {activeIdx.map((di) => {
-                  const day = days[di] || ops.EMPTY_DAY;
-                  const isFree = dg.excluded.includes(di);
-                  const { unit, color, cookLabel, isGroup } = meta(di);
+                {rows.map((row) => {
+                  const { iso, ws, di, doc, day, isFree } = row;
+                  const { unit, color, cookLabel, isGroup } = rowMeta(row);
+                  const act = actionsFor(ws);
+                  const isToday = iso === todayStr;
                   return (
-                    <tr key={di} className={cx(di === today && 'today')} onClick={() => setDate(isoDate(dates[di]))} style={{ cursor: 'pointer', outline: di === sel ? '1px solid var(--line)' : undefined }}>
-                      <td><div className="stack-sm" style={{ gap: 2 }}><div className="strong" style={{ color: isFree ? 'var(--muted)' : undefined }}>{ops.SHORT_DAYS[di]}</div><div className="small muted">{fmtDayDate(dates[di])}{di === today ? ' · today' : ''}</div></div></td>
+                    <tr key={iso} className={cx(isToday && 'today')}>
+                      <td><div className="stack-sm" style={{ gap: 2 }}><div className="strong" style={{ color: isFree ? 'var(--muted)' : undefined }}>{ops.SHORT_DAYS[di]}</div><div className="small muted">{fmtDayDate(parseIso(iso))}{isToday ? ' · today' : ''}</div></div></td>
                       {isFree ? (
                         <td colSpan={maxMeals + (anyCanAdd ? 1 : 0) + 1}><span className="muted">Free day · nothing planned.</span></td>
                       ) : (
@@ -299,24 +329,25 @@ export default function PlanView() {
                             const meal = day.meals[mi];
                             if (!meal) return <td key={mi}>{mi === 0 && day.meals.length === 0 ? <span className="muted">Nothing planned</span> : null}</td>;
                             const key = `${di}-${mi}`;
-                            const fresh = planDoc.tags[key] === 'fresh';
+                            const fresh = !!doc && doc.tags[key] === 'fresh';
+                            const eaten = !!doc && !!doc.eaten[key];
                             return (
                               <td key={mi}>
                                 <div className="row">
-                                  <button type="button" className="cell-btn" onClick={(e) => { e.stopPropagation(); setDetail({ di, mi }); }}>
-                                    <span className="cell-name row-sm wrap" style={{ gap: 6 }}>{planDoc.eaten[key] && <Icon name="check" size={14} stroke={2.5} style={{ color: 'var(--accent-text)' }} />}{meal.name}</span>
+                                  <button type="button" className="cell-btn" onClick={() => setDetail({ di, mi, ws })}>
+                                    <span className="cell-name row-sm wrap" style={{ gap: 6 }}>{eaten && <Icon name="check" size={14} stroke={2.5} style={{ color: 'var(--accent-text)' }} />}{meal.name}</span>
                                     <span className="small muted">{meal.variantLabel ? `${meal.variantLabel} · ` : ''}{fmtInt(meal.totalMacros.calories)} kcal</span>
                                   </button>
-                                  <button type="button" className="tag" onClick={(e) => { e.stopPropagation(); actions.toggleTag(di, mi); }}>{fresh ? 'fresh' : 'batch'}</button>
+                                  <button type="button" className="tag" onClick={() => act.toggleTag(di, mi)}>{fresh ? 'fresh' : 'batch'}</button>
                                 </div>
                               </td>
                             );
                           })}
-                          {anyCanAdd && <td>{day.meals.length < ops.MAX_MEALS && <button type="button" className="icon-btn sm muted" aria-label="Add a meal" onClick={(e) => { e.stopPropagation(); openSwap(di, day.meals.length, true); }}><Icon name="plus" size={16} /></button>}</td>}
+                          {anyCanAdd && <td>{day.meals.length < ops.MAX_MEALS && <button type="button" className="icon-btn sm muted" aria-label="Add a meal" onClick={() => openSwap(di, day.meals.length, true, ws)}><Icon name="plus" size={16} /></button>}</td>}
                           <td>
                             <div className="row-sm">
                               <span className="num" style={{ fontSize: 18 }}>{fmtInt(day.totals.calories)}</span>
-                              {day.proteinShake && <button type="button" className="tag" title="Protein shake · click to remove" onClick={(e) => { e.stopPropagation(); actions.dropShake(di); }}>+ shake</button>}
+                              {day.proteinShake && <button type="button" className="tag" title="Protein shake · click to remove" onClick={() => act.dropShake(di)}>+ shake</button>}
                               {day.meals.length > 0 && !ops.zoneCheck(day.totals, T).ok && <Icon name="alert" size={16} style={{ color: 'var(--warn)' }} />}
                             </div>
                           </td>

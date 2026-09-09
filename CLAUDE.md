@@ -38,7 +38,8 @@ Path `/Users/sebas/Desktop/MealPrep/`.
     pages of `WeekStrip.jsx`; `extra` slot in its head row), `MonthGrid.jsx` (`MonthCells` 42-cell Monday-first grid, read-only;
     default export = desktop head + grid; `MonthPager` = phone, ±13 months scroll-snapped, compact cells;
     exports `monthOf`/`monthCells`), `grocery.js` (`groceryForWindow` over a rolling date window), `PlanView.jsx`
-    (phone day cards; desktop tiles + week table; empty states hold no Generate button — that is the header's),
+    (one rolling list from the selected day: phone day cards with meal rows, desktop tiles + table; empty states hold no
+    Generate button — that is the header's),
     `MealDetailSheet.jsx`, `SwapSheet.jsx`, `GroceryView.jsx`, `RecipesView.jsx` (+ ingredients table),
     `LogView.jsx`, `SavedPlans.jsx`, `common.js` (dates, group colours, `useIsDesktop`).
   - `src/screens/` — `Home` (day pager + eaten log), `Fuel` (segments via `/fuel/:view?`), `CookDay` (`/fuel/cook/:week/:unit`),
@@ -128,11 +129,12 @@ else shake-planned in-zone, else least-bad + deficit shake.
   recent earlier day with meals. Storage stays per week, keyed by Monday (`plans.weeks`), a year back or ahead.
 - **Review as a new user**: `?fresh` on any URL (`FreshStart` in `App.jsx`) asks, erases everything and reloads as a
   first launch — same as More › Backup › Erase everything. A private window is the zero-setup alternative.
-- **Fuel › Plan is Week | Month** (`settings.planView`, toggle in the strip's head row, both form factors). The laptop
-  "Week" list runs FROM THE SELECTED DAY, like Generate: at least `planDays` rows, extended to the last planned day within
+- **Fuel › Plan is Week | Month** (`settings.planView`, toggle in the strip's head row, both form factors). The "Week"
+  list (laptop table, phone day cards) runs FROM THE SELECTED DAY, like Generate: at least `planDays` rows, extended to the last planned day within
   four weeks (never cut at a Sunday). Rows can belong to different week documents — each binds its own actions via
   `usePlanActionsFor()(weekStart)`; sheets carry `ws`. Rows are not clickable for selection (the strip selects), so the
-  list never jumps. Phone month = compact grid (number + group dot) swiped like the strip, with the selected day's card under it. The month grid is
+  list never jumps. Phone meal rows are compact and open the meal sheet (servings, batch/fresh, swap, remove, eaten); the batch tag toggles
+  in place. Phone month = compact grid (number + group dot) swiped like the strip, with the same list under it. The month grid is
   read-only: click selects the day (header, Generate, Cook day follow), double-click opens its week, the N days Generate
   would cover are tinted; edits (swap/add/tags/servings) stay in the table and day cards. Tiles average the visible
   month's planned days and hide at zero, like the empty-week card replaces the table when the week has no meals.

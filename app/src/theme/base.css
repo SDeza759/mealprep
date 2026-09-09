@@ -284,3 +284,6 @@ select.input { appearance: none; -webkit-appearance: none; padding-right: 32px; 
 .mcell.compact.on { background: var(--surface2); border-color: var(--line); }
 .mcell.compact.out { opacity: 0.3; }
 .mcell.compact .dot { width: 6px; height: 6px; border-radius: 3px; }
+
+/* phone plan list: one card per day, a row per meal (opens the meal sheet) */
+.mrow { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 0; border-top: 1px solid var(--line); cursor: pointer; text-align: left; }

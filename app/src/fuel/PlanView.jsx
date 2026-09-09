@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DAYS_NAMES } from '../core/index.js';
 import { fmtInt } from '../core/display.js';
 import * as ops from '../core/planOps.js';
-import { Card, Button, Bar, Stepper, Chip, Tag, Icon, Empty, Seg, Confirm, cx } from '../ui/index.jsx';
+import { Card, Button, Bar, Icon, Empty, Seg, Confirm, cx } from '../ui/index.jsx';
 import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanActions, usePlanActionsFor, useRangeActions, useSettings, emptyWeek } from './hooks.js';
 import { useSelectedDate } from './selection.js';
 import { weekStartOf, weekdayIndex, todayIso, isoDate, parseIso, addDaysIso } from './dates.js';
-import { groupColor, weekDates, fmtDayDate, fmtLongDate, fmtRange, weekLabel, macroLine, targetsLine, useIsDesktop, MONTHS } from './common.js';
+import { groupColor, fmtDayDate, weekLabel, macroLine, useIsDesktop, MONTHS } from './common.js';
 import DayPager from './DayPager.jsx';
 import MealDetailSheet from './MealDetailSheet.jsx';
 import SwapSheet from './SwapSheet.jsx';
@@ -20,30 +20,6 @@ const MACRO_TILES = [
   { key: 'protein', tKey: 'proteinGrams', label: 'Protein', color: 'var(--protein)', unit: ' g' },
   { key: 'fat', tKey: 'fatGrams', label: 'Fat', color: 'var(--fat)', unit: ' g' },
 ];
-
-function ZoneLine({ totals, T }) {
-  const zone = ops.zoneCheck(totals, T);
-  return (
-    <div className="okline">
-      <Icon name={zone.ok ? 'checkCircle' : 'alert'} size={16} stroke={2.25} style={{ color: zone.ok ? 'var(--good)' : 'var(--warn)', flex: '0 0 auto' }} />
-      <span>{ops.zoneText(zone)}</span>
-    </div>
-  );
-}
-
-function DayTiles({ totals, T }) {
-  return (
-    <div className="tiles">
-      {MACRO_TILES.map((m) => (
-        <div key={m.key} className="tile">
-          <div className="eyebrow" style={{ fontSize: 10 }}>{m.label}</div>
-          <div className="num" style={{ fontSize: 20 }}>{fmtInt(totals[m.key])}{m.unit}</div>
-          <Bar value={totals[m.key]} target={T[m.tKey]} color={m.color} thin />
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function PlanView() {
   const desktop = useIsDesktop();
@@ -70,8 +46,6 @@ export default function PlanView() {
   const [month, setMonth] = useState(() => monthOf(date));
   useEffect(() => { setMonth((c) => { const m = monthOf(date); return c.y === m.y && c.m === m.m ? c : m; }); }, [date]);
   const viewSeg = <Seg className="sm" value={view} onChange={(v) => patchSettings({ planView: v })} options={[{ value: 'week', label: 'Week', icon: desktop ? 'list' : undefined }, { value: 'month', label: 'Month', icon: desktop ? 'calendar' : undefined }]} />;
-  const dates = useMemo(() => weekDates(weekStart), [weekStart]);
-  const today = weekStart === weekStartOf(todayIso()) ? weekdayIndex(todayIso()) : -1;
   // A week with no document renders as an empty week; actions create the document on first edit.
   const planDoc = stored || emptyWeek(weekStart, T);
 
@@ -111,98 +85,45 @@ export default function PlanView() {
     </>
   );
 
-  const days = planDoc.days;
 
-  const MealCard = ({ di, mi, meal }) => {
-    const key = `${di}-${mi}`;
-    const isFresh = planDoc.tags[key] === 'fresh';
-    const isEaten = !!planDoc.eaten[key];
-    const { cookLabel } = meta(di);
-    return (
-      <Card className="meal-card" role="button" tabIndex={0} onClick={() => setDetail({ di, mi })} onKeyDown={(e) => { if (e.key === 'Enter') setDetail({ di, mi }); }} style={{ cursor: 'pointer' }}>
-        <div className="row top">
-          <div className="grow stack-sm" style={{ gap: 4 }}>
-            <div className="meal-name row-sm wrap" style={{ gap: 6 }}>{meal.name}{meal.variantLabel && <Tag>{meal.variantLabel}</Tag>}</div>
-            <div className="small muted">{macroLine(meal.totalMacros)}</div>
-          </div>
-          <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-            <Stepper value={planDoc.servings[key] || 1} onChange={(v) => actions.setServing(di, mi, v)} min={1} max={12} ariaLabel="Servings" />
-          </div>
-        </div>
-        <div className="row-sm" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-          <Chip on={!isFresh} icon={isFresh ? undefined : 'pot'} onClick={() => actions.toggleTag(di, mi)}>{isFresh ? 'Fresh · cook that day' : `Batch${cookLabel ? ` · ${cookLabel}` : ''}`}</Chip>
-          <Chip on={isEaten} hi={isEaten} icon="check" onClick={() => actions.toggleEaten(di, mi)}>{isEaten ? 'Eaten' : 'Eat'}</Chip>
-          <div className="grow" />
-          <button type="button" className="link" onClick={() => openSwap(di, mi)}>Swap</button>
-        </div>
-      </Card>
-    );
+  // The list runs from the selected day, like Generate does: at least the Generate window (n days),
+  // extended to the last planned day within four weeks so a longer stretch never stops at a Sunday.
+  const rows = [];
+  let lastPlanned = -1;
+  for (let i = 0; i < 28; i++) {
+    const iso = addDaysIso(date, i);
+    const ws = weekStartOf(iso);
+    const di = weekdayIndex(iso);
+    const doc = (plans.weeks && plans.weeks[ws]) || null;
+    const day = (doc && doc.days && doc.days[di]) || ops.EMPTY_DAY;
+    if (day.meals.length) lastPlanned = i;
+    rows.push({ iso, ws, di, doc, day, isFree: dg.excluded.includes(di) });
+  }
+  rows.splice(Math.max(n, lastPlanned + 1));
+  const rowMeta = (row) => {
+    const unit = ops.unitForDay(units, row.di);
+    const entry = row.doc && row.doc.groups && row.doc.groups[row.di];
+    const gi = entry ? entry.groupIndex : -1;
+    const cook = unit ? dg.cookDays[unit.lead] : undefined;
+    return { unit, color: groupColor(gi), cookLabel: cook != null && cook !== '' ? `cook ${ops.SHORT_DAYS[cook]}` : null, isGroup: !!unit && unit.days.length > 1 };
   };
-
-  const DayBody = ({ di }) => {
-    const day = days[di] || ops.EMPTY_DAY;
-    const isFree = dg.excluded.includes(di);
-    const { unit, cookLabel, color, isGroup } = meta(di);
-    if (isFree) {
-      return <Card><Empty title={`${DAYS_NAMES[di]} is a free day`}>Nothing planned. Change that under Settings › Day groups.</Empty></Card>;
-    }
-    if (day.meals.length === 0) {
-      const iso = isoDate(dates[di]);
-      // Generate lives in the header (once, at the top); the card holds only its day count and the
-      // actions that are not a copy of it.
-      return (
-        <Card className="stack" style={{ padding: 20 }}>
-          <div className="num" style={{ fontSize: 22, textAlign: 'center', padding: '10px 0 2px' }}>Nothing planned</div>
-          <div className="row-sm wrap" style={{ justifyContent: 'center', gap: 16 }}>
-            {canCopy(iso, n) && <button type="button" className="link" onClick={() => copyPattern(iso, n)}><Icon name="copy" size={14} stroke={2.25} />Repeat last plan</button>}
-            <button type="button" className="link" onClick={() => openSwap(di, 0, true)}><Icon name="plus" size={14} stroke={2.25} />Add a meal</button>
-            {unit && <button type="button" className="link" onClick={() => actions.regenerate([di])}>Just {isGroup ? unit.name : 'this day'}</button>}
-          </div>
-        </Card>
-      );
-    }
-    return (
-      <>
-        <Card className="stack">
-          <div className="stack-sm" style={{ gap: 3 }}>
-            <div className="row-sm wrap" style={{ gap: 6 }}>
-              <span className="dot" style={{ '--c': color }} />
-              <span className="strong">{DAYS_NAMES[di]}</span>
-              <span className="muted small">· {fmtDayDate(dates[di])}{isGroup ? ` · ${unit.name} group` : ' · own plan'}{cookLabel ? ` · ${cookLabel}` : ''}</span>
-            </div>
-            <div className="small muted">Targets {targetsLine(T)}</div>
-          </div>
-          <DayTiles totals={day.totals} T={T} />
-          <ZoneLine totals={day.totals} T={T} />
-        </Card>
-        {day.meals.map((meal, mi) => <MealCard key={`${di}-${mi}`} di={di} mi={mi} meal={meal} />)}
-        {day.proteinShake && (
-          <Card className="row">
-            <Icon name="shake" size={22} style={{ color: 'var(--muted)' }} />
-            <div className="grow stack-sm" style={{ gap: 3 }}>
-              <div className="strong">Protein shake</div>
-              <div className="small muted">{day.proteinShake.calories} kcal · {day.proteinShake.carbs} C · {day.proteinShake.protein} P · {day.proteinShake.fat} F · 1 scoop</div>
-            </div>
-            <button type="button" className="icon-btn sm muted" aria-label="Remove shake and re-solve" onClick={() => actions.dropShake(di)}><Icon name="x" size={16} /></button>
-          </Card>
-        )}
-        <div className="row-sm wrap">
-          {day.meals.length < ops.MAX_MEALS && <Button size="sm" icon="plus" onClick={() => openSwap(di, day.meals.length, true)}>Add a meal</Button>}
-          {unit && <Button size="sm" icon="refresh" onClick={() => actions.regenerate([di])}>Regenerate {isGroup ? unit.name : ops.SHORT_DAYS[di]}</Button>}
-        </div>
-      </>
-    );
-  };
+  let maxMeals = 1;
+  rows.forEach((r) => { if (r.day.meals.length > maxMeals) maxMeals = r.day.meals.length; });
+  const anyCanAdd = rows.some((r) => !r.isFree && r.day.meals.length < ops.MAX_MEALS);
+  const listSummary = ops.weeklySummary(rows.map((r) => (r.isFree ? null : r.day)), [], T);
+  const selUnit = meta(sel).unit;
+  const listEmpty = rows.every((r) => r.day.meals.length === 0);
+  const selFree = dg.excluded.includes(sel);
+  const todayStr = todayIso();
 
   // Averages over the planned days of the week, and of the visible month (free weekdays skipped).
-  const summary = ops.weeklySummary(days, dg.excluded, T);
   const monthPlanned = monthCells(month.y, month.m)
     .filter((d) => d.getMonth() === month.m)
     .map((d) => { const iso = isoDate(d); const di = weekdayIndex(iso); if (dg.excluded.includes(di)) return null; const wk = plans.weeks && plans.weeks[weekStartOf(iso)]; return wk && wk.days ? wk.days[di] : null; })
     .filter((d) => d && d.meals.length > 0);
   const monthSummary = ops.weeklySummary(monthPlanned, [], T);
-  const avgLine = (label, s) => s.n > 0 && (
-    <div className="small muted">{label} avg · {macroLine(s.avg)} · {s.n} day{s.n === 1 ? '' : 's'}</div>
+  const avgLine = (s, prefix) => s.n > 0 && (
+    <div className="small muted">{prefix ? `${prefix} · ` : ''}{s.n} day{s.n === 1 ? '' : 's'} planned · avg {macroLine(s.avg)}</div>
   );
   const bottomRow = (extra) => (
     <div className="row-sm wrap">
@@ -213,15 +134,84 @@ export default function PlanView() {
   );
 
   // ---------- phone ----------
+  // The same rows as the laptop table, one card per day. Meal rows open the meal sheet (servings,
+  // batch/fresh, swap, remove, eaten); the batch tag toggles in place.
+  const dayList = rows.map((row) => {
+    const { iso, ws, di, doc, day, isFree } = row;
+    const { unit, color, cookLabel, isGroup } = rowMeta(row);
+    const act = actionsFor(ws);
+    const isToday = iso === todayStr;
+    const zoneOk = day.meals.length === 0 || ops.zoneCheck(day.totals, T).ok;
+    return (
+      <Card key={iso} className="stack-sm" style={{ padding: '12px 14px', gap: 4 }}>
+        <div className="row between" style={{ gap: 8 }}>
+          <div className="row-sm wrap" style={{ gap: 6, minWidth: 0 }}>
+            <span className="dot" style={{ '--c': isFree ? 'var(--dim)' : color }} />
+            <span className="strong" style={{ color: isFree ? 'var(--muted)' : undefined }}>{DAYS_NAMES[di]}</span>
+            <span className="small muted">· {fmtDayDate(parseIso(iso))}{isToday ? ' · today' : ''}{isFree ? ' · free' : ` · ${isGroup ? unit.name : 'own plan'}${cookLabel ? ` · ${cookLabel}` : ''}`}</span>
+          </div>
+          {day.meals.length > 0 && (
+            <div className="row-sm nowrap" style={{ gap: 6 }}>
+              {!zoneOk && <Icon name="alert" size={16} style={{ color: 'var(--warn)' }} />}
+              <span className="num" style={{ fontSize: 18 }}>{fmtInt(day.totals.calories)}</span>
+            </div>
+          )}
+        </div>
+        {isFree ? <div className="small muted">Free day · nothing planned.</div> : (
+          <>
+            {day.meals.map((meal, mi) => {
+              const key = `${di}-${mi}`;
+              const fresh = !!doc && doc.tags[key] === 'fresh';
+              const eaten = !!doc && !!doc.eaten[key];
+              const servings = (doc && doc.servings[key]) || 1;
+              const open = () => setDetail({ di, mi, ws });
+              return (
+                <div key={mi} className="mrow" role="button" tabIndex={0} onClick={open} onKeyDown={(e) => { if (e.key === 'Enter') open(); }}>
+                  <div className="grow stack-sm" style={{ gap: 2 }}>
+                    <div className="row-sm" style={{ gap: 6 }}>{eaten && <Icon name="check" size={14} stroke={2.5} style={{ color: 'var(--accent-text)' }} />}<span className="strong">{meal.name}</span></div>
+                    <div className="small muted">{meal.variantLabel ? `${meal.variantLabel} · ` : ''}{fmtInt(meal.totalMacros.calories)} kcal{servings > 1 ? ` · ${servings} servings` : ''}</div>
+                  </div>
+                  <button type="button" className="tag" onClick={(e) => { e.stopPropagation(); act.toggleTag(di, mi); }}>{fresh ? 'fresh' : 'batch'}</button>
+                  <Icon name="chevronRight" size={16} style={{ color: 'var(--dim)' }} />
+                </div>
+              );
+            })}
+            {day.proteinShake && (
+              <div className="mrow" style={{ cursor: 'default' }}>
+                <Icon name="shake" size={18} style={{ color: 'var(--muted)' }} />
+                <div className="grow small muted">Protein shake · {day.proteinShake.calories} kcal · 1 scoop</div>
+                <button type="button" className="icon-btn sm muted" aria-label="Remove shake and re-solve" onClick={() => act.dropShake(di)}><Icon name="x" size={16} /></button>
+              </div>
+            )}
+            <div className="row between" style={{ gap: 8, paddingTop: 6 }}>
+              {day.meals.length === 0 ? <span className="muted">Nothing planned</span> : <span className="small muted">{macroLine(day.totals, { kcal: false })}</span>}
+              {day.meals.length < ops.MAX_MEALS && <button type="button" className="link" onClick={() => openSwap(di, day.meals.length, true, ws)}><Icon name="plus" size={14} stroke={2.25} />Add a meal</button>}
+            </div>
+          </>
+        )}
+      </Card>
+    );
+  });
+  const phoneEmpty = (
+    <Card className="stack" style={{ padding: 20 }}>
+      <div className="num" style={{ fontSize: 22, textAlign: 'center', padding: '10px 0 2px' }}>Nothing planned</div>
+      <div className="row-sm wrap" style={{ justifyContent: 'center', gap: 16 }}>
+        {canCopy(date, n) && <button type="button" className="link" onClick={() => copyPattern(date, n)}><Icon name="copy" size={14} stroke={2.25} />Repeat last plan</button>}
+        {!selFree && <button type="button" className="link" onClick={() => openSwap(sel, 0, true)}><Icon name="plus" size={14} stroke={2.25} />Add a meal</button>}
+        {selUnit && <button type="button" className="link" onClick={() => actions.regenerate([sel])}>Just {selUnit.days.length > 1 ? selUnit.name : 'this day'}</button>}
+      </div>
+    </Card>
+  );
+
   if (!desktop) {
     return (
       <>
         {view === 'month'
           ? <MonthPager date={date} onSelect={setDate} month={month} onMonth={setMonth} plans={plans} excluded={dg.excluded} T={T} n={n} head={viewSeg} />
           : pager}
-        {view === 'month' ? avgLine(MONTHS[month.m], monthSummary) : avgLine('Week', summary)}
-        <DayBody di={sel} />
-        {bottomRow()}
+        {view === 'month' ? avgLine(monthSummary, MONTHS[month.m]) : avgLine(listSummary)}
+        {listEmpty ? phoneEmpty : dayList}
+        {bottomRow(!listEmpty && selUnit && <Button size="sm" icon="refresh" onClick={() => actions.regenerate([sel])}>Regenerate {selUnit.days.length > 1 ? selUnit.name : ops.SHORT_DAYS[sel]}</Button>)}
         {sheets}
       </>
     );
@@ -254,35 +244,6 @@ export default function PlanView() {
     );
   }
 
-  // The list runs from the selected day, like Generate does: at least the Generate window (n days),
-  // extended to the last planned day within four weeks so a longer stretch never stops at a Sunday.
-  const rows = [];
-  let lastPlanned = -1;
-  for (let i = 0; i < 28; i++) {
-    const iso = addDaysIso(date, i);
-    const ws = weekStartOf(iso);
-    const di = weekdayIndex(iso);
-    const doc = (plans.weeks && plans.weeks[ws]) || null;
-    const day = (doc && doc.days && doc.days[di]) || ops.EMPTY_DAY;
-    if (day.meals.length) lastPlanned = i;
-    rows.push({ iso, ws, di, doc, day, isFree: dg.excluded.includes(di) });
-  }
-  rows.splice(Math.max(n, lastPlanned + 1));
-  const rowMeta = (row) => {
-    const unit = ops.unitForDay(units, row.di);
-    const entry = row.doc && row.doc.groups && row.doc.groups[row.di];
-    const gi = entry ? entry.groupIndex : -1;
-    const cook = unit ? dg.cookDays[unit.lead] : undefined;
-    return { unit, color: groupColor(gi), cookLabel: cook != null && cook !== '' ? `cook ${ops.SHORT_DAYS[cook]}` : null, isGroup: !!unit && unit.days.length > 1 };
-  };
-  let maxMeals = 1;
-  rows.forEach((r) => { if (r.day.meals.length > maxMeals) maxMeals = r.day.meals.length; });
-  const anyCanAdd = rows.some((r) => !r.isFree && r.day.meals.length < ops.MAX_MEALS);
-  const listSummary = ops.weeklySummary(rows.map((r) => (r.isFree ? null : r.day)), [], T);
-  const selUnit = meta(sel).unit;
-  const listEmpty = rows.every((r) => r.day.meals.length === 0);
-  const selFree = dg.excluded.includes(sel);
-  const todayStr = todayIso();
 
   // Nothing planned from here on: no zero tiles, no identical empty rows. Generate lives in the
   // header; here only the actions that are not a copy of it.

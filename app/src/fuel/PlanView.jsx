@@ -45,7 +45,7 @@ function DayTiles({ totals, T }) {
   );
 }
 
-export default function PlanView({ onGenerate }) {
+export default function PlanView() {
   const desktop = useIsDesktop();
   const navigate = useNavigate();
   const [date, setDate] = useSelectedDate();
@@ -138,22 +138,19 @@ export default function PlanView({ onGenerate }) {
     }
     if (day.meals.length === 0) {
       const iso = isoDate(dates[di]);
+      // Generate lives in the header (once, at the top); the card holds only its day count and the
+      // actions that are not a copy of it.
       return (
-        <Card className="stack-lg" style={{ padding: 20 }}>
-          <Empty title={`Nothing planned for ${fmtLongDate(dates[di])}`}>
-            Generate starts here and covers {fmtRange(iso, n)}.{isGroup ? ` ${unit.name} share one plan.` : ''}
-          </Empty>
+        <Card className="stack" style={{ padding: 20 }}>
+          <div className="num" style={{ fontSize: 22, textAlign: 'center', padding: '10px 0 2px' }}>Nothing planned</div>
           <div className="row between">
             <span className="small strong">Days to plan</span>
             <Stepper value={n} onChange={(v) => patchSettings({ planDays: v })} min={1} max={28} ariaLabel="Days to plan" />
           </div>
-          <div className="stack-sm">
-            <Button variant="primary" block icon="refresh" onClick={() => onGenerate(iso)}>Generate {n} day{n === 1 ? '' : 's'}</Button>
-            {canCopy(iso, n) && <Button block icon="copy" onClick={() => copyPattern(iso, n)}>Repeat last plan</Button>}
-            <div className="row-sm" style={{ justifyContent: 'center', gap: 16 }}>
-              <button type="button" className="link" onClick={() => openSwap(di, 0, true)}>Add a meal</button>
-              {unit && <button type="button" className="link" onClick={() => actions.regenerate([di])}>Just {isGroup ? unit.name : 'this day'}</button>}
-            </div>
+          <div className="row-sm wrap" style={{ justifyContent: 'center', gap: 16 }}>
+            {canCopy(iso, n) && <button type="button" className="link" onClick={() => copyPattern(iso, n)}><Icon name="copy" size={14} stroke={2.25} />Repeat last plan</button>}
+            <button type="button" className="link" onClick={() => openSwap(di, 0, true)}><Icon name="plus" size={14} stroke={2.25} />Add a meal</button>
+            {unit && <button type="button" className="link" onClick={() => actions.regenerate([di])}>Just {isGroup ? unit.name : 'this day'}</button>}
           </div>
         </Card>
       );

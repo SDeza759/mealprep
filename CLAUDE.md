@@ -38,7 +38,7 @@ Path `/Users/sebas/Desktop/MealPrep/`.
     pages of `WeekStrip.jsx`; `extra` slot in its head row), `MonthGrid.jsx` (`MonthCells` 42-cell Monday-first grid, read-only;
     default export = desktop head + grid; `MonthPager` = phone, ±13 months scroll-snapped, compact cells;
     exports `monthOf`/`monthCells`), `grocery.js` (`groceryForWindow` over a rolling date window), `PlanView.jsx`
-    (phone day cards incl. the inline empty-day generate card; desktop table + rail),
+    (phone day cards; desktop tiles + week table; empty states hold no Generate button — that is the header's),
     `MealDetailSheet.jsx`, `SwapSheet.jsx`, `GroceryView.jsx`, `RecipesView.jsx` (+ ingredients table),
     `LogView.jsx`, `SavedPlans.jsx`, `common.js` (dates, group colours, `useIsDesktop`).
   - `src/screens/` — `Home` (day pager + eaten log), `Fuel` (segments via `/fuel/:view?`), `CookDay` (`/fuel/cook/:week/:unit`),
@@ -120,7 +120,7 @@ else shake-planned in-zone, else least-bad + deficit shake.
   The shake's eaten slot is index `meals.length`.
 - **Manual re-solves anchor at recipe grams** (`baseMealIngredients`), never at the previous solution.
 - **Generation is a rolling window, never "the week"**: Generate starts on the selected day (today by default)
-  for N days (`settings.planDays`, default 7, up to 28; stepper inline on the empty-day card and on Grocery) and
+  for N days (`settings.planDays`, default 7, up to 28; stepper in the desktop header, on the phone's empty-day card and on Grocery) and
   maps onto the week documents it touches (`regenerateDays` with `expand:false`; recipes used earlier in the
   window seed later weeks). Replacing days that already hold meals asks first (`Confirm` in `Fuel.jsx`). A group
   only partly inside the window plans just its in-window days. "Repeat last plan" copies, per weekday, the most

@@ -58,7 +58,7 @@ export default function Fuel() {
         </div>
       </div>
       <Seg value={current} onChange={(v) => navigate(VIEWS.find((x) => x.value === v).path)} options={VIEWS} />
-      {current === 'plan' && <PlanView onGenerate={startGenerate} />}
+      {current === 'plan' && <PlanView />}
       {current === 'grocery' && <GroceryView />}
       {current === 'recipes' && <RecipesView />}
       {current === 'log' && <LogView />}

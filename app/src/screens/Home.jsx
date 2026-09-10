@@ -8,7 +8,7 @@ import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanAc
 import { useSelectedDate } from '../fuel/selection.js';
 import { weekStartOf, weekdayIndex, todayIso } from '../fuel/dates.js';
 import { fmtLongDate, weekDates, macroLine, groupColor, useIsDesktop } from '../fuel/common.js';
-import DayPager from '../fuel/DayPager.jsx';
+import DayStrip from '../fuel/DayStrip.jsx';
 import MealDetailSheet from '../fuel/MealDetailSheet.jsx';
 
 const BARS = [
@@ -57,7 +57,7 @@ export default function Home() {
       <div className="page-head">
         <div className="page-head-l"><div className="eyebrow">{fmtLongDate(dates[sel])}{isToday ? ' · today' : ''}</div><div className="num page-title">Home</div></div>
       </div>
-      <DayPager date={date} onSelect={setDate} excluded={dg.excluded} colorOf={colorOf} />
+      <DayStrip date={date} onSelect={setDate} excluded={dg.excluded} colorOf={colorOf} />
 
       <Card className="stack">
         <div className="row" style={{ gap: 16 }}>

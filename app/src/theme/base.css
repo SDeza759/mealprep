@@ -289,3 +289,11 @@ select.input { appearance: none; -webkit-appearance: none; padding-right: 32px; 
 
 /* phone plan list: one card per day, a row per meal (opens the meal sheet) */
 .mrow { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 0; border-top: 1px solid var(--line); cursor: pointer; text-align: left; }
+
+/* continuous day strip (Home, Fuel): snaps per day; cells sized by the strip (--dayw) */
+.strip { display: flex; gap: 4px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.strip::-webkit-scrollbar { display: none; }
+.strip .day { flex: 0 0 var(--dayw, 48px); width: auto; scroll-snap-align: start; }
+.day.range { background: var(--accent-soft); }
+.day.on.range { background: var(--surface2); }
+.days-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 24px; }

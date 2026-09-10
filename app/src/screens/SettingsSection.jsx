@@ -1,10 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { DAYS_NAMES, RECIPES, INGREDIENT_REGISTRY } from '../core/index.js';
-import * as ops from '../core/planOps.js';
-import { Card, Button, Seg, Toggle, SRow, Stepper, Sheet, Confirm, Icon, cx, useToast } from '../ui/index.jsx';
-import { useSettings, useDayGroups, useUnits, useTargets, usePlansDoc } from '../fuel/hooks.js';
-import { groupColor, targetsLine, useIsDesktop } from '../fuel/common.js';
+import { RECIPES, INGREDIENT_REGISTRY } from '../core/index.js';
+import { Card, Button, Seg, Toggle, SRow, Sheet, Confirm, Icon, cx, useToast } from '../ui/index.jsx';
+import { useSettings, useTargets } from '../fuel/hooks.js';
+import { targetsLine, useIsDesktop } from '../fuel/common.js';
 import { ACCENTS } from '../store/defaults.js';
 import { buildBackup, parseBackup, saveJson, backupFileName } from '../store/backup.js';
 import { replaceAll, clearAll, allDocs, setDoc } from '../store/store.js';
@@ -12,7 +11,7 @@ import { storageMode } from '../store/db.js';
 import pkg from '../../package.json';
 
 const TITLES = {
-  appearance: 'Appearance', targets: 'Targets', days: 'Day groups', meals: 'Meals per day', units: 'Units',
+  appearance: 'Appearance', targets: 'Targets', units: 'Units',
   notifications: 'Notifications', backup: 'Backup', about: 'About',
 };
 
@@ -63,129 +62,6 @@ function Targets() {
           : <div className="warnbox">Percentages add up to {T.pctSum}% — they must equal 100% before a plan can be generated.</div>}
       </Card>
       <div className="infobox">The solver holds every day inside 95–105% of all four numbers. Protein at 0.8–1 g per pound of bodyweight and fat at 20–30% of calories are the usual starting points; carbs fill the rest. Adaptive targets from your weight trend arrive with Body.</div>
-    </>
-  );
-}
-
-function Days() {
-  const [dg, patch] = useDayGroups();
-  const units = useUnits();
-  const [plans] = usePlansDoc();
-  const hasPlans = Object.keys(plans.weeks || {}).length > 0;
-  const [selected, setSelected] = useState(null);
-  const [menu, setMenu] = useState(null);
-  const groups = dg.groups;
-  const byNum = (a, b) => a - b;
-
-  const tap = (d) => {
-    if (dg.excluded.includes(d)) { setSelected(null); setMenu(d); return; }
-    if (selected === null) { setSelected(d); return; }
-    if (selected === d) { setSelected(null); setMenu(d); return; }
-    const gA = ops.findDayGroup(groups, selected), gB = ops.findDayGroup(groups, d);
-    let next;
-    if (gA !== -1 && gB !== -1) {
-      if (gA === gB) { setSelected(null); return; }
-      next = groups.map((g, i) => (i === gA ? [...g, ...groups[gB]].sort(byNum) : g)).filter((_, i) => i !== gB);
-    } else if (gA !== -1) next = groups.map((g, i) => (i === gA ? [...g, d].sort(byNum) : g));
-    else if (gB !== -1) next = groups.map((g, i) => (i === gB ? [...g, selected].sort(byNum) : g));
-    else next = [...groups, [selected, d].sort(byNum)];
-    patch({ groups: next, mealCounts: ops.normalizedCounts(next, dg.mealCounts) });
-    setSelected(null);
-  };
-  const ungroup = (d) => {
-    const gi = ops.findDayGroup(groups, d);
-    if (gi === -1) return;
-    patch({ groups: groups.map((g, i) => (i === gi ? g.filter((x) => x !== d) : g)).filter((g) => g.length > 1) });
-  };
-  const toggleFree = (d) => {
-    if (dg.excluded.includes(d)) { patch({ excluded: dg.excluded.filter((x) => x !== d) }); return; }
-    patch({ groups: groups.map((g) => g.filter((x) => x !== d)).filter((g) => g.length > 0), excluded: [...dg.excluded, d].sort(byNum) });
-  };
-  const setCook = (unit, v) => {
-    const cookDays = { ...dg.cookDays };
-    if (v === '') delete cookDays[unit.lead]; else cookDays[unit.lead] = Number(v);
-    patch({ cookDays });
-  };
-  const menuGi = menu != null ? ops.findDayGroup(groups, menu) : -1;
-
-  return (
-    <>
-      <Card className="stack">
-        <div className="eyebrow">Days</div>
-        <div className="week">
-          {[0, 1, 2, 3, 4, 5, 6].map((d) => {
-            const free = dg.excluded.includes(d);
-            const gi = ops.findDayGroup(groups, d);
-            return (
-              <button key={d} type="button" className={cx('day', selected === d && 'on')} onClick={() => tap(d)} aria-pressed={selected === d} style={selected === d ? { borderColor: 'var(--accent)' } : undefined}>
-                <div className="eyebrow" style={{ fontSize: 10 }}>{ops.SHORT_DAYS[d]}</div>
-                <div className="num" style={{ fontSize: 16, color: free ? 'var(--dim)' : undefined }}>{free ? '–' : gi !== -1 ? `G${gi + 1}` : '1'}</div>
-                {free ? <div className="eyebrow" style={{ fontSize: 9, color: 'var(--dim)', letterSpacing: '0.08em' }}>free</div> : <div className="day-mark" style={{ '--c': groupColor(gi) }} />}
-              </button>
-            );
-          })}
-        </div>
-        <div className="small muted" style={{ lineHeight: 1.45 }}>
-          {selected !== null ? <span><span className="strong">{DAYS_NAMES[selected]} selected.</span> Tap another day to put them in one group, or tap it again for options.</span>
-            : 'Tap a day, then a second day to group them. Grouped days share one plan — same meals, same amounts — so you cook once and eat it on each of those days. Tap a day twice for free-day and ungroup options.'}
-        </div>
-      </Card>
-      <Card pad={false} className="card-rows">
-        {units.map((u) => (
-          <div key={u.key} className="srow" style={{ alignItems: 'center' }}>
-            <span className="dot" style={{ '--c': groupColor(u.groupIndex) }} />
-            <div className="srow-main">
-              <div className="srow-title">{u.name}{u.days.length > 1 ? ' group' : ''}</div>
-              <div className="srow-val">{u.days.length > 1 ? `${u.days.map((d) => ops.SHORT_DAYS[d]).join(' · ')} share one plan` : 'Own plan'}</div>
-            </div>
-            <label className="row-sm small muted" style={{ flex: '0 0 auto' }}>
-              <span>Cook</span>
-              <select className="input" style={{ width: 96, height: 36 }} value={dg.cookDays[u.lead] ?? ''} onChange={(e) => setCook(u, e.target.value)} aria-label={`Cook day for ${u.name}`}>
-                <option value="">—</option>
-                {DAYS_NAMES.map((n, i) => <option key={i} value={i}>{n}</option>)}
-              </select>
-            </label>
-          </div>
-        ))}
-        {units.length === 0 && <div className="srow"><div className="srow-main"><div className="srow-val">Every day is free — nothing gets planned.</div></div></div>}
-      </Card>
-      <div className="infobox">Cook day is when you prep a group's batch meals (fresh meals are cooked on the day). Changes here shape the next week you generate{hasPlans ? '; weeks already planned keep their groups' : ''}.</div>
-      <Sheet open={menu != null} onClose={() => setMenu(null)} title={menu != null ? DAYS_NAMES[menu] : ''}>
-        {menu != null && (
-          <div className="stack-sm">
-            <Button block onClick={() => { toggleFree(menu); setMenu(null); }}>{dg.excluded.includes(menu) ? 'Plan this day' : 'Make it a free day'}</Button>
-            {menuGi !== -1 && <Button block onClick={() => { ungroup(menu); setMenu(null); }}>Remove from group G{menuGi + 1}</Button>}
-          </div>
-        )}
-      </Sheet>
-    </>
-  );
-}
-
-function Meals() {
-  const [dg, patch] = useDayGroups();
-  const T = useTargets();
-  const units = useUnits();
-  const setCount = (u, val) => {
-    const v = Math.max(ops.MIN_MEALS, Math.min(ops.MAX_MEALS, val));
-    const next = { ...dg.mealCounts };
-    u.days.forEach((d) => { next[d] = v; });
-    patch({ mealCounts: next });
-  };
-  const strained = ops.strainedUnits(units, T.calories);
-  return (
-    <>
-      <Card pad={false} className="card-rows">
-        {units.map((u) => (
-          <div key={u.key} className="srow">
-            <span className="dot" style={{ '--c': groupColor(u.groupIndex) }} />
-            <div className="srow-main"><div className="srow-title">{u.name}</div><div className="srow-val">{Math.round(T.calories / u.meals)} kcal per meal</div></div>
-            <Stepper value={u.meals} onChange={(v) => setCount(u, v)} min={ops.MIN_MEALS} max={ops.MAX_MEALS} ariaLabel={`Meals per day for ${u.name}`} />
-          </div>
-        ))}
-      </Card>
-      {strained.length > 0 && <div className="warnbox">{strained.map((u) => `${u.name} (${Math.round(T.calories / u.meals)} kcal/meal)`).join(', ')} — that's a lot to ask of one sitting, so those days may land off-target.</div>}
-      <div className="infobox">A protein shake is added only when a day can't reach its targets from meals alone, and you can remove it from any day.</div>
     </>
   );
 }
@@ -294,7 +170,7 @@ function About() {
   );
 }
 
-const SECTIONS = { appearance: Appearance, targets: Targets, days: Days, meals: Meals, units: Units, notifications: Notifications, backup: Backup, about: About };
+const SECTIONS = { appearance: Appearance, targets: Targets, units: Units, notifications: Notifications, backup: Backup, about: About };
 
 export default function SettingsSection() {
   const { section } = useParams();

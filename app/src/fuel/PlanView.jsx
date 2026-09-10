@@ -8,7 +8,8 @@ import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanAc
 import { useSelectedDate } from './selection.js';
 import { weekStartOf, weekdayIndex, todayIso, isoDate, parseIso, addDaysIso } from './dates.js';
 import { groupColor, fmtDayDate, fmtLongDate, weekLabel, macroLine, useIsDesktop, MONTHS } from './common.js';
-import DayPager from './DayPager.jsx';
+import DayStrip from './DayStrip.jsx';
+import DaysPanel from './DaysPanel.jsx';
 import MealDetailSheet from './MealDetailSheet.jsx';
 import SwapSheet from './SwapSheet.jsx';
 import SavedPlans from './SavedPlans.jsx';
@@ -75,7 +76,7 @@ export default function PlanView() {
   const openSwap = (di, mi, isAdd = false, ws = weekStart) => { setDetail(null); setSwapTarget({ di, mi, isAdd, ws }); };
   const pick = (recipe) => { if (!swapTarget) return; actionsFor(swapTarget.ws || weekStart).swap(swapTarget.di, swapTarget.mi, recipe, swapTarget.isAdd); setSwapTarget(null); };
 
-  const pager = <DayPager date={date} onSelect={setDate} excluded={dg.excluded} colorOf={colorOf} extra={viewSeg} />;
+  const pager = <DayStrip date={date} onSelect={setDate} excluded={dg.excluded} colorOf={colorOf} rangeN={n} right={viewSeg} />;
   const sheets = (
     <>
       {detail && <MealDetailSheet planDoc={docFor(detail.ws || weekStart)} di={detail.di} mi={detail.mi} onClose={() => setDetail(null)} actions={actionsFor(detail.ws || weekStart)} onSwap={(di, mi) => openSwap(di, mi, false, detail.ws || weekStart)} />}
@@ -114,6 +115,7 @@ export default function PlanView() {
   let maxMeals = 1;
   rows.forEach((r) => { if (r.day.meals.length > maxMeals) maxMeals = r.day.meals.length; });
   const anyCanAdd = rows.some((r) => !r.isFree); // the action column: + (add) and clear day
+  const anyShake = rows.some((r) => !!r.day.proteinShake);
   const listSummary = ops.weeklySummary(rows.map((r) => (r.isFree ? null : r.day)), [], T);
   const selUnit = meta(sel).unit;
   const listEmpty = rows.every((r) => r.day.meals.length === 0);
@@ -154,12 +156,7 @@ export default function PlanView() {
             <span className="strong" style={{ color: isFree ? 'var(--muted)' : undefined }}>{DAYS_NAMES[di]}</span>
             <span className="small muted">· {fmtDayDate(parseIso(iso))}{isToday ? ' · today' : ''}{isFree ? ' · free' : ` · ${isGroup ? unit.name : 'own plan'}${cookLabel ? ` · ${cookLabel}` : ''}`}</span>
           </div>
-          {day.meals.length > 0 && (
-            <div className="row-sm nowrap" style={{ gap: 6 }}>
-              {!zoneOk && <Icon name="alert" size={16} style={{ color: 'var(--warn)' }} />}
-              <span className="num" style={{ fontSize: 18 }}>{fmtInt(day.totals.calories)}</span>
-            </div>
-          )}
+          {!zoneOk && <Icon name="alert" size={16} style={{ color: 'var(--warn)', flex: '0 0 auto' }} />}
         </div>
         {isFree ? <div className="small muted">Free day · nothing planned.</div> : (
           <>
@@ -188,7 +185,7 @@ export default function PlanView() {
               </div>
             )}
             <div className="row between" style={{ gap: 8, paddingTop: 6 }}>
-              {day.meals.length === 0 ? <span className="muted">Nothing planned</span> : <span className="small muted">{macroLine(day.totals, { kcal: false })}</span>}
+              {day.meals.length === 0 ? <span className="muted">Nothing planned</span> : <span className="small" style={{ color: zoneOk ? 'transparent' : 'var(--warn)' }}>{zoneOk ? '' : ops.zoneText(ops.zoneCheck(day.totals, T))}</span>}
               <div className="row-sm" style={{ gap: 14 }}>
                 {day.meals.length < ops.MAX_MEALS && <button type="button" className="link" onClick={() => openSwap(di, day.meals.length, true, ws)}><Icon name="plus" size={14} stroke={2.25} />Add a meal</button>}
                 {day.meals.length > 0 && <button type="button" className="link muted" onClick={() => setConfirmDay({ iso, ws, di })}><Icon name="trash" size={14} stroke={2.25} />Clear day</button>}
@@ -216,6 +213,7 @@ export default function PlanView() {
         {view === 'month'
           ? <MonthPager date={date} onSelect={setDate} month={month} onMonth={setMonth} plans={plans} excluded={dg.excluded} T={T} n={n} head={viewSeg} />
           : pager}
+        <DaysPanel />
         {view === 'month' ? avgLine(monthSummary, MONTHS[month.m]) : avgLine(listSummary)}
         {listEmpty ? phoneEmpty : dayList}
         {bottomRow(!listEmpty && selUnit && <Button size="sm" icon="refresh" onClick={() => actions.regenerate([sel])}>Regenerate {selUnit.days.length > 1 ? selUnit.name : ops.SHORT_DAYS[sel]}</Button>)}
@@ -245,6 +243,7 @@ export default function PlanView() {
       <div className="desk-main">
         <MonthGrid date={date} onSelect={setDate} onOpenWeek={(iso) => { setDate(iso); patchSettings({ planView: 'week' }); }}
           month={month} onMonth={setMonth} plans={plans} excluded={dg.excluded} T={T} n={n} head={viewSeg} />
+        <DaysPanel />
         {monthSummary.n > 0 && tiles(monthSummary)}
         {sheets}
       </div>
@@ -258,6 +257,7 @@ export default function PlanView() {
     return (
       <div className="desk-main">
         {pager}
+        <DaysPanel />
         <Card style={{ padding: 28 }}>
           <Empty title="Nothing planned" />
           <div className="row-sm" style={{ justifyContent: 'center', gap: 20, marginTop: 4 }}>
@@ -275,11 +275,12 @@ export default function PlanView() {
   return (
     <div className="desk-main">
         {pager}
+        <DaysPanel />
         {tiles(listSummary)}
         <Card pad={false} style={{ overflow: 'hidden' }}>
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>Day</th>{Array.from({ length: maxMeals }, (_, i) => <th key={i}>Meal</th>)}{anyCanAdd && <th style={{ width: 92 }} />}<th>Total</th><th>Group</th></tr></thead>
+              <thead><tr><th>Day</th>{Array.from({ length: maxMeals }, (_, i) => <th key={i}>Meal</th>)}{anyShake && <th>Shake</th>}{anyCanAdd && <th style={{ width: 92 }} />}</tr></thead>
               <tbody>
                 {rows.map((row) => {
                   const { iso, ws, di, doc, day, isFree } = row;
@@ -288,9 +289,15 @@ export default function PlanView() {
                   const isToday = iso === todayStr;
                   return (
                     <tr key={iso} className={cx(isToday && 'today')}>
-                      <td><div className="stack-sm" style={{ gap: 2 }}><div className="strong" style={{ color: isFree ? 'var(--muted)' : undefined }}>{ops.SHORT_DAYS[di]}</div><div className="small muted">{fmtDayDate(parseIso(iso))}{isToday ? ' · today' : ''}</div></div></td>
+                      <td>
+                        <div className="stack-sm" style={{ gap: 2 }}>
+                          <div className="row-sm" style={{ gap: 6 }}><span className="strong" style={{ color: isFree ? 'var(--muted)' : undefined }}>{ops.SHORT_DAYS[di]}</span>{day.meals.length > 0 && !ops.zoneCheck(day.totals, T).ok && <Icon name="alert" size={14} style={{ color: 'var(--warn)' }} title="Off the 95–105% zone" />}</div>
+                          <div className="small muted">{fmtDayDate(parseIso(iso))}{isToday ? ' · today' : ''}</div>
+                          {!isFree && <div className="small muted row-sm" style={{ gap: 5 }}><span className="dot" style={{ '--c': color, width: 6, height: 6 }} />{isGroup ? unit.name : 'own plan'}{cookLabel ? ` · ${cookLabel}` : ''}</div>}
+                        </div>
+                      </td>
                       {isFree ? (
-                        <td colSpan={maxMeals + (anyCanAdd ? 1 : 0) + 1}><span className="muted">Free day · nothing planned.</span></td>
+                        <td colSpan={maxMeals + (anyShake ? 1 : 0) + (anyCanAdd ? 1 : 0)}><span className="muted">Free day · nothing planned.</span></td>
                       ) : (
                         <>
                           {Array.from({ length: maxMeals }, (_, mi) => {
@@ -311,6 +318,19 @@ export default function PlanView() {
                               </td>
                             );
                           })}
+                          {anyShake && (
+                            <td>
+                              {day.proteinShake && (
+                                <div className="row-sm">
+                                  <div className="cell-btn" style={{ cursor: 'default' }}>
+                                    <span className="cell-name">Protein shake</span>
+                                    <span className="small muted">{day.proteinShake.calories} kcal · 1 scoop</span>
+                                  </div>
+                                  <button type="button" className="icon-btn sm muted" aria-label="Remove shake and re-solve" onClick={() => act.dropShake(di)}><Icon name="x" size={14} /></button>
+                                </div>
+                              )}
+                            </td>
+                          )}
                           {anyCanAdd && (
                             <td>
                               <div className="row-sm" style={{ gap: 6 }}>
@@ -319,16 +339,8 @@ export default function PlanView() {
                               </div>
                             </td>
                           )}
-                          <td>
-                            <div className="row-sm">
-                              <span className="num" style={{ fontSize: 18 }}>{fmtInt(day.totals.calories)}</span>
-                              {day.proteinShake && <button type="button" className="tag" title="Protein shake · click to remove" onClick={() => act.dropShake(di)}>+ shake</button>}
-                              {day.meals.length > 0 && !ops.zoneCheck(day.totals, T).ok && <Icon name="alert" size={16} style={{ color: 'var(--warn)' }} />}
-                            </div>
-                          </td>
                         </>
                       )}
-                      <td><div className="row-sm"><span className="dot" style={{ '--c': isFree ? 'var(--dim)' : color }} /><span className="small muted">{isFree ? 'free' : `${isGroup ? unit.name : 'own plan'}${cookLabel ? ` · ${cookLabel}` : ''}`}</span></div></td>
                     </tr>
                   );
                 })}

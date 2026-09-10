@@ -34,16 +34,19 @@ Path `/Users/sebas/Desktop/MealPrep/`.
     old app's export), `defaults.js` (frozen defaults, `ACCENTS`).
   - `src/fuel/` — `hooks.js` (`useSettings/useTargets/useDayGroups/useUnits/usePlansDoc/useWeekPlan(weekStart)/
     usePlanActions(weekStart)` = `usePlanActionsFor()(weekStart)`, `useLogEaten`, `recordEatenMeals`), `dates.js` (ISO date helpers, Monday keys),
-    `selection.js` (session-level selected date shared by Home and Fuel), `DayPager.jsx` (±52 weeks, scroll-snap
-    pages of `WeekStrip.jsx`; `extra` slot in its head row), `MonthGrid.jsx` (`MonthCells` 42-cell Monday-first grid, read-only;
+    `selection.js` (session-level selected date shared by Home and Fuel), `DayStrip.jsx` (one continuous strip of days, ±52 weeks, snaps per day;
+    arrows/swipes move the strip only, never the selection; head row = month(s) on screen · Today · `right` slot),
+    `DaysPanel.jsx` (the plan's shape on the plan screen: one-line summary + inline editor for groups / meals a day / cook
+    day / free days — no sheet), `MonthGrid.jsx` (`MonthCells` 42-cell Monday-first grid, read-only;
     default export = desktop head + grid; `MonthPager` = phone, ±13 months scroll-snapped, compact cells;
     exports `monthOf`/`monthCells`), `grocery.js` (`groceryForWindow` over a rolling date window), `PlanView.jsx`
     (one rolling list from the selected day: phone day cards with meal rows, desktop tiles + table; empty states hold no
     Generate button — that is the header's),
     `MealDetailSheet.jsx`, `SwapSheet.jsx`, `GroceryView.jsx`, `RecipesView.jsx` (+ ingredients table),
     `LogView.jsx`, `SavedPlans.jsx`, `common.js` (dates, group colours, `useIsDesktop`).
-  - `src/screens/` — `Home` (day pager + eaten log), `Fuel` (segments via `/fuel/:view?`), `CookDay` (`/fuel/cook/:week/:unit`),
-    `Train`/`Body` (placeholders), `More` (settings index), `SettingsSection` (`/more/:section`).
+  - `src/screens/` — `Home` (day strip + eaten log), `Fuel` (segments via `/fuel/:view?`), `CookDay` (`/fuel/cook/:week/:unit`),
+    `Train`/`Body` (placeholders), `More` (settings index: appearance, units, targets, notifications, backup, about — day
+    groups / meals a day / cook days live on Fuel › Plan, not in Settings), `SettingsSection` (`/more/:section`).
   - `src/theme/` — `tokens.css` (dark-first; light under `[data-theme=light]` and the OS query),
     `base.css` (all component classes), `ThemeProvider.jsx`. `src/ui/` — primitives + `Icon.jsx`
     (inline SVG, never emoji). `scripts/make-icons.js` — dependency-free PNG icons.
@@ -138,6 +141,11 @@ else shake-planned in-zone, else least-bad + deficit shake.
   read-only: click selects the day (header, Generate, Cook day follow), double-click opens its week, the N days Generate
   would cover are tinted; edits (swap/add/tags/servings) stay in the table and day cards. Tiles average the visible
   month's planned days and hide at zero, like the empty-week card replaces the table when the week has no meals.
+- **The day strip is continuous** (user's call): no "Week of…" label, no paging; the arrows (laptop) and swipes (phone)
+  scroll the strip and never change the selected day — only a click does. The head row shows the month(s) on screen.
+  The laptop table has no Total or Group column: group + cook day sit under the date, off-zone is an alert icon, the
+  shake is its own cell. The plan's shape (groups, meals a day, cook days, free days) is edited on the plan screen
+  (`DaysPanel`), collapsed to one line by default.
 - **Phone and laptop offer the same actions** (user's call): empty state = "Nothing planned" + Repeat last plan / Add a meal /
   Just <day|unit>; planned = Add a meal, Clear day (per day, asks first; `clearDay` empties that day only — its group
   keeps the shared plan, grocery/Cook day drop it), Regenerate <day|unit>, Saved plans, Clear this week (asks first) on both. The phone
@@ -179,7 +187,7 @@ else shake-planned in-zone, else least-bad + deficit shake.
 - `plan.days` is dense with nulls; empty days are valid and skipped by averages. Plans/favorites are keyed
   by recipe name and go stale on renames until regenerated. The macro-audit build fails if a record name
   is missing from the registry (rename records after any registry rename).
-- `.week`/`.day` classes are shared by the Fuel strip and Settings › Days. Sheets are bottom sheets under
+- `.week`/`.day` classes are shared by the day strip and the Days panel editor. Sheets are bottom sheets under
   900px, centred modals above; `useIsDesktop()` is the breakpoint hook.
 - Legacy `index.html`: `.wk-narrow` is measured (ResizeObserver), never `display:flex` on `.wk-meal-cell`;
   frame/overflow live on `.wk-table-scroll`; its export carries daygroups/favorites/overrides (Dialed imports it).

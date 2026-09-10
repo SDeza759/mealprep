@@ -8,6 +8,7 @@ const GROUP_COLORS = ['var(--accent)', 'var(--fg)', 'var(--carbs)', 'var(--prote
 export function groupColor(gi) { return gi == null || gi < 0 ? 'var(--muted)' : GROUP_COLORS[gi % GROUP_COLORS.length]; }
 
 export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export const MONTH_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export function weekDates(weekStart) {
   const start = weekStart ? parseIso(weekStart) : mondayOf(new Date());

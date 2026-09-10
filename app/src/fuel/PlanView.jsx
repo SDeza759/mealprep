@@ -7,7 +7,7 @@ import { Card, Button, Bar, Icon, Empty, Seg, Confirm, cx } from '../ui/index.js
 import { useWeekPlan, usePlansDoc, useTargets, useDayGroups, useUnits, usePlanActions, usePlanActionsFor, useRangeActions, useSettings, emptyWeek } from './hooks.js';
 import { useSelectedDate } from './selection.js';
 import { weekStartOf, weekdayIndex, todayIso, isoDate, parseIso, addDaysIso } from './dates.js';
-import { groupColor, fmtDayDate, weekLabel, macroLine, useIsDesktop, MONTHS } from './common.js';
+import { groupColor, fmtDayDate, fmtLongDate, weekLabel, macroLine, useIsDesktop, MONTHS } from './common.js';
 import DayPager from './DayPager.jsx';
 import MealDetailSheet from './MealDetailSheet.jsx';
 import SwapSheet from './SwapSheet.jsx';
@@ -40,6 +40,7 @@ export default function PlanView() {
   const [swapTarget, setSwapTarget] = useState(null);
   const [savedOpen, setSavedOpen] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [confirmDay, setConfirmDay] = useState(null); // { iso, ws, di }
   const n = settings.planDays || 7;
   // Desktop Week | Month toggle (persisted). The visible month follows the selection when it moves.
   const view = settings.planView === 'month' ? 'month' : 'week';
@@ -80,6 +81,9 @@ export default function PlanView() {
       {detail && <MealDetailSheet planDoc={docFor(detail.ws || weekStart)} di={detail.di} mi={detail.mi} onClose={() => setDetail(null)} actions={actionsFor(detail.ws || weekStart)} onSwap={(di, mi) => openSwap(di, mi, false, detail.ws || weekStart)} />}
       {swapTarget && <SwapSheet target={swapTarget} onClose={() => setSwapTarget(null)} onPick={pick} />}
       <SavedPlans open={savedOpen} onClose={() => setSavedOpen(false)} weekStart={weekStart} />
+      <Confirm open={!!confirmDay} onClose={() => setConfirmDay(null)} title={confirmDay ? `Clear ${fmtLongDate(parseIso(confirmDay.iso))}?` : ''} confirmLabel="Clear" danger
+        onConfirm={() => { if (confirmDay) actionsFor(confirmDay.ws).clearDay(confirmDay.di); }}
+        body="Its meals come off the plan; the other days keep theirs, and grocery and Cook day drop it. Generate or “Just this day” can plan it again." />
       <Confirm open={confirmClear} onClose={() => setConfirmClear(false)} title={`Clear the week of ${weekLabel(weekStart, true).replace('Week of ', '')}?`} confirmLabel="Clear" danger
         onConfirm={() => actions.clearWeek()} body="Removes every meal, eaten mark, serving and batch tag in this week. Generate can fill it again." />
     </>
@@ -109,7 +113,7 @@ export default function PlanView() {
   };
   let maxMeals = 1;
   rows.forEach((r) => { if (r.day.meals.length > maxMeals) maxMeals = r.day.meals.length; });
-  const anyCanAdd = rows.some((r) => !r.isFree && r.day.meals.length < ops.MAX_MEALS);
+  const anyCanAdd = rows.some((r) => !r.isFree); // the action column: + (add) and clear day
   const listSummary = ops.weeklySummary(rows.map((r) => (r.isFree ? null : r.day)), [], T);
   const selUnit = meta(sel).unit;
   const listEmpty = rows.every((r) => r.day.meals.length === 0);
@@ -185,7 +189,10 @@ export default function PlanView() {
             )}
             <div className="row between" style={{ gap: 8, paddingTop: 6 }}>
               {day.meals.length === 0 ? <span className="muted">Nothing planned</span> : <span className="small muted">{macroLine(day.totals, { kcal: false })}</span>}
-              {day.meals.length < ops.MAX_MEALS && <button type="button" className="link" onClick={() => openSwap(di, day.meals.length, true, ws)}><Icon name="plus" size={14} stroke={2.25} />Add a meal</button>}
+              <div className="row-sm" style={{ gap: 14 }}>
+                {day.meals.length < ops.MAX_MEALS && <button type="button" className="link" onClick={() => openSwap(di, day.meals.length, true, ws)}><Icon name="plus" size={14} stroke={2.25} />Add a meal</button>}
+                {day.meals.length > 0 && <button type="button" className="link muted" onClick={() => setConfirmDay({ iso, ws, di })}><Icon name="trash" size={14} stroke={2.25} />Clear day</button>}
+              </div>
             </div>
           </>
         )}
@@ -272,7 +279,7 @@ export default function PlanView() {
         <Card pad={false} style={{ overflow: 'hidden' }}>
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>Day</th>{Array.from({ length: maxMeals }, (_, i) => <th key={i}>Meal</th>)}{anyCanAdd && <th style={{ width: 48 }} />}<th>Total</th><th>Group</th></tr></thead>
+              <thead><tr><th>Day</th>{Array.from({ length: maxMeals }, (_, i) => <th key={i}>Meal</th>)}{anyCanAdd && <th style={{ width: 92 }} />}<th>Total</th><th>Group</th></tr></thead>
               <tbody>
                 {rows.map((row) => {
                   const { iso, ws, di, doc, day, isFree } = row;
@@ -304,7 +311,14 @@ export default function PlanView() {
                               </td>
                             );
                           })}
-                          {anyCanAdd && <td>{day.meals.length < ops.MAX_MEALS && <button type="button" className="icon-btn sm muted" aria-label="Add a meal" onClick={() => openSwap(di, day.meals.length, true, ws)}><Icon name="plus" size={16} /></button>}</td>}
+                          {anyCanAdd && (
+                            <td>
+                              <div className="row-sm" style={{ gap: 6 }}>
+                                {day.meals.length < ops.MAX_MEALS && <button type="button" className="icon-btn sm muted" aria-label="Add a meal" onClick={() => openSwap(di, day.meals.length, true, ws)}><Icon name="plus" size={16} /></button>}
+                                {day.meals.length > 0 && <button type="button" className="icon-btn sm muted" aria-label={`Clear ${ops.SHORT_DAYS[di]}`} title="Clear this day" onClick={() => setConfirmDay({ iso, ws, di })}><Icon name="trash" size={16} /></button>}
+                              </div>
+                            </td>
+                          )}
                           <td>
                             <div className="row-sm">
                               <span className="num" style={{ fontSize: 18 }}>{fmtInt(day.totals.calories)}</span>

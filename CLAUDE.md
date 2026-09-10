@@ -139,7 +139,8 @@ else shake-planned in-zone, else least-bad + deficit shake.
   would cover are tinted; edits (swap/add/tags/servings) stay in the table and day cards. Tiles average the visible
   month's planned days and hide at zero, like the empty-week card replaces the table when the week has no meals.
 - **Phone and laptop offer the same actions** (user's call): empty state = "Nothing planned" + Repeat last plan / Add a meal /
-  Just <day|unit>; planned = Add a meal, Regenerate <day|unit>, Saved plans, Clear this week (asks first) on both. The phone
+  Just <day|unit>; planned = Add a meal, Clear day (per day, asks first; `clearDay` empties that day only — its group
+  keeps the shared plan, grocery/Cook day drop it), Regenerate <day|unit>, Saved plans, Clear this week (asks first) on both. The phone
   shows a one-line week/month average where the laptop shows tiles. Differences left on purpose are form-factor only:
   arrows vs swipe, table vs day cards (per-meal controls inline on the phone, in the meal sheet on the laptop), month cells
   with names vs dots, double-click to open a week (laptop only).

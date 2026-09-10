@@ -242,9 +242,22 @@ export function usePlanActionsFor() {
       });
     };
 
+    // Clear one day (travel, a skipped day): its meals, marks, servings and tags go; the rest of its
+    // group keeps the shared plan. Generate or "Just this day" can plan it again.
+    const clearDay = (di) => {
+      setWeek((prev) => {
+        if (!prev || !prev.days[di]) return prev;
+        const days = prev.days.slice();
+        days[di] = null;
+        const groups = { ...(prev.groups || {}) };
+        delete groups[di];
+        return { ...prev, days, groups, eaten: ops.dropDayKeys(prev.eaten, [di]), servings: ops.dropDayKeys(prev.servings, [di]), tags: ops.dropDayKeys(prev.tags, [di]) };
+      });
+    };
+
     const clearWeek = () => setWeek(null);
 
-    return { regenerate, swap, remove, dropShake, toggleEaten, setServing, toggleTag, clearWeek };
+    return { regenerate, swap, remove, dropShake, toggleEaten, setServing, toggleTag, clearDay, clearWeek };
   }, [setPlans, T, dg, overrides, toast]);
 }
 
